@@ -35,6 +35,7 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - verify-c
+    - parsec
 
 tests:
   verify-c-test:
