@@ -8,12 +8,12 @@ import Text.Parsec
 import AST
 import Lexer
 import Lib
+import ArithmeticExpression
+import BooleanExpression
+import Identifier
 
 main :: IO ()
 main = someFunc
-
-identifier :: Parser Idt
-identifier = Idt <$> lIdentifier
 
 assignment :: Parser Stmt
 assignment = do
@@ -22,26 +22,3 @@ assignment = do
     exp <- aExp
     return $ Assignment id exp
 
-aExp :: Parser AExp
-aExp = buildExpressionParser aOperatorTable aTerm
-
-aTerm :: Parser AExp
-aTerm = parens aExp <|> aLit <|> aIdt
-
-aOperatorTable :: OperatorTable String () Identity AExp
-aOperatorTable =
-    [ [Infix opMul AssocLeft, Infix opDiv AssocLeft]
-    , [Infix opAdd AssocLeft, Infix opSub AssocLeft]
-    ]
-
-opMul, opDiv, opAdd, opSub :: Parser (AExp -> AExp -> AExp)
-opMul = reservedOp "*" >> return (ABinExp Mul)
-opDiv = reservedOp "/" >> return (ABinExp Div)
-opAdd = reservedOp "+" >> return (ABinExp Add)
-opSub = reservedOp "-" >> return (ABinExp Sub)
-
-aLit :: Parser AExp
-aLit = ALit <$> integer
-
-aIdt :: Parser AExp
-aIdt = AIdt <$> identifier

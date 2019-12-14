@@ -16,7 +16,7 @@ langDef = Tok.LanguageDef
     , Tok.identLetter     = alphaNum <|> oneOf "_'"
     , Tok.opStart         = oneOf operatorSymbols
     , Tok.opLetter        = oneOf operatorSymbols
-    , Tok.reservedNames   = ["if", "else", "while", "return"]
+    , Tok.reservedNames   = ["if", "else", "while", "return", "true", "false"]
     , Tok.reservedOpNames = ["+", "-", "*", "/", "="]
     , Tok.caseSensitive   = True
     }
@@ -26,6 +26,9 @@ lexer = Tok.makeTokenParser langDef
 
 reservedOp :: String -> Parser ()
 reservedOp = Tok.reservedOp lexer
+
+reserved :: String -> Parser ()
+reserved = Tok.reserved lexer
 
 lIdentifier :: Parser String
 lIdentifier = Tok.identifier lexer

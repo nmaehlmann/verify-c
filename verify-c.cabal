@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 00f017953c2db697db5c17e05bf38fcd950799eff8e9fda55c7bcd0925aa4e79
+-- hash: e2807b9941908fc602eb3dd9522127e38666f3d9721e8db234fd300d909545e5
 
 name:           verify-c
 version:        0.1.0.0
@@ -39,7 +39,10 @@ library
 executable verify-c-exe
   main-is: Main.hs
   other-modules:
+      ArithmeticExpression
       AST
+      BooleanExpression
+      Identifier
       Lexer
       Paths_verify_c
   hs-source-dirs:
