@@ -27,8 +27,11 @@ lexer = Tok.makeTokenParser langDef
 reservedOp :: String -> Parser ()
 reservedOp = Tok.reservedOp lexer
 
-identifier :: Parser String
-identifier = Tok.identifier lexer
+lIdentifier :: Parser String
+lIdentifier = Tok.identifier lexer
+
+integer :: Parser Integer
+integer = Tok.integer lexer
 
 parens :: Parser p -> Parser p
 parens = Tok.parens lexer

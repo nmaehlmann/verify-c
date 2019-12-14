@@ -4,7 +4,7 @@ data Idt = Idt String
     deriving (Eq, Show)
 
 data AExp 
-    = ALit Int
+    = ALit Integer
     | AIdt Idt
     | ABinExp BinOp AExp AExp
     deriving (Eq, Show)    

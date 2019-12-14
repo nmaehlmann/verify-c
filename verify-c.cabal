@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7f7e1883fe46119212ecb8c9638b5e5453ebcbd863265d9585b0c675341e160a
+-- hash: 00f017953c2db697db5c17e05bf38fcd950799eff8e9fda55c7bcd0925aa4e79
 
 name:           verify-c
 version:        0.1.0.0
@@ -39,12 +39,15 @@ library
 executable verify-c-exe
   main-is: Main.hs
   other-modules:
+      AST
+      Lexer
       Paths_verify_c
   hs-source-dirs:
       app
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , parsec
     , verify-c
   default-language: Haskell2010
 
