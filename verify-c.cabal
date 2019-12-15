@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 78790b5b89098822b77ac1f75becc1ff98513e91e57b7283359b3bb08c2e837f
+-- hash: 781ac3f4567d7313077e42b12ca8d05cfa37225f12fce39260e6ee576d3b434d
 
 name:           verify-c
 version:        0.1.0.0
@@ -15,7 +15,6 @@ author:         Author name here
 maintainer:     example@example.com
 copyright:      2019 Author name here
 license:        BSD3
-license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
     README.md
