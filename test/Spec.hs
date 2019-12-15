@@ -19,7 +19,6 @@ spacesGen = do
     numOfSpaces <- (arbitrary :: Gen Int) `suchThat` (>= 0)
     return $ replicate numOfSpaces ' '
 
-
 whitespaceIndependent s f = property $ forAll (insertWhiteSpaces s) $ f
 
 main :: IO ()
@@ -35,12 +34,12 @@ main = hspec $ do
             parseBExp "false" `shouldBe` Right BFalse
             parseBExp "maybe" `shouldNotSatisfy` isValid
 
-        it "parses comparisons" $ do
+        it "parses simple comparisons" $ do
             parseBExp "x < y" `shouldBe` (Right (BLess x y))
             parseBExp "x = y" `shouldBe` (Right (BEq x y))
 
         it "ignores whitespaces in '<' comparisons" $ do
-            whitespaceIndependent ["x","<","y"] (\s -> parseBExp s `shouldBe` (Right (BLess x y)))
+            whitespaceIndependent ["x","<","y"] $ \s -> parseBExp s `shouldBe` (Right (BLess x y))
         
         it "ignores whitespaces in '=' comparisons" $ do
             whitespaceIndependent ["x","=","y"] $ \s -> parseBExp s `shouldBe` (Right (BEq x y))
