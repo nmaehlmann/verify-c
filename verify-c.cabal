@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: e2807b9941908fc602eb3dd9522127e38666f3d9721e8db234fd300d909545e5
+-- hash: 2c57aa9fbcce9f5102c86eb3a1d39639f799025c78c764d4a3e8c466db7b68f3
 
 name:           verify-c
 version:        0.1.0.0
@@ -36,14 +36,15 @@ library
       base >=4.7 && <5
   default-language: Haskell2010
 
-executable verify-c-exe
+executable verify-c
   main-is: Main.hs
   other-modules:
-      ArithmeticExpression
       AST
-      BooleanExpression
-      Identifier
-      Lexer
+      Parser.ArithmeticExpression
+      Parser.BooleanExpression
+      Parser.Identifier
+      Parser.Lexer
+      Parser.Statement
       Paths_verify_c
   hs-source-dirs:
       app
@@ -63,6 +64,8 @@ test-suite verify-c-test
       test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      QuickCheck
+    , base >=4.7 && <5
+    , hspec
     , verify-c
   default-language: Haskell2010

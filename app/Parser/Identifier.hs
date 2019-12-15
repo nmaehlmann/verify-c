@@ -1,10 +1,10 @@
-module Identifier where
+module Parser.Identifier where
 
 import Text.Parsec.String (Parser)
 import Text.Parsec
 
 import AST
-import Lexer
+import Parser.Lexer
 
 identifier :: Parser Idt
 identifier = Idt <$> lIdentifier

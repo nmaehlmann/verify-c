@@ -1,4 +1,5 @@
-module Lexer where
+module Parser.Lexer where
+    
 import Text.Parsec.String (Parser)
 import qualified Text.Parsec.Token as Tok
 import Text.Parsec
@@ -38,3 +39,6 @@ integer = Tok.integer lexer
 
 parens :: Parser p -> Parser p
 parens = Tok.parens lexer
+
+braces :: Parser p -> Parser p
+braces = Tok.braces lexer

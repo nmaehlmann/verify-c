@@ -1,4 +1,4 @@
-module ArithmeticExpression where
+module Parser.ArithmeticExpression where
 
 import Data.Functor.Identity
 import Text.Parsec.String (Parser)
@@ -6,8 +6,8 @@ import Text.Parsec.Expr
 import Text.Parsec
 
 import AST
-import Lexer
-import Identifier
+import Parser.Lexer
+import Parser.Identifier
 
 aExp :: Parser AExp
 aExp = buildExpressionParser aOperatorTable aTerm

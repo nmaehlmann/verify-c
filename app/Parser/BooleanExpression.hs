@@ -1,14 +1,14 @@
-module BooleanExpression where
+module Parser.BooleanExpression where
 
 import Data.Functor.Identity
 import Text.Parsec.String (Parser)
 import Text.Parsec.Expr
 import Text.Parsec
 
-import ArithmeticExpression
 import AST
-import Lexer
-import Identifier
+import Parser.ArithmeticExpression
+import Parser.Lexer
+import Parser.Identifier
     
 bExp :: Parser BExp
 bExp = buildExpressionParser bOperatorTable bTerm

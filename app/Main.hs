@@ -1,24 +1,18 @@
 module Main where
 
-import Data.Functor.Identity
-import Text.Parsec.String (Parser)
-import Text.Parsec.Expr
+import Data.Maybe
 import Text.Parsec
+import System.Environment
 
 import AST
-import Lexer
-import Lib
-import ArithmeticExpression
-import BooleanExpression
-import Identifier
+import Parser.Statement
 
 main :: IO ()
-main = someFunc
+main = do
+    textToParse <- fmap listToMaybe getArgs
+    case textToParse of 
+        Nothing -> putStrLn "please provide an argument"
+        (Just t) -> putStrLn $ show $ parse statement "" t
+        
 
-assignment :: Parser Stmt
-assignment = do
-    id <- identifier
-    reservedOp "="
-    exp <- aExp
-    return $ Assignment id exp
 
