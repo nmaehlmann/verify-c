@@ -23,7 +23,7 @@ bLess = comparisonBTerm "<" BLess
 comparisonBTerm :: String -> (AExp -> AExp -> BExp) -> Parser BExp
 comparisonBTerm op f = do
     lhs <- aExp
-    reserved op
+    reservedOp op
     rhs <- aExp
     return $ f lhs rhs
 

@@ -4,11 +4,15 @@ import Text.Parsec
 import Data.Either
 
 import AST
+import Parser.ArithmeticExpression
 import Parser.BooleanExpression
+import Parser.Statement
 
 insertWhiteSpaces :: [String] -> Gen String
-insertWhiteSpaces [] = spacesGen
-insertWhiteSpaces (x:xs) = do
+insertWhiteSpaces [] = return ""
+insertWhiteSpaces (x:xs) = (\spacedXs -> x ++ spacedXs) <$> insertWhiteSpaces' xs
+insertWhiteSpaces' [] = spacesGen
+insertWhiteSpaces' (x:xs) = do
     s <- spacesGen
     next <- insertWhiteSpaces xs
     return $ s ++ x ++ next
@@ -57,3 +61,28 @@ main = hspec $ do
         it "ignores whitespaces in disjunctions" $ do
             whitespaceIndependent ["x < y", "||", "y < z"] $ 
                 \s -> parseBExp s `shouldBe` (Right (BOr (BLess x y) (BLess y z)))
+
+    describe "Parser.Statement" $ do
+        let parseStmt t = parse statement "" t
+        let x = Idt "x"
+        let y = Idt "y"
+
+        it "parses assignments" $ do
+            parseStmt "x = y;" `shouldBe` (Right (Assignment x (AIdt y)))
+
+        it "ignores whitespaces in assignments" $ do
+            whitespaceIndependent ["x", "=", "y", ";"] $ 
+                \s -> parseStmt s  `shouldBe` (Right (Assignment x (AIdt y)))
+
+    describe "Parser.ArithmeticExpression" $ do
+        let parseAExp t = parse aExp "" t
+        let x = AIdt $ Idt "x"
+        let y = AIdt $ Idt "y"
+
+        it "parses additions" $ do
+            parseAExp "x + y;" `shouldBe` (Right (ABinExp Add x y))
+
+        it "ignores whitespaces in additions" $ do
+            whitespaceIndependent ["x", "+", "y"] $ 
+                \s -> parseAExp s  `shouldBe` (Right (ABinExp Add x y))
+

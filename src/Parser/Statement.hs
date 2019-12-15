@@ -10,7 +10,7 @@ import Parser.BooleanExpression
 import Parser.Identifier
 
 statement :: Parser Stmt
-statement = chainl1 singleStatement (return Seq)
+statement = whiteSpace >> chainl1 singleStatement (return Seq)
 
 singleStatement :: Parser Stmt
 singleStatement = assignment <|> ifThenElse <|> while

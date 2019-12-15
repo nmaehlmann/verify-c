@@ -3,9 +3,13 @@ module Parser.Lexer where
 import Text.Parsec.String (Parser)
 import qualified Text.Parsec.Token as Tok
 import Text.Parsec
+import Data.List
+
+operators :: [String]
+operators = ["+", "-", "*", "/", "=", "<", "==", "&&", "||", "[", "]"]
 
 operatorSymbols :: [Char]
-operatorSymbols = "+-*/=[]"
+operatorSymbols = nub $ mconcat operators
 
 langDef :: Tok.LanguageDef ()
 langDef = Tok.LanguageDef
@@ -18,7 +22,7 @@ langDef = Tok.LanguageDef
     , Tok.opStart         = oneOf operatorSymbols
     , Tok.opLetter        = oneOf operatorSymbols
     , Tok.reservedNames   = ["if", "else", "while", "return", "true", "false"]
-    , Tok.reservedOpNames = ["+", "-", "*", "/", "="]
+    , Tok.reservedOpNames = operators
     , Tok.caseSensitive   = True
     }
 
@@ -42,3 +46,6 @@ parens = Tok.parens lexer
 
 braces :: Parser p -> Parser p
 braces = Tok.braces lexer
+
+whiteSpace ::  Parser ()
+whiteSpace = Tok.whiteSpace lexer
