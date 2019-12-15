@@ -17,7 +17,7 @@ bTerm :: Parser BExp
 bTerm = parens bExp <|> bTrue <|> bFalse <|> try bEq <|> bLess
 
 bEq, bLess :: Parser BExp
-bEq = comparisonBTerm "=" BEq
+bEq = comparisonBTerm "==" BEq
 bLess = comparisonBTerm "<" BLess
 
 comparisonBTerm :: String -> (AExp -> AExp -> BExp) -> Parser BExp
