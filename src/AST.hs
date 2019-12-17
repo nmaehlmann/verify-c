@@ -22,9 +22,6 @@ data BExp
     | BOr BExp BExp
     deriving (Eq, Show)    
 
-data Exp = AExp | BExp
-    deriving (Eq, Show)
-
 data Stmt 
     = Assignment Idt AExp
     | ITE BExp Stmt Stmt

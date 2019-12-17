@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 781ac3f4567d7313077e42b12ca8d05cfa37225f12fce39260e6ee576d3b434d
+-- hash: 0ddeba076686fc70ffc027f602ccb8802d9bff78e1fada9a8b1e255acb6ae332
 
 name:           verify-c
 version:        0.1.0.0
@@ -59,6 +59,11 @@ test-suite verify-c-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      IT.AExpSpec
+      IT.BExpSpec
+      IT.FacSpec
+      IT.StatementSpec
+      IT.Whitespaces
       Paths_verify_c
   hs-source-dirs:
       test
