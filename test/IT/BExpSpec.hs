@@ -15,9 +15,9 @@ import IT.Whitespaces
 bExpSpec :: IO Spec
 bExpSpec = return $ describe "Parser.BooleanExpression" $ do
     let parseBExp t = parse bExp "" t
-    let x = AIdt $ Idt "x"
-    let y = AIdt $ Idt "y"
-    let z = AIdt $ Idt "z"
+    let x = AIdt $ LIdt "x"
+    let y = AIdt $ LIdt "y"
+    let z = AIdt $ LIdt "z"
     let isValid = isRight
 
     it "parses boolean constants" $ do

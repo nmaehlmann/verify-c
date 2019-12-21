@@ -14,9 +14,9 @@ import IT.Whitespaces
 aExpSpec :: IO Spec
 aExpSpec = return $ describe "Parser.ArithmeticExpression" $ do
     let parseAExp t = parse aExp "" t
-    let x = AIdt $ Idt "x"
-    let y = AIdt $ Idt "y"
-    let z = AIdt $ Idt "z"
+    let x = AIdt $ LIdt "x"
+    let y = AIdt $ LIdt "y"
+    let z = AIdt $ LIdt "z"
 
     it "parses literals" $ do
         parseAExp "1337" `shouldBe` (Right (ALit 1337))

@@ -47,5 +47,8 @@ parens = Tok.parens lexer
 braces :: Parser p -> Parser p
 braces = Tok.braces lexer
 
+brackets :: Parser p -> Parser p
+brackets = Tok.brackets lexer
+
 whiteSpace ::  Parser ()
 whiteSpace = Tok.whiteSpace lexer

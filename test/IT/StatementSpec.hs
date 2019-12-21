@@ -15,11 +15,11 @@ import IT.Whitespaces
 statementSpec :: IO Spec
 statementSpec = return $ describe "Parser.Statement" $ do
     let parseStmt t = parse statement "" t
-    let x = Idt "x"
-    let y = Idt "y"
-    let z = Idt "z"
-    let a = Idt "a"
-    let b = Idt "b"
+    let x = LIdt "x"
+    let y = LIdt "y"
+    let z = LIdt "z"
+    let a = LIdt "a"
+    let b = LIdt "b"
 
     it "parses assignments" $ do
         parseStmt "x = y;" `shouldBe` (Right (Assignment x (AIdt y)))

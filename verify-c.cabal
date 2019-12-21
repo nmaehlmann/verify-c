@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 0ddeba076686fc70ffc027f602ccb8802d9bff78e1fada9a8b1e255acb6ae332
+-- hash: c6baa2e9a4bb0e0cf48048d3389df8fca1995b8a8d5b2560ba6c2c11fb5f500f
 
 name:           verify-c
 version:        0.1.0.0
@@ -30,8 +30,9 @@ library
       Lib
       Parser.ArithmeticExpression
       Parser.BooleanExpression
-      Parser.Identifier
+      Parser.InternalArithmeticExpression
       Parser.Lexer
+      Parser.LExpression
       Parser.Statement
   other-modules:
       Paths_verify_c
@@ -48,7 +49,7 @@ executable verify-c
       Paths_verify_c
   hs-source-dirs:
       app
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Werror
   build-depends:
       base >=4.7 && <5
     , parsec
@@ -62,6 +63,7 @@ test-suite verify-c-test
       IT.AExpSpec
       IT.BExpSpec
       IT.FacSpec
+      IT.LExpSpec
       IT.StatementSpec
       IT.Whitespaces
       Paths_verify_c

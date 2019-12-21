@@ -7,7 +7,7 @@ import AST
 import Parser.Lexer
 import Parser.ArithmeticExpression
 import Parser.BooleanExpression
-import Parser.Identifier
+import Parser.LExpression
 
 statement :: Parser Stmt
 statement = whiteSpace >> chainl1 singleStatement (return Seq)
@@ -17,11 +17,11 @@ singleStatement = assignment <|> ifThenElse <|> while
 
 assignment :: Parser Stmt
 assignment = do
-    id <- identifier
+    idt <- identifier
     reservedOp "="
-    exp <- aExp
+    expr <- aExp
     reserved ";"
-    return $ Assignment id exp
+    return $ Assignment idt expr
 
 ifThenElse :: Parser Stmt
 ifThenElse = do

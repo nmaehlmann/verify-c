@@ -8,7 +8,6 @@ import Text.Parsec
 import AST
 import Parser.ArithmeticExpression
 import Parser.Lexer
-import Parser.Identifier
     
 bExp :: Parser BExp
 bExp = buildExpressionParser bOperatorTable bTerm

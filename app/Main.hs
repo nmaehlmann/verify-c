@@ -4,7 +4,6 @@ import Data.Maybe
 import Text.Parsec
 import System.Environment
 
-import AST
 import Parser.Statement
 
 main :: IO ()
