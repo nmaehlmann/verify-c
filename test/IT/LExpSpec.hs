@@ -42,3 +42,9 @@ lExpSpec = return $ describe "Parser.LExpression" $ do
 
     it "parses array brackets with higher precedence than derefs" $ do
         parseLExp "*a[x]" `shouldBe` (Right (LDereference (LArray a x)))
+
+    it "parses structure parts" $ do
+        parseLExp "arr.a" `shouldBe` (Right (LStructPart arr a))
+
+    it "parses structure parts" $ do
+        parseLExp "arr.a.arr" `shouldBe` (Right (LStructPart (LStructPart arr a) arr))

@@ -21,18 +21,20 @@ identifier = LIdt <$> lIdentifier
 
 lOperatorTable :: OperatorTable String () Identity LExp
 lOperatorTable = 
-    [ [postfix arrayOp]
-    , [prefix dereferenceOp]
+    [ [postfix opArray]
+    , [prefix opDereference]
+    , [Infix opPart AssocLeft]
     ]
 
-dereferenceOp :: Parser (LExp -> LExp)
-dereferenceOp = do
-    char '*' --TODO: why does this not work with reservedOp?
-    return $ LDereference
+opPart :: Parser (LExp -> LExp -> LExp)
+opPart = reservedOp "." >> return LStructPart
 
+-- TODO: why does this not work with reservedOp?
+opDereference :: Parser (LExp -> LExp)
+opDereference = char '*' >> return LDereference
 
-arrayOp :: Parser (LExp -> LExp)
-arrayOp = do
+opArray :: Parser (LExp -> LExp)
+opArray = do
     idx <- brackets $ aExp lExp
     return $ (\lExpression -> LArray lExpression idx)
 
