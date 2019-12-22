@@ -10,13 +10,13 @@ import Parser.LExpression
 lExpSpec :: IO Spec
 lExpSpec = return $ describe "Parser.LExpression" $ do
     let parseLExp t = parse lExp "" t
-    let a = LIdt "a"
-    let arr = LIdt "arr"
-    let x = AIdt $ LIdt "x"
-    let y = AIdt $ LIdt "y"
+    let a = LIdt $ Idt "a"
+    let arr = LIdt $ Idt "arr"
+    let x = AIdt $ LIdt $ Idt "x"
+    let y = AIdt $ LIdt $ Idt "y"
     
     it "parses symbols" $ do
-        parseLExp "pi" `shouldBe` (Right (LIdt "pi"))
+        parseLExp "pi" `shouldBe` (Right (LIdt (Idt "pi")))
 
     it "parses arrays" $ do
         parseLExp "a[1]" `shouldBe` (Right (LArray a (ALit 1)))
@@ -32,7 +32,7 @@ lExpSpec = return $ describe "Parser.LExpression" $ do
         parseLExp "arr[x * y]" `shouldBe` (Right (LArray arr (ABinExp Mul x y)))
 
     it "parses derefenced symbols" $ do
-        parseLExp "*referencedVar" `shouldBe` (Right (LDereference (LIdt "referencedVar")))
+        parseLExp "*referencedVar" `shouldBe` (Right (LDereference (LIdt (Idt "referencedVar"))))
 
     it "parses doubly derefenced symbols" $ do
         parseLExp "**a" `shouldBe` (Right (LDereference (LDereference a)))

@@ -11,6 +11,20 @@ operators = ["+", "-", "*", "/", "=", "<", "==", "&&", "||", "[", "]"]
 operatorSymbols :: [Char]
 operatorSymbols = nub $ mconcat operators
 
+names :: [String]
+names = 
+    [ "char"
+    , "else"
+    , "false"
+    , "if"
+    , "int"
+    , "while"
+    , "return"
+    , "struct"
+    , "true"
+    , "void"
+    ]
+
 langDef :: Tok.LanguageDef ()
 langDef = Tok.LanguageDef
     { Tok.commentStart    = "/*"
@@ -21,7 +35,7 @@ langDef = Tok.LanguageDef
     , Tok.identLetter     = alphaNum <|> oneOf "_'"
     , Tok.opStart         = oneOf operatorSymbols
     , Tok.opLetter        = oneOf operatorSymbols
-    , Tok.reservedNames   = ["if", "else", "while", "return", "true", "false"]
+    , Tok.reservedNames   = names
     , Tok.reservedOpNames = operators
     , Tok.caseSensitive   = True
     }
@@ -52,3 +66,9 @@ brackets = Tok.brackets lexer
 
 whiteSpace ::  Parser ()
 whiteSpace = Tok.whiteSpace lexer
+
+comma ::  Parser String
+comma = Tok.comma lexer
+
+semi ::  Parser String
+semi = Tok.semi lexer

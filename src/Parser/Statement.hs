@@ -7,20 +7,23 @@ import AST
 import Parser.Lexer
 import Parser.ArithmeticExpression
 import Parser.BooleanExpression
+import Parser.Declaration
 import Parser.LExpression
+import Parser.Identifier
+import Parser.Type
 
 statement :: Parser Stmt
 statement = whiteSpace >> chainl1 singleStatement (return Seq)
 
 singleStatement :: Parser Stmt
-singleStatement = assignment <|> ifThenElse <|> while
+singleStatement = assignment <|> ifThenElse <|> while <|> funDef <|> returnStatement
 
 assignment :: Parser Stmt
 assignment = do
-    idt <- identifier
+    idt <- lExp
     reservedOp "="
     expr <- aExp
-    reserved ";"
+    semi
     return $ Assignment idt expr
 
 ifThenElse :: Parser Stmt
@@ -39,4 +42,19 @@ while = do
     body <- braces statement
     return $ While condition body
     
+returnStatement :: Parser Stmt
+returnStatement = do
+    reserved "return"
+    returnValue <- optionMaybe aExp
+    semi
+    return $ Return returnValue
+
+funDef :: Parser Stmt
+funDef = do
+    returnType <- typeName
+    name <- identifier
+    arguments <- parens $ declaration `sepBy` comma
+    body <- braces $ statement
+    return $ FunDef returnType name arguments body
+
     

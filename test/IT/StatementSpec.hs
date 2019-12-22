@@ -15,14 +15,17 @@ import IT.Whitespaces
 statementSpec :: IO Spec
 statementSpec = return $ describe "Parser.Statement" $ do
     let parseStmt t = parse statement "" t
-    let x = LIdt "x"
-    let y = LIdt "y"
-    let z = LIdt "z"
-    let a = LIdt "a"
-    let b = LIdt "b"
+    let x = LIdt $ Idt "x"
+    let y = LIdt $ Idt "y"
+    let z = LIdt $ Idt "z"
+    let a = LIdt $ Idt "a"
+    let b = LIdt $ Idt "b"
 
     it "parses assignments" $ do
         parseStmt "x = y;" `shouldBe` (Right (Assignment x (AIdt y)))
+
+    it "parses assignments to arrays" $ do
+        parseStmt "a[1] = y;" `shouldBe` (Right (Assignment (LArray a (ALit 1)) (AIdt y)))
 
     it "ignores whitespaces in assignments" $ do
         whitespaceIndependent ["x", "=", "y", ";"] $ 
@@ -46,3 +49,28 @@ statementSpec = return $ describe "Parser.Statement" $ do
         let condition = BLess (ALit 0) (AIdt x)
         let body = Assignment x (ABinExp Sub (AIdt x) (ALit 1))
         parseStmt s `shouldBe` (Right (While condition body))
+
+    it "parses void functions" $ do
+        let s = "void noOp(){return;}"
+        let returnType = TVoid
+        let name = Idt "noOp"
+        let arguments = []
+        let body = Return Nothing
+        parseStmt s `shouldBe` (Right (FunDef returnType name arguments body))
+
+    it "parses functions without arguments" $ do
+        let s = "int one(){return 1;}"
+        let returnType = TInt
+        let name = Idt "one"
+        let arguments = []
+        let body = Return $ Just $ ALit $ 1
+        parseStmt s `shouldBe` (Right (FunDef returnType name arguments body))
+
+    it "parses simple functions definitions" $ do
+        let s = "int add(int a, int b){return a + b;}"
+        let returnType = TInt
+        let name = Idt "add"
+        let arguments = [Decl TInt (Idt "a"), Decl TInt (Idt "b")]
+        let body = Return $ Just $ ABinExp Add (AIdt a) (AIdt b)
+        parseStmt s `shouldBe` (Right (FunDef returnType name arguments body))
+

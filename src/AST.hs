@@ -1,10 +1,7 @@
 module AST where
 
-data Idt = Idt String
-    deriving (Eq, Show)
-
 data LExp 
-    = LIdt String 
+    = LIdt Idt 
     | LArray LExp AExp
     | LStructPart LExp LExp
     | LDereference LExp
@@ -36,4 +33,21 @@ data Stmt
     | While BExp Stmt
     | Seq Stmt Stmt
     | Empty
+    | FunDef Type Idt [Decl] Stmt
+    | Return (Maybe AExp)
+    deriving (Eq, Show)
+
+data Type
+    = TInt
+    | TChar
+    | TStruct String
+    | TArray Type
+    | TReference Type
+    | TVoid
+    deriving (Eq, Show)
+
+data Idt = Idt String
+    deriving (Eq, Show)
+
+data Decl = Decl Type Idt
     deriving (Eq, Show)

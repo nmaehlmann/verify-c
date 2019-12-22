@@ -15,10 +15,13 @@ facSpec = do
             it "parses a faculty program" $ do
                 (parse statement "" facSrc) `shouldBe` fac
 
+n = LIdt $ Idt "n"                
+p = LIdt $ Idt "p"
+c = LIdt $ Idt "c"                
 fac = Right (Seq (Seq assn1ToP assn1ToC) (While (BOr cLessN cEqN) (Seq assnPMulCToP assnCPlus1ToC)))
-assn1ToP = Assignment (LIdt "p") (ALit 1)
-assn1ToC = Assignment (LIdt "c") (ALit 1)
-cLessN = BLess (AIdt (LIdt "c")) (AIdt (LIdt "n"))
-cEqN = BEq (AIdt (LIdt "c")) (AIdt (LIdt "n"))
-assnPMulCToP = Assignment (LIdt "p") (ABinExp Mul (AIdt (LIdt "p")) (AIdt (LIdt "c")))
-assnCPlus1ToC = Assignment (LIdt "c") (ABinExp Add (AIdt (LIdt "c")) (ALit 1))
+assn1ToP = Assignment p (ALit 1)
+assn1ToC = Assignment c (ALit 1)
+cLessN = BLess (AIdt c) (AIdt n)
+cEqN = BEq (AIdt c) (AIdt n)
+assnPMulCToP = Assignment p (ABinExp Mul (AIdt p) (AIdt c))
+assnCPlus1ToC = Assignment c (ABinExp Add (AIdt c) (ALit 1))
