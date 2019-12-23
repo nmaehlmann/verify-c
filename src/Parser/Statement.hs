@@ -1,7 +1,7 @@
 module Parser.Statement where
 
 import Text.Parsec.String (Parser)
-import Text.Parsec
+import Text.Parsec hiding (Empty)
 
 import AST
 import Parser.Lexer
@@ -13,7 +13,7 @@ import Parser.Identifier
 import Parser.Type
 
 statement :: Parser Stmt
-statement = whiteSpace >> chainl1 singleStatement (return Seq)
+statement = whiteSpace >> chainl singleStatement (return Seq) Empty
 
 singleStatement :: Parser Stmt
 singleStatement = assignment <|> ifThenElse <|> while <|> funDef <|> returnStatement

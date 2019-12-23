@@ -12,7 +12,7 @@ aExp :: Parser LExp -> Parser AExp
 aExp lExpParser = buildExpressionParser aOperatorTable $ aTerm lExpParser
 
 aTerm :: Parser LExp -> Parser AExp
-aTerm lExpParser = parens (aExp lExpParser) <|> aLit <|> aLExp lExpParser
+aTerm lExpParser = parens (aExp lExpParser) <|> aLit <|> aLExp lExpParser <|> aArray lExpParser
 
 aOperatorTable :: OperatorTable String () Identity AExp
 aOperatorTable =
@@ -31,3 +31,9 @@ aLit = ALit <$> integer
 
 aLExp :: Parser LExp -> Parser AExp
 aLExp = fmap AIdt 
+
+aArray :: Parser LExp -> Parser AExp
+aArray lExpParser = do 
+    fields <- braces $ aExp lExpParser `sepBy` comma
+    return $ AArray fields
+    

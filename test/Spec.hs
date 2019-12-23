@@ -5,6 +5,7 @@ import IT.AExpSpec
 import IT.BExpSpec
 import IT.LExpSpec
 import IT.StatementSpec
+import IT.MaxSpec
 
 
 main :: IO ()
@@ -15,5 +16,6 @@ main = do
         , lExpSpec
         , statementSpec
         , facSpec
+        , maxSpec
         ]
     hspec $ foldl1 (>>) specs

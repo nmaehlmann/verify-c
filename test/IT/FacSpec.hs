@@ -9,7 +9,7 @@ import Parser.Statement
 
 facSpec :: IO Spec
 facSpec = do
-    facSrc <- readFile "test/IT/fac.c0" 
+    facSrc <- readFile "examples/fac.c0" 
     return $ do
         describe "Parser.Statement" $ do
             it "parses a faculty program" $ do

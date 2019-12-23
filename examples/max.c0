@@ -1,0 +1,10 @@
+i = 0;
+r = 0;
+while (i < n) {
+    if(a[r] < a[i]) {
+        r = i ;
+    }
+    else {
+    }
+    i = i + 1;
+}

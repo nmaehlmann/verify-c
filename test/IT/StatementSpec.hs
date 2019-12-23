@@ -14,6 +14,7 @@ import IT.Whitespaces
 
 statementSpec :: IO Spec
 statementSpec = return $ describe "Parser.Statement" $ do
+    let isValid = isRight
     let parseStmt t = parse statement "" t
     let x = LIdt $ Idt "x"
     let y = LIdt $ Idt "y"
@@ -21,11 +22,18 @@ statementSpec = return $ describe "Parser.Statement" $ do
     let a = LIdt $ Idt "a"
     let b = LIdt $ Idt "b"
 
+    it "rejects invalid statements" $ do
+        parseStmt "this is not a valid c0 program" `shouldNotSatisfy` isValid
+
     it "parses assignments" $ do
         parseStmt "x = y;" `shouldBe` (Right (Assignment x (AIdt y)))
 
-    it "parses assignments to arrays" $ do
+    it "parses assignments to fields of an array" $ do
         parseStmt "a[1] = y;" `shouldBe` (Right (Assignment (LArray a (ALit 1)) (AIdt y)))
+    
+    it "parses assignments to arrays" $ do
+        let arrayExp = AArray $ ALit <$> [1..6]
+        parseStmt "a = {1, 2, 3, 4, 5, 6};" `shouldBe` (Right (Assignment a arrayExp))
 
     it "ignores whitespaces in assignments" $ do
         whitespaceIndependent ["x", "=", "y", ";"] $ 

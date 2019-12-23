@@ -12,6 +12,7 @@ data AExp
     | AIdt LExp
     | ABinExp BinOp AExp AExp
     | AAddress LExp -- is this useful in c0?
+    | AArray [AExp]
     deriving (Eq, Show)    
 
 data BinOp = Add | Sub | Mul | Div
