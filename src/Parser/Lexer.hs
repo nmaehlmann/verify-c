@@ -6,7 +6,11 @@ import Text.Parsec
 import Data.List
 
 operators :: [String]
-operators = ["+", "-", "*", "/", "=", "<", "==", "&&", "||", "[", "]"]
+operators = 
+    [ "+" , "-" , "*" , "/"  
+    , "=" , "==", "!=", "<=" 
+    , "<" , ">=", ">" , "&&"
+    , "||", "[" , "]"]
 
 operatorSymbols :: [Char]
 operatorSymbols = nub $ mconcat operators

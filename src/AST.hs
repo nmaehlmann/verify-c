@@ -18,11 +18,19 @@ data AExp
 data BinOp = Add | Sub | Mul | Div
     deriving (Eq, Show)
 
+data CompOp 
+    = Less 
+    | LessOrEqual 
+    | Greater 
+    | GreaterOrEqual 
+    | Equal 
+    | NotEqual
+    deriving (Eq, Show)
+
 data BExp 
     = BTrue
     | BFalse
-    | BEq AExp AExp
-    | BLess AExp AExp
+    | BComp CompOp AExp AExp
     | BNeg BExp
     | BAnd BExp BExp
     | BOr BExp BExp

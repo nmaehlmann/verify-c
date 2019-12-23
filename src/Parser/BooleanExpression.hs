@@ -13,18 +13,28 @@ bExp :: Parser BExp
 bExp = buildExpressionParser bOperatorTable bTerm
 
 bTerm :: Parser BExp
-bTerm = parens bExp <|> bTrue <|> bFalse <|> try bEq <|> bLess
+bTerm = parens bExp <|> bTrue <|> bFalse <|> comparison
 
-bEq, bLess :: Parser BExp
-bEq = comparisonBTerm "==" BEq
-bLess = comparisonBTerm "<" BLess
-
-comparisonBTerm :: String -> (AExp -> AExp -> BExp) -> Parser BExp
-comparisonBTerm op f = do
+comparison :: Parser BExp
+comparison = do
     lhs <- aExp
-    reservedOp op
+    op  <- comparisonOperator
     rhs <- aExp
-    return $ f lhs rhs
+    return $ BComp op lhs rhs
+
+comparisonOperator :: Parser CompOp
+comparisonOperator = choice $ toParser <$> comparisonOperators
+    where toParser (txt, op) = try $ reservedOp txt >> return op
+
+comparisonOperators :: [(String, CompOp)]
+comparisonOperators = 
+    [ ("==", Equal)
+    , ("!=", NotEqual)
+    , ("<=", LessOrEqual)
+    , ("<" , Less)
+    , (">=", GreaterOrEqual)
+    , (">" , Greater)
+    ]
 
 bOperatorTable :: OperatorTable String () Identity BExp
 bOperatorTable =
@@ -38,7 +48,6 @@ opOr = reservedOp "||" >> return BOr
 
 opNeg :: Parser (BExp -> BExp)
 opNeg = reservedOp "!" >> return BNeg
-
 
 bTrue, bFalse :: Parser BExp
 bTrue = reserved "true" >> return  BTrue

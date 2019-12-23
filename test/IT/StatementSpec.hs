@@ -47,14 +47,14 @@ statementSpec = return $ describe "Parser.Statement" $ do
 
     it "parses if-then-else blocks" $ do
         let s = "if( a < b ){ x = y; } else{ y = z; }"
-        let condition = BLess (AIdt a) (AIdt b)
+        let condition = BComp Less (AIdt a) (AIdt b)
         let ifCase = Assignment x (AIdt y)
         let elseCase = Assignment y (AIdt z)
         parseStmt s `shouldBe` (Right (ITE condition ifCase elseCase))
 
     it "parses while blocks" $ do
         let s = "while( 0 < x ){ x = x - 1; }"
-        let condition = BLess (ALit 0) (AIdt x)
+        let condition = BComp Less (ALit 0) (AIdt x)
         let body = Assignment x (ABinExp Sub (AIdt x) (ALit 1))
         parseStmt s `shouldBe` (Right (While condition body))
 

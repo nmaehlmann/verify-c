@@ -26,28 +26,32 @@ bExpSpec = return $ describe "Parser.BooleanExpression" $ do
         parseBExp "maybe" `shouldNotSatisfy` isValid
 
     it "parses simple comparisons" $ do
-        parseBExp "x < y" `shouldBe` (Right (BLess x y))
-        parseBExp "x == y" `shouldBe` (Right (BEq x y))
+        parseBExp "x == y" `shouldBe` (Right (BComp Equal x y))
+        parseBExp "x != y" `shouldBe` (Right (BComp NotEqual x y))
+        parseBExp "x <  y" `shouldBe` (Right (BComp Less x y))
+        parseBExp "x <= y" `shouldBe` (Right (BComp LessOrEqual x y))
+        parseBExp "x >  y" `shouldBe` (Right (BComp Greater x y))
+        parseBExp "x >= y" `shouldBe` (Right (BComp GreaterOrEqual x y))
 
     it "ignores whitespaces in '<' comparisons" $ do
-        whitespaceIndependent ["x","<","y"] $ \s -> parseBExp s `shouldBe` (Right (BLess x y))
+        whitespaceIndependent ["x","<","y"] $ \s -> parseBExp s `shouldBe` (Right (BComp Less x y))
     
     it "ignores whitespaces in '=' comparisons" $ do
-        whitespaceIndependent ["x","==","y"] $ \s -> parseBExp s `shouldBe` (Right (BEq x y))
+        whitespaceIndependent ["x","==","y"] $ \s -> parseBExp s `shouldBe` (Right (BComp Equal x y))
 
     it "parses simple conjunctions" $ do
-        parseBExp "x < y && y < z" `shouldBe` (Right (BAnd (BLess x y) (BLess y z)))
+        parseBExp "x < y && y < z" `shouldBe` (Right (BAnd (BComp Less x y) (BComp Less y z)))
 
     it "parses simple disjunctions" $ do
-        parseBExp "x < y || y < z" `shouldBe` (Right (BOr (BLess x y) (BLess y z)))
+        parseBExp "x < y || y < z" `shouldBe` (Right (BOr (BComp Less x y) (BComp Less y z)))
 
     it "ignores whitespaces in conjunctions" $ do
         whitespaceIndependent ["x < y", "&&", "y < z"] $ 
-            \s -> parseBExp s `shouldBe` (Right (BAnd (BLess x y) (BLess y z)))
+            \s -> parseBExp s `shouldBe` (Right (BAnd (BComp Less x y) (BComp Less y z)))
 
     it "ignores whitespaces in disjunctions" $ do
         whitespaceIndependent ["x < y", "||", "y < z"] $ 
-            \s -> parseBExp s `shouldBe` (Right (BOr (BLess x y) (BLess y z)))
+            \s -> parseBExp s `shouldBe` (Right (BOr (BComp Less x y) (BComp Less y z)))
 
     it "parses parentheses" $ do
-        parseBExp "(x < y) || ((y < z) && true)" `shouldBe` (Right (BOr (BLess x y) (BAnd (BLess y z) BTrue)))
+        parseBExp "(x < y) || ((y < z) && true)" `shouldBe` (Right (BOr (BComp Less x y) (BAnd (BComp Less y z) BTrue)))
