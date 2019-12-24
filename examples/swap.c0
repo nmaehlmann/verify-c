@@ -1,0 +1,11 @@
+void swap (int* x, int* y) {
+    pre("true");
+    post("read(s,read(s,x)) = read(p, read(p,y)) and read(s,read(s,y)) = read(p, read(p,x))");
+
+    int tmp;
+    tmp = *x;
+    *x = *y;
+    *y = tmp;
+    
+    return;
+}

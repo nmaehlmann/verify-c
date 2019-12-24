@@ -16,7 +16,13 @@ statement :: Parser Stmt
 statement = whiteSpace >> chainl singleStatement (return Seq) Empty
 
 singleStatement :: Parser Stmt
-singleStatement = assignment <|> ifThenElse <|> while <|> funDef <|> returnStatement
+singleStatement = assignment <|> ifThenElse <|> while <|> funDef <|> returnStatement <|> assertion
+
+assertion :: Parser Stmt
+assertion = do
+    reserved "/*w:"
+    b <- bExp
+    return $ Assertion b
 
 assignment :: Parser Stmt
 assignment = do

@@ -13,6 +13,7 @@ data AExp
     | ABinExp BinOp AExp AExp
     | AAddress LExp -- is this useful in c0?
     | AArray [AExp]
+    | AFunCall [AExp]
     deriving (Eq, Show)    
 
 data BinOp = Add | Sub | Mul | Div
@@ -44,6 +45,7 @@ data Stmt
     | Empty
     | FunDef Type Idt [Decl] Stmt
     | Return (Maybe AExp)
+    | Assertion BExp 
     deriving (Eq, Show)
 
 data Type
@@ -59,4 +61,27 @@ data Idt = Idt String
     deriving (Eq, Show)
 
 data Decl = Decl Type Idt
+    deriving (Eq, Show)
+
+data Sentence 
+    = STrue
+    | SFalse
+    | SComp CompOp AExp AExp
+    | SNeg Sentence
+    | SForAll Idt Sentence
+    | SExists Idt Sentence
+    | SPredicate [AExp]
+    deriving (Eq, Show)
+
+data Term
+    = TLit Integer
+    | TIdt LExp
+    | TBinExp BinOp Term Term
+    | TFunCall [Term]
+    | TReadState State LExp
+    deriving (Eq, Show)
+
+data State
+    = StateVar Idt
+    | StateUpdate State LExp Term
     deriving (Eq, Show)

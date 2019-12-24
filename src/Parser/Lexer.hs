@@ -27,6 +27,8 @@ names =
     , "struct"
     , "true"
     , "void"
+    , "/*w:"
+    , "*/"
     ]
 
 langDef :: Tok.LanguageDef ()
