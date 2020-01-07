@@ -27,8 +27,10 @@ names =
     , "struct"
     , "true"
     , "void"
-    , "/*w:"
-    , "*/"
+    , "precondition"
+    , "postcondition"
+    , "invariant"
+    , "assertion"
     ]
 
 langDef :: Tok.LanguageDef ()

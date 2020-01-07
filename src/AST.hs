@@ -10,13 +10,13 @@ data LExp
 data AExp 
     = ALit Integer
     | AIdt LExp
-    | ABinExp BinOp AExp AExp
+    | ABinExp ABinOp AExp AExp
     | AAddress LExp -- is this useful in c0?
     | AArray [AExp]
     | AFunCall [AExp]
     deriving (Eq, Show)    
 
-data BinOp = Add | Sub | Mul | Div
+data ABinOp = Add | Sub | Mul | Div
     deriving (Eq, Show)
 
 data CompOp 
@@ -33,9 +33,14 @@ data BExp
     | BFalse
     | BComp CompOp AExp AExp
     | BNeg BExp
-    | BAnd BExp BExp
-    | BOr BExp BExp
-    deriving (Eq, Show)    
+    | BBinExp BBinOp BExp BExp
+    deriving (Eq, Show)
+
+data BBinOp
+    = And
+    | Or
+    | Implies
+    deriving (Eq, Show)
 
 data Stmt 
     = Assignment LExp AExp
@@ -73,15 +78,7 @@ data Sentence
     | SPredicate [AExp]
     deriving (Eq, Show)
 
-data Term
-    = TLit Integer
-    | TIdt LExp
-    | TBinExp BinOp Term Term
-    | TFunCall [Term]
-    | TReadState State LExp
-    deriving (Eq, Show)
-
 data State
     = StateVar Idt
-    | StateUpdate State LExp Term
+    | StateUpdate State LExp AExp
     deriving (Eq, Show)

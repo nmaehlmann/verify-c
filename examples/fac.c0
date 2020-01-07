@@ -1,6 +1,6 @@
 p = 1;
 c = 1;
-while(c < n || c == n){
+while(c <= n){
     p = p * c;
     c = c + 1;
 }

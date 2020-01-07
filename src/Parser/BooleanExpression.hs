@@ -43,8 +43,8 @@ bOperatorTable =
     ]
 
 opAnd, opOr :: Parser (BExp -> BExp -> BExp)
-opAnd = reservedOp "&&" >> return BAnd
-opOr = reservedOp "||" >> return BOr
+opAnd = reservedOp "&&" >> return (BBinExp And)
+opOr = reservedOp "||" >> return (BBinExp Or)
 
 opNeg :: Parser (BExp -> BExp)
 opNeg = reservedOp "!" >> return BNeg

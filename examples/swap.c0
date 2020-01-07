@@ -9,3 +9,15 @@ void swap (int* x, int* y) {
     
     return;
 }
+
+void swap (int* x, int* y) {
+    pre("*x = X and *y = Y");
+    post("*x = Y and *y = X");
+
+    int tmp;
+    tmp = *x;
+    *x = *y;
+    *y = tmp;
+    
+    return;
+}
