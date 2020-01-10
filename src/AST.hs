@@ -31,9 +31,13 @@ data CompOp
 data BExp 
     = BTrue
     | BFalse
+    -- | BComp Comparison
     | BComp CompOp AExp AExp
     | BNeg BExp
     | BBinExp BBinOp BExp BExp
+    deriving (Eq, Show)
+
+data Comparison = Comparison CompOp AExp AExp
     deriving (Eq, Show)
 
 data BBinOp
@@ -71,7 +75,7 @@ data Decl = Decl Type Idt
 data Sentence 
     = STrue
     | SFalse
-    | SComp CompOp AExp AExp
+    | SComp Comparison
     | SNeg Sentence
     | SForAll Idt Sentence
     | SExists Idt Sentence
@@ -81,4 +85,15 @@ data Sentence
 data State
     = StateVar Idt
     | StateUpdate State LExp AExp
+    deriving (Eq, Show)
+
+data TExp a 
+    = TTrue
+    | TFalse
+    | TComparison CompOp a a
+    | TNeg a
+    | TBinExp BBinOp a a
+    deriving (Eq, Show)
+
+data PBExp = PBExp (TExp PBExp)
     deriving (Eq, Show)

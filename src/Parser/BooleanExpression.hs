@@ -1,4 +1,4 @@
-module Parser.BooleanExpression where
+module Parser.BooleanExpression (bExp) where
 
 import Data.Functor.Identity
 import Text.Parsec.String (Parser)
