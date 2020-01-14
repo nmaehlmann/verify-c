@@ -50,4 +50,10 @@ aExpSpec = return $ describe "Parser.ArithmeticExpression" $ do
         parseAExp "x - (3 / (y + z))" `shouldBe` (Right (ABinExp Sub  x (ABinExp Div (ALit 3) (ABinExp Add y z))))
 
     it "parses parentheses with higher precedence than multiplication" $ do
-        parseAExp "x * (y - z)" `shouldBe` (Right (ABinExp Mul  x (ABinExp Sub y z)))
+        parseAExp "x * (y - z)" `shouldBe` (Right (ABinExp Mul x (ABinExp Sub y z)))
+
+    it "parses function calls" $ do
+        parseAExp "pow(10, 2) + 1" `shouldBe` (Right (ABinExp Add (AFunCall (Idt "pow") [(ALit 10), (ALit 2)]) (ALit 1)))
+
+    it "distinguishes function calls from LExpressions" $ do
+        parseAExp "x + pow(10, 2)" `shouldBe` (Right (ABinExp Add x (AFunCall (Idt "pow") [(ALit 10), (ALit 2)])))

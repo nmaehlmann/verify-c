@@ -13,7 +13,7 @@ aExp :: Parser LExp -> Parser AExp
 aExp lExpParser = buildExpressionParser aOperatorTable $ aTerm lExpParser
 
 aTerm :: Parser LExp -> Parser AExp
-aTerm lExpParser = parens (aExp lExpParser) <|> aLit <|> aLExp lExpParser <|> aArray lExpParser <|> funCall lExpParser
+aTerm lExpParser = parens (aExp lExpParser) <|> aLit <|> aArray lExpParser <|> try (funCall lExpParser) <|> aLExp lExpParser
 
 aOperatorTable :: OperatorTable String () Identity AExp
 aOperatorTable =
@@ -42,4 +42,4 @@ funCall :: Parser LExp ->  Parser AExp
 funCall lExpParser = do
     funName <- identifier
     funArgs <- parens $ commaSep $ aExp lExpParser
-    return $ AFunCall funArgs
+    return $ AFunCall funName funArgs

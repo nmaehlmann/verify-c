@@ -18,7 +18,7 @@ bTerm :: Parser BExp
 bTerm = parens bExp <|> bTrue <|> bFalse <|> bComparison
 
 fOExp :: Parser FOExp
-fOExp = parens fOExp <|> bTrue <|> bFalse <|> bComparison <|> forall <|> exists
+fOExp = parens fOExp <|> bTrue <|> bFalse <|> bComparison <|> forall <|> exists <|> predicate
 
 forall :: Parser FOExp
 forall = do
@@ -70,3 +70,9 @@ opNeg = reservedOp "!" >> return negation
 bTrue, bFalse :: LogicExpression a => Parser a
 bTrue = reserved "true" >> return true
 bFalse = reserved "false" >> return false
+
+predicate :: Parser FOExp
+predicate = do
+    predName <- identifier
+    predArgs <- parens $ commaSep aExp
+    return $ Predicate predName predArgs

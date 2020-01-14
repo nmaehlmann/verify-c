@@ -16,7 +16,7 @@ data FOExp
     | FOBinExp BBinOp FOExp FOExp
     | Forall Idt FOExp
     | Exists Idt FOExp
-    | Predicate [AExp]
+    | Predicate Idt [AExp]
     deriving (Eq, Show)
 
 data LExp 
@@ -32,7 +32,7 @@ data AExp
     | ABinExp ABinOp AExp AExp
     | AAddress LExp -- is this useful in c0?
     | AArray [AExp]
-    | AFunCall [AExp]
+    | AFunCall Idt [AExp]
     deriving (Eq, Show)    
 
 data ABinOp = Add | Sub | Mul | Div
