@@ -6,21 +6,38 @@ import Text.Parsec.Expr
 import Text.Parsec
 
 import AST
+import LogicExpression
 import Parser.ArithmeticExpression
+import Parser.Identifier
 import Parser.Lexer
-    
+
 bExp :: Parser BExp
 bExp = buildExpressionParser bOperatorTable bTerm
 
 bTerm :: Parser BExp
-bTerm = parens bExp <|> bTrue <|> bFalse <|> comparison
+bTerm = parens bExp <|> bTrue <|> bFalse <|> bComparison
 
-comparison :: Parser BExp
-comparison = do
+fOExp :: Parser FOExp
+fOExp = parens fOExp <|> bTrue <|> bFalse <|> bComparison <|> forall <|> exists
+
+forall :: Parser FOExp
+forall = do
+    reserved "forall"
+    idt <- identifier
+    Forall idt <$> fOExp
+
+exists :: Parser FOExp
+exists = do
+    reserved "exists"
+    idt <- identifier
+    Exists idt <$> fOExp
+
+bComparison :: LogicExpression a => Parser a
+bComparison = do
     lhs <- aExp
     op  <- comparisonOperator
     rhs <- aExp
-    return $ BComp op lhs rhs
+    return $ comparison op lhs rhs
 
 comparisonOperator :: Parser CompOp
 comparisonOperator = choice $ toParser <$> comparisonOperators
@@ -36,19 +53,20 @@ comparisonOperators =
     , (">" , Greater)
     ]
 
-bOperatorTable :: OperatorTable String () Identity BExp
+bOperatorTable :: LogicExpression a => OperatorTable String () Identity a
 bOperatorTable =
     [ [Prefix opNeg]
-    , [Infix opAnd AssocLeft, Infix opOr AssocLeft]
+    , [Infix opAnd AssocLeft, Infix opOr AssocLeft, Infix opImplies AssocLeft]
     ]
 
-opAnd, opOr :: Parser (BExp -> BExp -> BExp)
-opAnd = reservedOp "&&" >> return (BBinExp And)
-opOr = reservedOp "||" >> return (BBinExp Or)
+opAnd, opOr, opImplies :: LogicExpression a => Parser (a -> a -> a)
+opAnd = reservedOp "&&" >> return (binaryExpression And)
+opOr = reservedOp "||" >> return (binaryExpression Or)
+opImplies = reservedOp "->" >> return (binaryExpression Implies)
 
-opNeg :: Parser (BExp -> BExp)
-opNeg = reservedOp "!" >> return BNeg
+opNeg :: LogicExpression a => Parser (a -> a)
+opNeg = reservedOp "!" >> return negation
 
-bTrue, bFalse :: Parser BExp
-bTrue = reserved "true" >> return  BTrue
-bFalse = reserved "false" >> return  BFalse
+bTrue, bFalse :: LogicExpression a => Parser a
+bTrue = reserved "true" >> return true
+bFalse = reserved "false" >> return false

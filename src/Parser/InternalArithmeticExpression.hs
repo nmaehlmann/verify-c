@@ -6,13 +6,14 @@ import Text.Parsec.Expr
 import Text.Parsec
 
 import AST
+import Parser.Identifier
 import Parser.Lexer
 
 aExp :: Parser LExp -> Parser AExp
 aExp lExpParser = buildExpressionParser aOperatorTable $ aTerm lExpParser
 
 aTerm :: Parser LExp -> Parser AExp
-aTerm lExpParser = parens (aExp lExpParser) <|> aLit <|> aLExp lExpParser <|> aArray lExpParser
+aTerm lExpParser = parens (aExp lExpParser) <|> aLit <|> aLExp lExpParser <|> aArray lExpParser <|> funCall lExpParser
 
 aOperatorTable :: OperatorTable String () Identity AExp
 aOperatorTable =
@@ -36,4 +37,9 @@ aArray :: Parser LExp -> Parser AExp
 aArray lExpParser = do 
     fields <- braces $ aExp lExpParser `sepBy` comma
     return $ AArray fields
-    
+
+funCall :: Parser LExp ->  Parser AExp
+funCall lExpParser = do
+    funName <- identifier
+    funArgs <- parens $ commaSep $ aExp lExpParser
+    return $ AFunCall funArgs

@@ -1,5 +1,24 @@
 module AST where
 
+data BExp 
+    = BTrue
+    | BFalse
+    | BComp CompOp AExp AExp
+    | BNeg BExp
+    | BBinExp BBinOp BExp BExp
+    deriving (Eq, Show)
+
+data FOExp 
+    = FOTrue
+    | FOFalse
+    | FOComp CompOp AExp AExp
+    | FONeg FOExp
+    | FOBinExp BBinOp FOExp FOExp
+    | Forall Idt FOExp
+    | Exists Idt FOExp
+    | Predicate [AExp]
+    deriving (Eq, Show)
+
 data LExp 
     = LIdt Idt 
     | LArray LExp AExp
@@ -26,18 +45,6 @@ data CompOp
     | GreaterOrEqual 
     | Equal 
     | NotEqual
-    deriving (Eq, Show)
-
-data BExp 
-    = BTrue
-    | BFalse
-    -- | BComp Comparison
-    | BComp CompOp AExp AExp
-    | BNeg BExp
-    | BBinExp BBinOp BExp BExp
-    deriving (Eq, Show)
-
-data Comparison = Comparison CompOp AExp AExp
     deriving (Eq, Show)
 
 data BBinOp
@@ -72,28 +79,3 @@ data Idt = Idt String
 data Decl = Decl Type Idt
     deriving (Eq, Show)
 
-data Sentence 
-    = STrue
-    | SFalse
-    | SComp Comparison
-    | SNeg Sentence
-    | SForAll Idt Sentence
-    | SExists Idt Sentence
-    | SPredicate [AExp]
-    deriving (Eq, Show)
-
-data State
-    = StateVar Idt
-    | StateUpdate State LExp AExp
-    deriving (Eq, Show)
-
-data TExp a 
-    = TTrue
-    | TFalse
-    | TComparison CompOp a a
-    | TNeg a
-    | TBinExp BBinOp a a
-    deriving (Eq, Show)
-
-data PBExp = PBExp (TExp PBExp)
-    deriving (Eq, Show)

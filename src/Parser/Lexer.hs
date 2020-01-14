@@ -10,7 +10,7 @@ operators =
     [ "+" , "-" , "*" , "/"  
     , "=" , "==", "!=", "<=" 
     , "<" , ">=", ">" , "&&"
-    , "||", "[" , "]"]
+    , "||", "[" , "]" , "->"]
 
 operatorSymbols :: [Char]
 operatorSymbols = nub $ mconcat operators
@@ -31,6 +31,8 @@ names =
     , "postcondition"
     , "invariant"
     , "assertion"
+    , "forall"
+    , "exists"
     ]
 
 langDef :: Tok.LanguageDef ()
@@ -77,6 +79,9 @@ whiteSpace = Tok.whiteSpace lexer
 
 comma ::  Parser String
 comma = Tok.comma lexer
+
+commaSep ::  Parser p -> Parser [p]
+commaSep = Tok.commaSep lexer
 
 semi ::  Parser String
 semi = Tok.semi lexer
