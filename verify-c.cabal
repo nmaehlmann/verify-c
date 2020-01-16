@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7227dfae4c9e41c064ee39487d2ebbb91bd271c3bfb3ac2fd5573b2f7c68060a
+-- hash: 4da63913792d9ce81fe38d921d65d56edc4be3cd40fda0e99ebcdc10e2eb4878
 
 name:           verify-c
 version:        0.1.0.0
@@ -28,6 +28,7 @@ library
   exposed-modules:
       AST
       Lib
+      LogicExpression
       Parser.ArithmeticExpression
       Parser.BooleanExpression
       Parser.Declaration
