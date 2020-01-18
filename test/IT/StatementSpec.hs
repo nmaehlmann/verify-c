@@ -59,26 +59,43 @@ statementSpec = return $ describe "Parser.Statement" $ do
         parseStmt s `shouldBe` (Right (While condition body))
 
     it "parses void functions" $ do
-        let s = "void noOp(){return;}"
-        let returnType = TVoid
-        let name = Idt "noOp"
-        let arguments = []
-        let body = Return Nothing
-        parseStmt s `shouldBe` (Right (FunDef returnType name arguments body))
+        let s = "void noOp(){ precondition(\"true\"); postcondition(\"true\"); return; }"
+        let result = FunDef $ FunctionDefinition
+                { funDefType     = TVoid
+                , funDefName     = Idt "noOp"
+                , funDefArgs     = []
+                , funDefPrecond  = FOTrue
+                , funDefPostcond = FOTrue
+                , funDefBody     = Return Nothing
+                }
+        parseStmt s `shouldBe` (Right result)
 
     it "parses functions without arguments" $ do
-        let s = "int one(){return 1;}"
-        let returnType = TInt
-        let name = Idt "one"
-        let arguments = []
-        let body = Return $ Just $ ALit $ 1
-        parseStmt s `shouldBe` (Right (FunDef returnType name arguments body))
+        let s = "int one(){ precondition(\"true\"); postcondition(\"true\"); return 1; }"
+        let result = FunDef $ FunctionDefinition
+                { funDefType     = TInt
+                , funDefName     = Idt "one"
+                , funDefArgs     = []
+                , funDefPrecond  = FOTrue
+                , funDefPostcond = FOTrue
+                , funDefBody     = Return $ Just $ ALit $ 1
+                }
+        parseStmt s `shouldBe` (Right result)
+        
 
-    it "parses simple functions definitions" $ do
-        let s = "int add(int a, int b){return a + b;}"
-        let returnType = TInt
-        let name = Idt "add"
-        let arguments = [Decl TInt (Idt "a"), Decl TInt (Idt "b")]
-        let body = Return $ Just $ ABinExp Add (AIdt a) (AIdt b)
-        parseStmt s `shouldBe` (Right (FunDef returnType name arguments body))
+    it "parses a simple add function" $ do
+        let s = "int add(int a, int b){ precondition(\"true\"); postcondition(\"x == a + b\"); return a + b; }"
+        let result = FunDef $ FunctionDefinition
+                { funDefType     = TInt
+                , funDefName     = Idt "add"
+                , funDefArgs     = [Decl TInt (Idt "a"), Decl TInt (Idt "b")]
+                , funDefPrecond  = FOTrue
+                , funDefPostcond = FOComp Equal (AIdt x) $ ABinExp Add (AIdt a) (AIdt b)
+                , funDefBody     = Return $ Just $ ABinExp Add (AIdt a) (AIdt b)
+                }
+        parseStmt s `shouldBe` (Right result)
+
+    it "parses assertions" $ do
+        let s = "assertion(\"x != 0\");"
+        parseStmt s `shouldBe` (Right (Assertion (FOComp NotEqual (AIdt x) (ALit 0))))
 

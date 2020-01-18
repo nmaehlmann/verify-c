@@ -59,10 +59,19 @@ data Stmt
     | While BExp Stmt
     | Seq Stmt Stmt
     | Empty
-    | FunDef Type Idt [Decl] Stmt
+    | FunDef FunctionDefinition
     | Return (Maybe AExp)
-    | Assertion BExp 
+    | Assertion FOExp 
     deriving (Eq, Show)
+
+data FunctionDefinition = FunctionDefinition 
+    { funDefType      :: Type
+    , funDefName      :: Idt
+    , funDefArgs :: [Decl]
+    , funDefPrecond   :: FOExp
+    , funDefPostcond  :: FOExp
+    , funDefBody      :: Stmt
+    } deriving (Eq, Show)
 
 data Type
     = TInt

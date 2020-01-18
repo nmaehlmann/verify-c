@@ -19,10 +19,23 @@ singleStatement :: Parser Stmt
 singleStatement = assignment <|> ifThenElse <|> while <|> funDef <|> returnStatement <|> assertion
 
 assertion :: Parser Stmt
-assertion = do
-    reserved "/*w:"
-    b <- bExp
-    return $ Assertion b
+assertion = Assertion <$> fOAssertion "assertion"
+
+precondition :: Parser FOExp
+precondition = fOAssertion "precondition"
+
+postcondition :: Parser FOExp
+postcondition = fOAssertion "postcondition"
+
+invariant :: Parser FOExp
+invariant = fOAssertion "invariant"
+
+fOAssertion :: String -> Parser FOExp
+fOAssertion keyword = do
+    reserved keyword
+    fo <- parens (quotes fOExp)
+    semi
+    return fo
 
 assignment :: Parser Stmt
 assignment = do
@@ -60,7 +73,18 @@ funDef = do
     returnType <- typeName
     name <- identifier
     arguments <- parens $ declaration `sepBy` comma
-    body <- braces $ statement
-    return $ FunDef returnType name arguments body
+    (pre, post, body) <- braces $ do 
+        pre <- precondition 
+        post <- postcondition
+        body <- statement
+        return (pre, post, body)
+    return $ FunDef $ FunctionDefinition
+        { funDefType     = returnType
+        , funDefName     = name
+        , funDefArgs     = arguments
+        , funDefPrecond  = pre
+        , funDefPostcond = post
+        , funDefBody     = body
+        }
 
     
