@@ -1,4 +1,4 @@
-module Parser.BooleanExpression (bExp) where
+module Parser.BooleanExpression (bExp, fOExp) where
 
 import Data.Functor.Identity
 import Text.Parsec.String (Parser)
@@ -18,22 +18,29 @@ bTerm :: Parser BExp
 bTerm = parens bExp <|> bTrue <|> bFalse <|> bComparison
 
 fOExp :: Parser FOExp
-fOExp = parens fOExp <|> bTrue <|> bFalse <|> bComparison <|> forall <|> exists <|> predicate
+fOExp = buildExpressionParser bOperatorTable fOTerm
+
+fOTerm :: Parser FOExp
+fOTerm = parens fOExp <|> bTrue <|> bFalse <|> bComparison <|> forall <|> exists <|> predicate
 
 forall :: Parser FOExp
-forall = do
-    reserved "forall"
-    idt <- identifier
-    Forall idt <$> fOExp
+forall = quantifier "forall" Forall
 
 exists :: Parser FOExp
-exists = do
-    reserved "exists"
-    idt <- identifier
-    Exists idt <$> fOExp
+exists = quantifier "exists" Exists
+
+quantifier :: String -> (Idt -> FOExp -> FOExp) -> Parser FOExp
+quantifier quantifierString quantifierConstructor = do
+    reserved quantifierString
+    (idt, fo) <- parens $ do
+        idt <- identifier
+        _ <- comma
+        fo <- fOExp
+        return (idt, fo)
+    return $ quantifierConstructor idt fo
 
 bComparison :: LogicExpression a => Parser a
-bComparison = do
+bComparison = try $ do
     lhs <- aExp
     op  <- comparisonOperator
     rhs <- aExp
