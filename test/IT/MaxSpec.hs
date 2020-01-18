@@ -17,12 +17,16 @@ maxSpec = do
 
 a = LIdt $ Idt "a"                
 i = LIdt $ Idt "i"
+k = LIdt $ Idt "k"
 r = LIdt $ Idt "r"
 n = LIdt $ Idt "n"                
-maxExp = Right (Seq (Seq assn0ToI assn0ToR) (While iLessN (Seq (ITE aAtRLessAAtI assnIToR Empty) assnIPlus1ToI)))
+maxExp = Right (Seq (Seq assn0ToI assn0ToR) (While iLessN inv (Seq (ITE aAtRLessAAtI assnIToR Empty) assnIPlus1ToI)))
 assn0ToI = Assignment i (ALit 0)
 assn0ToR = Assignment r (ALit 0)
 iLessN = BComp Less (AIdt i) (AIdt n)
+inv = Forall (Idt "k" ) (FOBinExp Implies kInRange aAtKLessOrEqR)
+kInRange = Predicate (Idt "inRange") [AIdt k, ALit 0, AIdt i]
+aAtKLessOrEqR = FOComp LessOrEqual (AIdt (LArray a (AIdt k))) (AIdt r)
 aAtRLessAAtI = BComp Less (AIdt (LArray a (AIdt r))) (AIdt (LArray a (AIdt i)))
 assnIToR = Assignment r (AIdt i)
 assnIPlus1ToI = Assignment i (ABinExp Add (AIdt i) (ALit 1))

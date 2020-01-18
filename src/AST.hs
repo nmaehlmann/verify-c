@@ -56,12 +56,12 @@ data BBinOp
 data Stmt 
     = Assignment LExp AExp
     | ITE BExp Stmt Stmt
-    | While BExp Stmt
+    | While BExp FOExp Stmt
     | Seq Stmt Stmt
-    | Empty
     | FunDef FunctionDefinition
     | Return (Maybe AExp)
     | Assertion FOExp 
+    | Empty
     deriving (Eq, Show)
 
 data FunctionDefinition = FunctionDefinition 

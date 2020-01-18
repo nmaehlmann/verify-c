@@ -58,8 +58,11 @@ while :: Parser Stmt
 while = do
     reserved "while"
     condition <- parens bExp
-    body <- braces statement
-    return $ While condition body
+    (inv, body) <- braces $ do
+        inv <- invariant
+        body <- statement
+        return (inv, body)
+    return $ While condition inv body
     
 returnStatement :: Parser Stmt
 returnStatement = do

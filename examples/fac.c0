@@ -1,6 +1,7 @@
 p = 1;
 c = 1;
 while(c <= n){
+    invariant(" p == fac(c - 1) ");
     p = p * c;
     c = c + 1;
 }

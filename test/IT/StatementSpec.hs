@@ -53,10 +53,11 @@ statementSpec = return $ describe "Parser.Statement" $ do
         parseStmt s `shouldBe` (Right (ITE condition ifCase elseCase))
 
     it "parses while blocks" $ do
-        let s = "while( 0 < x ){ x = x - 1; }"
+        let s = "while( 0 < x ){ invariant(\"true\"); x = x - 1; }"
         let condition = BComp Less (ALit 0) (AIdt x)
+        let inv = FOTrue
         let body = Assignment x (ABinExp Sub (AIdt x) (ALit 1))
-        parseStmt s `shouldBe` (Right (While condition body))
+        parseStmt s `shouldBe` (Right (While condition inv body))
 
     it "parses void functions" $ do
         let s = "void noOp(){ precondition(\"true\"); postcondition(\"true\"); return; }"

@@ -1,6 +1,7 @@
 i = 0;
 r = 0;
 while (i < n) {
+    invariant(" forall(k, inRange(k, 0, i) -> (a[k] <= r)) ");
     if(a[r] < a[i]) {
         r = i ;
     }
