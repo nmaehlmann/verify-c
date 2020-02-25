@@ -9,6 +9,8 @@ import IT.StatementSpec
 import IT.MaxSpec
 import IT.FunDefSpec
 
+import VC
+
 
 main :: IO ()
 main = do

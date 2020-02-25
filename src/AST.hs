@@ -8,15 +8,19 @@ data BExp
     | BBinExp BBinOp BExp BExp
     deriving (Eq, Show)
 
-data FOExp 
+type FOExp = FO AExp
+
+type FOSExp = FO ASExp
+
+data FO a
     = FOTrue
     | FOFalse
-    | FOComp CompOp AExp AExp
-    | FONeg FOExp
-    | FOBinExp BBinOp FOExp FOExp
-    | Forall Idt FOExp
-    | Exists Idt FOExp
-    | Predicate Idt [AExp]
+    | FOComp CompOp a a
+    | FONeg (FO a)
+    | FOBinExp BBinOp (FO a) (FO a)
+    | Forall Idt (FO a)
+    | Exists Idt (FO a)
+    | Predicate Idt [a]
     deriving (Eq, Show)
 
 data LExp 
@@ -30,10 +34,22 @@ data AExp
     = ALit Integer
     | AIdt LExp
     | ABinExp ABinOp AExp AExp
-    -- | AAddress LExp -- is this useful in c0?
     | AArray [AExp]
     | AFunCall Idt [AExp]
-    deriving (Eq, Show)    
+    deriving (Eq, Show)
+
+data State
+    = Atomic String
+    | Update State LExp AExp
+    deriving (Eq, Show)
+
+data ASExp
+    = ASLit Integer
+    | ASRead State LExp
+    | ASBinExp ABinOp ASExp ASExp
+    | ASArray [ASExp]
+    | ASFunCall Idt [ASExp]
+    deriving (Eq, Show)
 
 data ABinOp = Add | Sub | Mul | Div
     deriving (Eq, Show)
@@ -58,7 +74,6 @@ data Stmt
     | ITE BExp Stmt Stmt
     | While BExp FOExp Stmt
     | Seq Stmt Stmt
-    -- | FunDef FunctionDefinition
     | Return (Maybe AExp)
     | Assertion FOExp 
     | Empty

@@ -1,3 +1,5 @@
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
 module LogicExpression where
 
 import AST
@@ -16,7 +18,7 @@ instance LogicExpression BExp where
     negation = BNeg
     binaryExpression = BBinExp
 
-instance LogicExpression FOExp where
+instance LogicExpression (FOExp) where
     true = FOTrue
     false = FOFalse
     comparison = FOComp
