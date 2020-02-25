@@ -1,4 +1,4 @@
-module Parser.BooleanExpression (bExp, fOExp) where
+module Parser.BooleanExpression (bExp, fOExp, fOAssertion) where
 
 import Data.Functor.Identity
 import Text.Parsec.String (Parser)
@@ -83,3 +83,10 @@ predicate = do
     predName <- identifier
     predArgs <- parens $ commaSep aExp
     return $ Predicate predName predArgs
+
+fOAssertion :: String -> Parser FOExp
+fOAssertion keyword = do
+    reserved keyword
+    fo <- parens (quotes fOExp)
+    semi
+    return fo

@@ -83,11 +83,11 @@ comma = Tok.comma lexer
 commaSep ::  Parser p -> Parser [p]
 commaSep = Tok.commaSep lexer
 
-semi ::  Parser String
-semi = Tok.semi lexer
+semi ::  Parser ()
+semi = Tok.semi lexer >> return ()
 
-symbol ::  String -> Parser String
-symbol = Tok.symbol lexer
+symbol ::  String -> Parser ()
+symbol s = Tok.symbol lexer s >> return ()
 
 quotes :: Parser p -> Parser p
 quotes p = do

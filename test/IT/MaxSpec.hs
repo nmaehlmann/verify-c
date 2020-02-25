@@ -1,7 +1,6 @@
 module IT.MaxSpec where
 
 import Test.Hspec
-import Test.QuickCheck
 import Text.Parsec hiding (Empty)
 
 import AST

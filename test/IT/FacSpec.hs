@@ -1,7 +1,6 @@
 module IT.FacSpec where
 
 import Test.Hspec
-import Test.QuickCheck
 import Text.Parsec
 
 import AST

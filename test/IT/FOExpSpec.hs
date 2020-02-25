@@ -1,16 +1,11 @@
 module IT.FOExpSpec where
 
 import Test.Hspec
-import Test.QuickCheck
 import Text.Parsec
-import Data.Either
 
 import AST
-import Parser.ArithmeticExpression
 import Parser.BooleanExpression
-import Parser.Statement
 
-import IT.Whitespaces
     
 fOExpSpec :: IO Spec
 fOExpSpec = return $ describe "Parser.BooleanExpression" $ do

@@ -30,7 +30,7 @@ data AExp
     = ALit Integer
     | AIdt LExp
     | ABinExp ABinOp AExp AExp
-    | AAddress LExp -- is this useful in c0?
+    -- | AAddress LExp -- is this useful in c0?
     | AArray [AExp]
     | AFunCall Idt [AExp]
     deriving (Eq, Show)    
@@ -58,16 +58,19 @@ data Stmt
     | ITE BExp Stmt Stmt
     | While BExp FOExp Stmt
     | Seq Stmt Stmt
-    | FunDef FunctionDefinition
+    -- | FunDef FunctionDefinition
     | Return (Maybe AExp)
     | Assertion FOExp 
     | Empty
     deriving (Eq, Show)
 
+data Program = Program [FunctionDefinition]
+    deriving (Eq, Show)
+
 data FunctionDefinition = FunctionDefinition 
     { funDefType      :: Type
     , funDefName      :: Idt
-    , funDefArgs :: [Decl]
+    , funDefArgs      :: [Decl]
     , funDefPrecond   :: FOExp
     , funDefPostcond  :: FOExp
     , funDefBody      :: Stmt

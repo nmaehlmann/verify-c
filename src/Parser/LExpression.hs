@@ -4,7 +4,6 @@ import Data.Functor.Identity
 import Text.Parsec.String (Parser)
 import Text.Parsec.Expr
 import Text.Parsec
-import Text.Parsec.Char
 
 import AST
 import qualified Parser.Lexer as Lex
@@ -40,5 +39,7 @@ opArray = do
     return $ (\lExpression -> LArray lExpression idx)
 
 -- prefix & postfix copied from: https://stackoverflow.com/questions/10475337/parsec-expr-repeated-prefix-postfix-operator-not-supported    
+-- prefix :: ParsecT s u m (a -> a) -> Operator s u m a
+prefix, postfix :: Stream s m t => ParsecT s u m (a -> a) -> Operator s u m a
 prefix  p = Prefix  . chainl1 p $ return       (.)
 postfix p = Postfix . chainl1 p $ return (flip (.))

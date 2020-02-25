@@ -3,7 +3,6 @@ module Parser.Declaration (declaration) where
 import Text.Parsec.String (Parser)
 
 import AST
-import Parser.Lexer
 import Parser.Identifier
 import Parser.Type
 

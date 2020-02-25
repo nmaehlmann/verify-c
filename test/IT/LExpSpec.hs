@@ -1,7 +1,6 @@
 module IT.LExpSpec where
 
 import Test.Hspec
-import Test.QuickCheck
 import Text.Parsec
 
 import AST
