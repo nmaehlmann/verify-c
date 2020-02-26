@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveFunctor #-}
 module AST where
 
 data BExp 
@@ -8,10 +9,6 @@ data BExp
     | BBinExp BBinOp BExp BExp
     deriving (Eq, Show)
 
-type FOExp = FO AExp
-
-type FOSExp = FO ASExp
-
 data FO a
     = FOTrue
     | FOFalse
@@ -21,34 +18,44 @@ data FO a
     | Forall Idt (FO a)
     | Exists Idt (FO a)
     | Predicate Idt [a]
+    deriving (Eq, Show, Functor)
+
+type FOExp = FO AExp
+
+type FOSExp = FO ASExp
+
+data LExpression a
+    = LIdt Idt
+    | LArray (LExpression a) a
+    | LStructPart (LExpression a) (LExpression a)
+    | LDereference (LExpression a)
+    deriving (Eq, Show, Functor)
+
+type LExp = LExpression AExp
+
+type LSExp = LExpression ASExp
+
+data ArithemticExpression v 
+    = ALit Integer
+    | AIdt v
+    | ABinExp ABinOp (ArithemticExpression v) (ArithemticExpression v)
+    | AArray [ArithemticExpression v]
+    | AFunCall Idt [ArithemticExpression v]
+    deriving (Eq, Show, Functor)
+
+type AExp = ArithemticExpression ReadLExp
+
+data ReadLExp = ReadLExp LExp
     deriving (Eq, Show)
 
-data LExp 
-    = LIdt Idt 
-    | LArray LExp AExp
-    | LStructPart LExp LExp
-    | LDereference LExp
-    deriving (Eq, Show)    
+type ASExp = ArithemticExpression SReadLExp
 
-data AExp 
-    = ALit Integer
-    | AIdt LExp
-    | ABinExp ABinOp AExp AExp
-    | AArray [AExp]
-    | AFunCall Idt [AExp]
+data SReadLExp = SReadLExp State LSExp
     deriving (Eq, Show)
 
 data State
     = Atomic String
     | Update State LExp AExp
-    deriving (Eq, Show)
-
-data ASExp
-    = ASLit Integer
-    | ASRead State LExp
-    | ASBinExp ABinOp ASExp ASExp
-    | ASArray [ASExp]
-    | ASFunCall Idt [ASExp]
     deriving (Eq, Show)
 
 data ABinOp = Add | Sub | Mul | Div
@@ -105,4 +112,3 @@ data Idt = Idt String
 
 data Decl = Decl Type Idt
     deriving (Eq, Show)
-

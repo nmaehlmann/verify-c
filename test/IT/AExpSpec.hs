@@ -10,9 +10,9 @@ import IT.Whitespaces
 aExpSpec :: IO Spec
 aExpSpec = return $ describe "Parser.ArithmeticExpression" $ do
     let parseAExp t = parse aExp "" t
-    let x = AIdt $ LIdt $ Idt "x"
-    let y = AIdt $ LIdt $ Idt "y"
-    let z = AIdt $ LIdt $ Idt "z"
+    let x = AIdt $ ReadLExp $ LIdt $ Idt "x"
+    let y = AIdt $ ReadLExp $ LIdt $ Idt "y"
+    let z = AIdt $ ReadLExp $ LIdt $ Idt "z"
 
     it "parses literals" $ do
         parseAExp "1337" `shouldBe` (Right (ALit 1337))
@@ -27,7 +27,7 @@ aExpSpec = return $ describe "Parser.ArithmeticExpression" $ do
         parseAExp "x / y" `shouldBe` (Right (ABinExp Div x y))
 
     it "parses arrays" $ do
-        parseAExp "x + y[z]" `shouldBe` (Right (ABinExp Add x (AIdt (LArray (LIdt (Idt "y")) z))))
+        parseAExp "x + y[z]" `shouldBe` (Right (ABinExp Add x (AIdt (ReadLExp (LArray (LIdt (Idt "y")) z)))))
 
     it "ignores whitespaces" $ do
         whitespaceIndependent ["x", "+", "y"] $ 

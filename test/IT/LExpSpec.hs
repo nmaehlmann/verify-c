@@ -11,8 +11,8 @@ lExpSpec = return $ describe "Parser.LExpression" $ do
     let parseLExp t = parse lExp "" t
     let a = LIdt $ Idt "a"
     let arr = LIdt $ Idt "arr"
-    let x = AIdt $ LIdt $ Idt "x"
-    let y = AIdt $ LIdt $ Idt "y"
+    let x = AIdt $ ReadLExp $ LIdt $ Idt "x"
+    let y = AIdt $ ReadLExp $ LIdt $ Idt "y"
     
     it "parses symbols" $ do
         parseLExp "pi" `shouldBe` (Right (LIdt (Idt "pi")))

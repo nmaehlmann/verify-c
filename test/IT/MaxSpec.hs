@@ -14,6 +14,7 @@ maxSpec = do
             it "parses a program that finds the maximal element of an array" $ do
                 (parse statement "" maxSrc) `shouldBe` maxExp
 
+mkIdt = AIdt . ReadLExp
 a = LIdt $ Idt "a"                
 i = LIdt $ Idt "i"
 k = LIdt $ Idt "k"
@@ -22,10 +23,10 @@ n = LIdt $ Idt "n"
 maxExp = Right (Seq (Seq assn0ToI assn0ToR) (While iLessN inv (Seq (ITE aAtRLessAAtI assnIToR Empty) assnIPlus1ToI)))
 assn0ToI = Assignment i (ALit 0)
 assn0ToR = Assignment r (ALit 0)
-iLessN = BComp Less (AIdt i) (AIdt n)
-inv = Forall (Idt "k" ) (FOBinExp Implies kInRange aAtKLessOrEqR)
-kInRange = Predicate (Idt "inRange") [AIdt k, ALit 0, AIdt i]
-aAtKLessOrEqR = FOComp LessOrEqual (AIdt (LArray a (AIdt k))) (AIdt r)
-aAtRLessAAtI = BComp Less (AIdt (LArray a (AIdt r))) (AIdt (LArray a (AIdt i)))
-assnIToR = Assignment r (AIdt i)
-assnIPlus1ToI = Assignment i (ABinExp Add (AIdt i) (ALit 1))
+iLessN = BComp Less (mkIdt i) (mkIdt n)
+inv = Forall (Idt "k") (FOBinExp Implies kInRange aAtKLessOrEqR)
+kInRange = Predicate (Idt "inRange") [mkIdt k, ALit 0, mkIdt i]
+aAtKLessOrEqR = FOComp LessOrEqual (mkIdt (LArray a (mkIdt k))) (mkIdt r)
+aAtRLessAAtI = BComp Less (mkIdt (LArray a (mkIdt r))) (mkIdt (LArray a (mkIdt i)))
+assnIToR = Assignment r (mkIdt i)
+assnIPlus1ToI = Assignment i (ABinExp Add (mkIdt i) (ALit 1))

@@ -31,7 +31,7 @@ aLit :: Parser AExp
 aLit = ALit <$> integer
 
 aLExp :: Parser LExp -> Parser AExp
-aLExp = fmap AIdt 
+aLExp = fmap (AIdt . ReadLExp)
 
 aArray :: Parser LExp -> Parser AExp
 aArray lExpParser = do 

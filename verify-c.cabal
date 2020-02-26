@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 0a995e41f54b9b5704ffb453e75a28ac0a1ece9557656cad80cc81328e636c20
+-- hash: 6b2c24ea9a7d7a0b0a8358291f81f72eec159924ea206193da8080e968e8369d
 
 name:           verify-c
 version:        0.1.0.0
@@ -40,6 +40,7 @@ library
       Parser.Sentence
       Parser.Statement
       Parser.Type
+      VC
   other-modules:
       Paths_verify_c
   hs-source-dirs:

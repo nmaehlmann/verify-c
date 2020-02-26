@@ -39,14 +39,15 @@ funDefSpec = return $ describe "Parser.FunctionDefinition" $ do
         
 
     it "parses a simple add function" $ do
+        let mkIdt = AIdt . ReadLExp
         let s = "int add(int a, int b){ precondition(\"true\"); postcondition(\"x == a + b\"); return a + b; }"
         let result = FunctionDefinition
                 { funDefType     = TInt
                 , funDefName     = Idt "add"
                 , funDefArgs     = [Decl TInt (Idt "a"), Decl TInt (Idt "b")]
                 , funDefPrecond  = FOTrue
-                , funDefPostcond = FOComp Equal (AIdt x) $ ABinExp Add (AIdt a) (AIdt b)
-                , funDefBody     = Return $ Just $ ABinExp Add (AIdt a) (AIdt b)
+                , funDefPostcond = FOComp Equal (mkIdt x) $ ABinExp Add (mkIdt a) (mkIdt b)
+                , funDefBody     = Return $ Just $ ABinExp Add (mkIdt a) (mkIdt b)
                 }
         parseFunDef s `shouldBe` (Right result)
 
