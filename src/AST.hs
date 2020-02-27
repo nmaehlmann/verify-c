@@ -58,7 +58,7 @@ data ReadLExp = ReadLExp State LSExp
 
 data State
     = Atomic String
-    | Update State LExp AExp
+    | Update State LSExp ASExp
     deriving (Eq, Show)
 
 data ABinOp = Add | Sub | Mul | Div

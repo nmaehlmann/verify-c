@@ -17,11 +17,20 @@ awp (ITE condition sTrue sFalse) p =
     in FOBinExp Or foTrue foFalse
 awp (While _ inv _) _ = stateifyFO inv
 awp (Seq s1 s2) p = awp s1 $ awp s2 p
+awp (Assignment idt aExp) p = 
+    let newState = Update sigma (dagger idt) (hashmark aExp)
+        oldState = sigma
+    in  replaceState oldState newState p
 
 -- p[aExp/idt]
 -- Q[upd(s,idt † ,aExp # )/s]
 -- awp (Assignment idt aExp) p = 
 
+replaceState :: State -> State -> FOSExp -> FOSExp
+replaceState sOld sNew expOld = fmap (replaceStateInASExp sOld sNew) expOld
+
+replaceStateInASExp :: State -> State -> ASExp -> ASExp
+replaceStateInASExp sOld sNew expOld = expOld
 
 bExpToFOExp :: BExp -> FOExp
 bExpToFOExp BTrue = FOTrue
@@ -51,4 +60,3 @@ hashmark (AFunCall name args) = ASFunCall name $ map hashmark args
 
 sigma :: State
 sigma = Atomic "s"
-
