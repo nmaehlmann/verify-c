@@ -21,36 +21,39 @@ data FO a
     deriving (Eq, Show, Functor)
 
 type FOExp = FO AExp
-
 type FOSExp = FO ASExp
 
-data LExpression a
+data LExp
     = LIdt Idt
-    | LArray (LExpression a) a
-    | LStructPart (LExpression a) (LExpression a)
-    | LDereference (LExpression a)
-    deriving (Eq, Show, Functor)
-
-type LExp = LExpression AExp
-
-type LSExp = LExpression ASExp
-
-data ArithemticExpression v 
-    = ALit Integer
-    | AIdt v
-    | ABinExp ABinOp (ArithemticExpression v) (ArithemticExpression v)
-    | AArray [ArithemticExpression v]
-    | AFunCall Idt [ArithemticExpression v]
-    deriving (Eq, Show, Functor)
-
-type AExp = ArithemticExpression ReadLExp
-
-data ReadLExp = ReadLExp LExp
+    | LArray LExp AExp
+    | LStructPart LExp Idt
+    | LDereference LExp
     deriving (Eq, Show)
 
-type ASExp = ArithemticExpression SReadLExp
+data LSExp
+    = LSIdt Idt
+    | LSArray LSExp ASExp
+    | LSStructPart LSExp Idt
+    | LSRead ReadLExp
+    deriving (Eq, Show)
 
-data SReadLExp = SReadLExp State LSExp
+data AExp 
+    = ALit Integer
+    | AIdt LExp
+    | ABinExp ABinOp AExp AExp
+    | AArray [AExp]
+    | AFunCall Idt [AExp]
+    deriving (Eq, Show)
+
+data ASExp 
+    = ASLit Integer
+    | ASRead ReadLExp
+    | ASBinExp ABinOp ASExp ASExp
+    | ASArray [ASExp]
+    | ASFunCall Idt [ASExp]
+    deriving (Eq, Show)
+
+data ReadLExp = ReadLExp State LSExp
     deriving (Eq, Show)
 
 data State

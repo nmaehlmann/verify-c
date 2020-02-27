@@ -37,8 +37,18 @@ stateifyAExp :: AExp -> ASExp
 stateifyAExp = hashmark
 
 dagger :: LExp -> LSExp
-dagger = fmap hashmark
+dagger (LIdt idt) = LSIdt idt
+dagger (LArray idt idx) = LSArray (dagger idt) (hashmark idx)
+dagger (LStructPart struct part) = LSStructPart (dagger struct) part
+dagger (LDereference idt) = LSRead $ ReadLExp sigma $ dagger idt
 
 hashmark :: AExp -> ASExp
-hashmark = fmap f
-    where f (ReadLExp x) = (SReadLExp (Atomic "s") (dagger x))
+hashmark (ALit i) = ASLit i
+hashmark (AIdt l) = ASRead $ ReadLExp sigma $ dagger l
+hashmark (ABinExp op l r) = ASBinExp op (hashmark l) (hashmark r)
+hashmark (AArray fields) = ASArray $ map hashmark fields
+hashmark (AFunCall name args) = ASFunCall name $ map hashmark args
+
+sigma :: State
+sigma = Atomic "s"
+

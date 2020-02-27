@@ -23,11 +23,14 @@ lOperatorTable :: OperatorTable String () Identity LExp
 lOperatorTable = 
     [ [postfix opArray]
     , [prefix opDereference]
-    , [Infix opPart AssocLeft]
+    , [postfix opPart]
     ]
 
-opPart :: Parser (LExp -> LExp -> LExp)
-opPart = Lex.reservedOp "." >> return LStructPart
+opPart :: Parser (LExp -> LExp)
+opPart = do
+    Lex.reservedOp "."
+    part <- identifier
+    return $ \s -> LStructPart s part
 
 -- TODO: why does this not work with reservedOp?
 opDereference :: Parser (LExp -> LExp)

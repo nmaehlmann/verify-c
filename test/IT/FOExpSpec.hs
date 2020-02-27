@@ -10,9 +10,9 @@ import Parser.BooleanExpression
 fOExpSpec :: IO Spec
 fOExpSpec = return $ describe "Parser.BooleanExpression" $ do
     let parseFOExp t = parse fOExp "" t
-    let x = AIdt $ ReadLExp $ LIdt $ Idt "x"
-    let y = AIdt $ ReadLExp $ LIdt $ Idt "y"
-    let n = AIdt $ ReadLExp $ LIdt $ Idt "n"
+    let x = AIdt $ LIdt $ Idt "x"
+    let y = AIdt $ LIdt $ Idt "y"
+    let n = AIdt $ LIdt $ Idt "n"
     let xLess1 = FOComp Less x (ALit 1)
 
     it "parses boolean constants" $ do

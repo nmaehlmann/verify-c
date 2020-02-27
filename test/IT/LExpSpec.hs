@@ -11,8 +11,8 @@ lExpSpec = return $ describe "Parser.LExpression" $ do
     let parseLExp t = parse lExp "" t
     let a = LIdt $ Idt "a"
     let arr = LIdt $ Idt "arr"
-    let x = AIdt $ ReadLExp $ LIdt $ Idt "x"
-    let y = AIdt $ ReadLExp $ LIdt $ Idt "y"
+    let x = AIdt $ LIdt $ Idt "x"
+    let y = AIdt $ LIdt $ Idt "y"
     
     it "parses symbols" $ do
         parseLExp "pi" `shouldBe` (Right (LIdt (Idt "pi")))
@@ -43,7 +43,7 @@ lExpSpec = return $ describe "Parser.LExpression" $ do
         parseLExp "*a[x]" `shouldBe` (Right (LDereference (LArray a x)))
 
     it "parses structure parts" $ do
-        parseLExp "arr.a" `shouldBe` (Right (LStructPart arr a))
+        parseLExp "arr.a" `shouldBe` (Right (LStructPart arr (Idt "a")))
 
     it "parses structure parts" $ do
-        parseLExp "arr.a.arr" `shouldBe` (Right (LStructPart (LStructPart arr a) arr))
+        parseLExp "arr.a.arr" `shouldBe` (Right (LStructPart (LStructPart arr (Idt "a")) (Idt "arr")))

@@ -14,7 +14,7 @@ facSpec = do
             it "parses a faculty program" $ do
                 (parse statement "" facSrc) `shouldBe` fac
 
-mkIdt = AIdt . ReadLExp
+mkIdt = AIdt
 n = LIdt $ Idt "n"                
 p = LIdt $ Idt "p"
 c = LIdt $ Idt "c"

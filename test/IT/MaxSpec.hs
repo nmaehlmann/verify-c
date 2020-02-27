@@ -14,7 +14,7 @@ maxSpec = do
             it "parses a program that finds the maximal element of an array" $ do
                 (parse statement "" maxSrc) `shouldBe` maxExp
 
-mkIdt = AIdt . ReadLExp
+mkIdt = AIdt
 a = LIdt $ Idt "a"                
 i = LIdt $ Idt "i"
 k = LIdt $ Idt "k"

@@ -13,7 +13,7 @@ statementSpec :: IO Spec
 statementSpec = return $ describe "Parser.Statement" $ do
     let isValid = isRight
     let parseStmt t = parse statement "" t
-    let mkIdt = AIdt . ReadLExp
+    let mkIdt = AIdt
     let x = LIdt $ Idt "x"
     let y = LIdt $ Idt "y"
     let z = LIdt $ Idt "z"

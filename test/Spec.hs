@@ -8,9 +8,7 @@ import IT.LExpSpec
 import IT.StatementSpec
 import IT.MaxSpec
 import IT.FunDefSpec
-
-import VC
-
+import IT.VCSpec
 
 main :: IO ()
 main = do
@@ -23,5 +21,7 @@ main = do
         , facSpec
         , maxSpec
         , funDefSpec
+        , daggerSpec
+        , hashmarkSpec
         ]
     hspec $ foldl1 (>>) specs

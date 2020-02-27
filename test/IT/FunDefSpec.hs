@@ -39,7 +39,7 @@ funDefSpec = return $ describe "Parser.FunctionDefinition" $ do
         
 
     it "parses a simple add function" $ do
-        let mkIdt = AIdt . ReadLExp
+        let mkIdt = AIdt
         let s = "int add(int a, int b){ precondition(\"true\"); postcondition(\"x == a + b\"); return a + b; }"
         let result = FunctionDefinition
                 { funDefType     = TInt
