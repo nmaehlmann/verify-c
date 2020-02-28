@@ -23,5 +23,6 @@ main = do
         , funDefSpec
         , daggerSpec
         , hashmarkSpec
+        , replaceStateSpec
         ]
     hspec $ foldl1 (>>) specs

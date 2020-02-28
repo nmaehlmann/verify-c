@@ -13,6 +13,11 @@ daggerSpec = return $ describe "VC.dagger" $ do
         let derefX = LDereference $ LIdt x
         let derefedX = LSRead $ ReadLExp sigma $ LSIdt x
         dagger derefX `shouldBe` derefedX
+    
+    it "resolves references to references" $ do
+        let doublyDerefX = LDereference $ LDereference $ LIdt x
+        let doublyDerefedX = LSRead $ ReadLExp sigma $ LSRead $ ReadLExp sigma $ LSIdt x
+        dagger doublyDerefX `shouldBe` doublyDerefedX
 
 hashmarkSpec :: IO Spec
 hashmarkSpec = return $ describe "VC.hashmark" $ do
@@ -37,3 +42,62 @@ hashmarkSpec = return $ describe "VC.hashmark" $ do
         let derefedX = LSRead $ ReadLExp sigma $ LSIdt x
         let derefedArray = ASRead $ ReadLExp sigma $ LSArray derefedX $ ASLit 1
         hashmark array `shouldBe` derefedArray
+
+    it "resolves addition of two arrays" $ do
+        let derefX = LDereference $ LIdt x
+        let array = AIdt $ LArray derefX $ ALit 1
+        let derefedX = LSRead $ ReadLExp sigma $ LSIdt x
+        let derefedArray = ASRead $ ReadLExp sigma $ LSArray derefedX $ ASLit 1
+        let addition = ABinExp Add array array
+        let derefedAddition = ASBinExp Add derefedArray derefedArray
+        hashmark addition `shouldBe` derefedAddition
+
+replaceStateSpec :: IO Spec
+replaceStateSpec = return $ describe "VC.replaceState" $ do
+    it "replaces c with c + 1 in an assertion of the fac program" $ do
+        let facFormula = facFormulaForState sigma
+    
+        -- read(c,s) + 1
+        let c = LSIdt $ Idt $ "c"
+        let cPlus1 = ASBinExp Add (ASRead (ReadLExp sigma c)) $ ASLit 1
+
+        -- upd(s,c, read(c,s) + 1)
+        let updatedState = Update sigma c cPlus1
+        
+        let facFormulaUpdated = facFormulaForState updatedState
+        replaceState sigma updatedState facFormula `shouldBe` facFormulaUpdated
+
+
+facFormulaForState state = 
+    let fac = Idt $ "fac"
+        p = LSIdt $ Idt $ "p"
+        c = LSIdt $ Idt $ "c"
+        n = LSIdt $ Idt $ "n"
+        readFromS var = ASRead $ ReadLExp state var
+
+        -- read(s, p)
+        readP = readFromS p
+
+        -- fac(read(c, s) - 1)
+        readC = readFromS c
+        cMinus1 = ASBinExp Sub readC (ASLit 1)
+        facCMinus1 = ASFunCall fac [cMinus1]
+
+        -- read(p, s) = fac(read(c, s) - 1)
+        pEqFacCMinus1 = FOComp Equal readP facCMinus1
+
+        -- read(n, s) + 1
+        readN = readFromS n
+        nPlus1 = ASBinExp Add readN (ASLit 1)
+
+        -- read(c, s) <= read(n, s) + 1
+        cLeqNPlus1 = FOComp LessOrEqual readC nPlus1
+
+    -- read(p, s) = fac(read(c, s) - 1) and read(c, s) <= read(n, s) + 1
+    in  FOBinExp And pEqFacCMinus1 cLeqNPlus1
+
+
+
+
+
+    

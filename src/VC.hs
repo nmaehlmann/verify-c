@@ -30,7 +30,28 @@ replaceState :: State -> State -> FOSExp -> FOSExp
 replaceState sOld sNew expOld = fmap (replaceStateInASExp sOld sNew) expOld
 
 replaceStateInASExp :: State -> State -> ASExp -> ASExp
-replaceStateInASExp sOld sNew expOld = expOld
+replaceStateInASExp _ _ (ASLit i) = ASLit i
+replaceStateInASExp sOld sNew (ASRead readLExp) = ASRead $ replaceStateInRead sOld sNew readLExp
+replaceStateInASExp sOld sNew (ASBinExp op l r) = ASBinExp op (replaceStateInASExp sOld sNew l) (replaceStateInASExp sOld sNew r)
+replaceStateInASExp sOld sNew (ASArray fields) = ASArray $ map (replaceStateInASExp sOld sNew) fields
+replaceStateInASExp sOld sNew (ASFunCall name args) = ASFunCall name $ map (replaceStateInASExp sOld sNew) args
+
+replaceStateInRead :: State -> State -> ReadLExp -> ReadLExp
+replaceStateInRead sOld sNew (ReadLExp sNested lSExp) = ReadLExp (replaceStateInNestedState sOld sNew sNested) (replaceStateInLSExp sOld sNew lSExp)
+
+replaceStateInNestedState :: State -> State -> State -> State
+replaceStateInNestedState sOld sNew sNested | sOld == sNested = sNew
+replaceStateInNestedState sOld sNew (Update state lSExp aSExp) = Update 
+    (replaceStateInNestedState sOld sNew state) 
+    (replaceStateInLSExp sOld sNew lSExp)
+    (replaceStateInASExp sOld sNew aSExp)
+replaceStateInNestedState _ _ s = s
+
+replaceStateInLSExp :: State -> State -> LSExp -> LSExp
+replaceStateInLSExp _ _ (LSIdt idt) = LSIdt idt
+replaceStateInLSExp sOld sNew (LSArray lSExp aSExp) = LSArray (replaceStateInLSExp sOld sNew lSExp) (replaceStateInASExp sOld sNew aSExp)
+replaceStateInLSExp sOld sNew (LSStructPart lSExp idt) = LSStructPart (replaceStateInLSExp sOld sNew lSExp) idt
+replaceStateInLSExp sOld sNew (LSRead readLExp) = LSRead $ replaceStateInRead sOld sNew readLExp
 
 bExpToFOExp :: BExp -> FOExp
 bExpToFOExp BTrue = FOTrue
