@@ -67,7 +67,24 @@ replaceStateSpec = return $ describe "VC.replaceState" $ do
         let facFormulaUpdated = facFormulaForState updatedState
         replaceState sigma updatedState facFormula `shouldBe` facFormulaUpdated
 
+awpSpec :: IO Spec
+awpSpec = return $ describe "VC.awp" $ do
+    it "it generates the precondition of an assertion of the fac program" $ do
+        let c = LIdt $ Idt $ "c"
+        let facFormula = facFormulaForState sigma
+        let assnCPlusTwoToC = Assignment c $ ABinExp Add (AIdt c) $ ALit 2
 
+        -- read(c,s) + 2
+        let sC = LSIdt $ Idt $ "c"
+        let cPlus2 = ASBinExp Add (ASRead (ReadLExp sigma sC)) $ ASLit 2
+
+        -- upd(s,c, read(c,s) + 1)
+        let updatedState = Update sigma sC cPlus2
+        let facFormulaUpdated = facFormulaForState updatedState
+        awp assnCPlusTwoToC facFormula `shouldBe` facFormulaUpdated
+        
+
+facFormulaForState :: State -> FOSExp
 facFormulaForState state = 
     let fac = Idt $ "fac"
         p = LSIdt $ Idt $ "p"

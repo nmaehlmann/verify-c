@@ -21,6 +21,23 @@ awp (Assignment idt aExp) p =
     let newState = Update sigma (dagger idt) (hashmark aExp)
         oldState = sigma
     in  replaceState oldState newState p
+awp (Return _) _ = error "unsupported yet"
+
+wvc :: Stmt -> FOSExp -> [FOSExp]
+wvc Empty _ = []
+wvc (Assignment _ _ ) _ = []
+wvc (Seq s1 s2) p = wvc s1 (awp s2 p) ++ wvc s2 p
+wvc (ITE _ sTrue sFalse) p = wvc sTrue p ++ wvc sFalse p
+wvc (While cond inv body) p =
+    let foCond = stateifyFO $ bExpToFOExp cond
+        foInv = stateifyFO inv
+        foInvAndCond = FOBinExp And foInv foCond
+        foInvAndNotCond = FOBinExp And foInv $ FONeg foCond
+    in  FOBinExp Implies foInvAndCond (awp body foInv)
+        : FOBinExp Implies foInvAndNotCond p
+        : wvc body foInv
+wvc (Assertion fo) p = [FOBinExp Implies (stateifyFO fo) p]
+wvc (Return _) _ = []
 
 -- p[aExp/idt]
 -- Q[upd(s,idt † ,aExp # )/s]
