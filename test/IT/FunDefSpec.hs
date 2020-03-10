@@ -51,3 +51,28 @@ funDefSpec = return $ describe "Parser.FunctionDefinition" $ do
                 }
         parseFunDef s `shouldBe` (Right result)
 
+    it "parses a function with 1 reference argument" $ do
+        let s = "void noSwap(int* a){ precondition(\"true\"); postcondition(\"true\"); return; }"
+        let result = FunctionDefinition
+                { funDefType     = TVoid
+                , funDefName     = Idt "noSwap"
+                , funDefArgs     = [Decl (TReference TInt) (Idt "a")]
+                , funDefPrecond  = FOTrue
+                , funDefPostcond = FOTrue
+                , funDefBody     = Return Nothing
+                }
+        parseFunDef s `shouldBe` (Right result)
+
+    it "parses a function with 2 reference arguments" $ do
+        let s = "void noSwap(int* a, int* b){ precondition(\"true\"); postcondition(\"true\"); return; }"
+        let result = FunctionDefinition
+                { funDefType     = TVoid
+                , funDefName     = Idt "noSwap"
+                , funDefArgs     = [Decl (TReference TInt) (Idt "a"), Decl (TReference TInt) (Idt "b")]
+                , funDefPrecond  = FOTrue
+                , funDefPostcond = FOTrue
+                , funDefBody     = Return Nothing
+                }
+        parseFunDef s `shouldBe` (Right result)
+
+

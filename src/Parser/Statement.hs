@@ -8,6 +8,7 @@ import Parser.Lexer
 import Parser.ArithmeticExpression
 import Parser.BooleanExpression
 import Parser.LExpression
+import Parser.Type
 
 statement :: Parser Stmt
 statement = whiteSpace >> chainl singleStatement (return Seq) Empty
@@ -23,6 +24,7 @@ invariant = fOAssertion "invariant"
 
 assignment :: Parser Stmt
 assignment = do
+    optional typeName
     idt <- lExp
     reservedOp "="
     expr <- aExp
