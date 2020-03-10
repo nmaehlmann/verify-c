@@ -1,8 +1,6 @@
 module Parser.Type (typeName) where
 
-import Data.Functor.Identity
 import Text.Parsec
-import Text.Parsec.Expr
 import Text.Parsec.String (Parser)
 
 import AST

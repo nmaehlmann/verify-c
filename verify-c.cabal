@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 20b31b40e936ce2b8a864271cf93031d78a3c3c14a6b9f9ba3a93e04eb5df593
+-- hash: cdde95829799445e3b09607b46a0bb780611bac34e84ae6a1182ea6793779b98
 
 name:           verify-c
 version:        0.1.0.0
@@ -48,6 +48,8 @@ library
       src
   build-depends:
       base >=4.7 && <5
+    , containers
+    , mtl
     , parsec
   default-language: Haskell2010
 

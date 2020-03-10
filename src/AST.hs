@@ -111,7 +111,7 @@ data Type
     deriving (Eq, Show)
 
 data Idt = Idt String
-    deriving (Eq, Show)
+    deriving (Eq, Ord, Show)
 
 data Decl = Decl Type Idt
     deriving (Eq, Show)

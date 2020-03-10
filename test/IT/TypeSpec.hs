@@ -2,12 +2,9 @@ module IT.TypeSpec where
 
 import Test.Hspec
 import Text.Parsec
-import Data.Either
 
 import AST
 import Parser.Type
-
-import IT.Whitespaces
 
 typeSpec :: IO Spec
 typeSpec = return $ describe "Parser.Statement" $ do

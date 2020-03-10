@@ -26,6 +26,8 @@ library:
   source-dirs: src
   dependencies:
     - parsec
+    - containers
+    - mtl
 
 executables:
   verify-c:

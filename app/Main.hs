@@ -4,6 +4,8 @@ import Data.Maybe
 import Text.Parsec
 import System.Environment
 
+import AST
+import VC
 import Parser.Program
 
 main :: IO ()
@@ -14,7 +16,10 @@ main = do
         Nothing -> putStrLn "please provide an argument"
         (Just t) -> do
             src <- readFile t
-            putStrLn $ show $ parse program "" src
+            let ast = parse program "" src
+            putStrLn $ case ast of
+                (Right (Program (f : _))) -> "vc: " ++ show (verify f)
+                _ -> "error: " ++ show ast
         
 
 
