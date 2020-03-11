@@ -1,5 +1,7 @@
 {-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 module AST where
+import Data.List
 
 data BExp 
     = BTrue
@@ -18,7 +20,7 @@ data FO a
     | Forall Idt (FO a)
     | Exists Idt (FO a)
     | Predicate Idt [a]
-    deriving (Eq, Show, Functor)
+    deriving (Eq, Functor)
 
 type FOExp = FO AExp
 type FOSExp = FO ASExp
@@ -35,7 +37,7 @@ data LSExp
     | LSArray LSExp ASExp
     | LSStructPart LSExp Idt
     | LSRead ReadLExp
-    deriving (Eq, Show)
+    deriving (Eq)
 
 data AExp 
     = ALit Integer
@@ -51,18 +53,18 @@ data ASExp
     | ASBinExp ABinOp ASExp ASExp
     | ASArray [ASExp]
     | ASFunCall Idt [ASExp]
-    deriving (Eq, Show)
+    deriving (Eq)
 
 data ReadLExp = ReadLExp State LSExp
-    deriving (Eq, Show)
+    deriving (Eq)
 
 data State
     = Atomic String
     | Update State LSExp ASExp
-    deriving (Eq, Show)
+    deriving (Eq)
 
 data ABinOp = Add | Sub | Mul | Div
-    deriving (Eq, Show)
+    deriving (Eq)
 
 data CompOp 
     = Less 
@@ -71,13 +73,13 @@ data CompOp
     | GreaterOrEqual 
     | Equal 
     | NotEqual
-    deriving (Eq, Show)
+    deriving (Eq)
 
 data BBinOp
     = And
     | Or
     | Implies
-    deriving (Eq, Show)
+    deriving (Eq)
 
 data Stmt 
     = Assignment LExp AExp
@@ -111,7 +113,68 @@ data Type
     deriving (Eq, Show)
 
 data Idt = Idt String
-    deriving (Eq, Ord, Show)
+    deriving (Eq, Ord)
 
 data Decl = Decl Type Idt
     deriving (Eq, Show)
+
+instance (Show a) => Show (FO a) where
+    show FOTrue = "true"
+    show FOFalse = "false"
+    show (FOComp op l r) = showBinExp op l r
+    show (FONeg f) = "!(" ++ show f ++ ")"
+    show (FOBinExp op l r) = showBinExp op l r
+    show (Forall i f) = "forall(" ++ show i ++ ", " ++ show f ++ ")"
+    show (Exists i f) = "exists(" ++ show i ++ ", " ++ show f ++ ")"
+    show (Predicate name args) = show name ++ "(" ++ argsList ++ ")"
+        where argsList = concat $ intersperse "," $ map show args
+
+showBinExp :: (Show a, Show o) => o -> a -> a -> String
+showBinExp op l r = "(" ++ show l ++ " " ++ show op ++ " " ++ show r ++ ")"
+
+instance Show Idt where
+    show (Idt s) = s
+
+instance Show ASExp where
+    show (ASLit i) = show i
+    show (ASRead readLExp) = show readLExp
+    show (ASBinExp op l r) = showBinExp op l r
+    show (ASArray fields) = "[" ++ showFields ++ "]" 
+        where showFields = concat $ intersperse "," $ map show fields
+    show (ASFunCall name args) = show name ++ "(" ++ argsList ++ ")"
+        where argsList = concat $ intersperse "," $ map show args
+
+instance Show ABinOp where
+    show Add = "+"
+    show Sub = "-"
+    show Mul = "*"
+    show Div = "/"
+
+instance Show ReadLExp where
+    show (ReadLExp state lSExp) = "read(" ++ show state ++ ", " ++ show lSExp ++ ")"
+
+instance Show LSExp where
+    show (LSIdt i) = show i
+    show (LSArray lSExp aSExp) = show lSExp ++ "[" ++ show aSExp ++ "]"
+    show (LSStructPart lSExp idt) = show lSExp ++ "." ++ show idt
+    show (LSRead r) = show r
+
+instance Show State where
+    show (Atomic s) = s
+    show (Update state lSExp aSExp) = "upd(" 
+        ++ show state ++ ", " 
+        ++ show lSExp ++ ", "
+        ++ show aSExp ++ ")"
+
+instance Show BBinOp where
+    show And = "&&"
+    show Or = "||"
+    show Implies = "->"
+
+instance Show CompOp where
+    show Less = "<"
+    show LessOrEqual = "<=" 
+    show Greater = ">" 
+    show GreaterOrEqual = ">="
+    show Equal = "="
+    show NotEqual = "!="

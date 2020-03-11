@@ -128,3 +128,8 @@ hashmark (AFunCall name args) = ASFunCall name $ map hashmark args
 
 sigma :: State
 sigma = Atomic "s"
+
+-- data LSExpEquality = Same | Unknown | Different
+-- compareLSExp :: LSExp -> LSExp -> LSExpEquality
+-- compareLSExp (LSRead a) (LSRead b) = if a == b then Same else Unknown
+-- compareLSExp (LArray lSExp = 
