@@ -151,6 +151,7 @@ instance Show ABinOp where
     show Div = "/"
 
 instance Show ReadLExp where
+    show (ReadLExp (Atomic _) (LSIdt i)) = show i
     show (ReadLExp state lSExp) = "read(" ++ show state ++ ", " ++ show lSExp ++ ")"
 
 instance Show LSExp where
