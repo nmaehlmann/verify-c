@@ -221,6 +221,6 @@ instance Monad Updated where
 data MemEq = MemEq | MemNotEq |MemUndecidable
 
 compareLSExp :: LSExp -> LSExp -> MemEq
--- compareLSExp (LSRead _) _ = MemUndecidable
--- compareLSExp _ (LSRead _) = MemUndecidable
+compareLSExp a@(LSRead _) b =  if a == b then MemEq else MemUndecidable
+compareLSExp a b@(LSRead _) =  if a == b then MemEq else MemUndecidable
 compareLSExp a b = if a == b then MemEq else MemNotEq

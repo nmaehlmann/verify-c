@@ -1,0 +1,7 @@
+void main(){
+    precondition("true");
+    postcondition("*x == 5");
+    int temp = 5;
+    int* x = &temp;
+    return;
+}
