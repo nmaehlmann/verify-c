@@ -1,9 +1,11 @@
 void swap (int* x, int* y) {
-    precondition("*x == X && *y == Y");
+    precondition("x != y && *x == X && *y == Y");
     postcondition("*x == Y && *y == X");
+    // precondition("x != y");
+    // postcondition(" y == 5 ");
 
-    // int tmp = *x;
-    // *x = *y;
+    int tmp = *x;
+    *x = *y;
     *y = tmp;
     
     return;

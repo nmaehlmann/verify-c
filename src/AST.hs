@@ -37,7 +37,7 @@ data LSExp
     | LSArray LSExp ASExp
     | LSStructPart LSExp Idt
     | LSRead ReadLExp
-    deriving (Eq)
+    deriving (Eq, Ord)
 
 data AExp 
     = ALit Integer
@@ -53,18 +53,18 @@ data ASExp
     | ASBinExp ABinOp ASExp ASExp
     | ASArray [ASExp]
     | ASFunCall Idt [ASExp]
-    deriving (Eq)
+    deriving (Eq, Ord)
 
 data ReadLExp = ReadLExp State LSExp
-    deriving (Eq)
+    deriving (Eq, Ord)
 
 data State
     = Atomic String
     | Update State LSExp ASExp
-    deriving (Eq)
+    deriving (Eq, Ord)
 
 data ABinOp = Add | Sub | Mul | Div
-    deriving (Eq)
+    deriving (Eq, Ord)
 
 data CompOp 
     = Less 
@@ -151,7 +151,7 @@ instance Show ABinOp where
     show Div = "/"
 
 instance Show ReadLExp where
-    show (ReadLExp (Atomic _) (LSIdt i)) = show i
+    -- show (ReadLExp (Atomic _) (LSIdt i)) = show i
     show (ReadLExp state lSExp) = "read(" ++ show state ++ ", " ++ show lSExp ++ ")"
 
 instance Show LSExp where
@@ -179,3 +179,6 @@ instance Show CompOp where
     show GreaterOrEqual = ">="
     show Equal = "="
     show NotEqual = "!="
+
+sigma :: State
+sigma = Atomic "s"

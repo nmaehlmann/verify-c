@@ -56,3 +56,5 @@ tests:
     - hspec
     - QuickCheck
     - parsec
+    - containers
+    - mtl

@@ -5,6 +5,7 @@ import AST
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Control.Monad.Reader
+import Simplification
 
 verify :: FunctionDefinition -> [FOSExp]
 verify f = map simplify $ FOBinExp Implies precondition awpBody : wvcs
@@ -125,102 +126,4 @@ hashmark (ABinExp op l r) = ASBinExp op (hashmark l) (hashmark r)
 hashmark (AArray fields) = ASArray $ map hashmark fields
 hashmark (AFunCall name args) = ASFunCall name $ map hashmark args
 
-sigma :: State
-sigma = Atomic "s"
 
-simplify :: FOSExp -> FOSExp
-simplify a = case simplifyFOSExp a of
-    Updated updated -> simplify updated
-    Unchanged unchanged -> unchanged
-
-simplifyFOSExp :: FOSExp -> Updated FOSExp
-simplifyFOSExp FOTrue = return FOTrue
-simplifyFOSExp FOFalse = return FOFalse
-simplifyFOSExp (FOComp op l r) = do
-    updatedL <- simplifyASExp l
-    updatedR <- simplifyASExp r
-    return $ FOComp op updatedL updatedR
-simplifyFOSExp (FONeg fo) = FONeg <$> simplifyFOSExp fo
-simplifyFOSExp (FOBinExp op l r) = do
-    updatedL <- simplifyFOSExp l
-    updatedR <- simplifyFOSExp r
-    return $ FOBinExp op updatedL updatedR
-simplifyFOSExp (Forall i fo) = Forall i <$> simplifyFOSExp fo
-simplifyFOSExp (Exists i fo) = Exists i <$> simplifyFOSExp fo
-simplifyFOSExp (Predicate i fos) = Predicate i <$> mapM simplifyASExp fos 
-
-simplifyASExp :: ASExp -> Updated ASExp
-simplifyASExp (ASLit a) = Unchanged $ ASLit a
-simplifyASExp (ASRead (ReadLExp s l)) = do
-    newS <- simplifyState2 s
-    newL <- simplifyLSExp l
-    simplifyRead $ ReadLExp newS newL
-
-simplifyASExp (ASBinExp op l r) = do
-    updatedL <- simplifyASExp l
-    updatedR <- simplifyASExp r
-    return $ ASBinExp op updatedL updatedR
-simplifyASExp (ASArray fields) = ASArray <$> mapM simplifyASExp fields
-simplifyASExp (ASFunCall funName funArgs) = ASFunCall funName <$> mapM simplifyASExp funArgs
-
-simplifyLSExp :: LSExp -> Updated LSExp
-simplifyLSExp (LSIdt i) = return $ LSIdt i
-simplifyLSExp (LSArray name idx) = do
-    newName <- simplifyLSExp name
-    newIdx <- simplifyASExp idx
-    return $ LSArray newName newIdx
-simplifyLSExp (LSStructPart struct part) = do
-    newStruct <- simplifyLSExp struct
-    return $ LSStructPart newStruct part
-simplifyLSExp (LSRead r) = LSRead <$> simplifyLSRead r
-
-simplifyLSRead :: ReadLExp -> Updated ReadLExp
-simplifyLSRead original@(ReadLExp (Update state lSExp _) toRead) = case compareLSExp toRead lSExp of
-    MemNotEq -> Updated $ ReadLExp state toRead 
-    _ -> Unchanged original
-simplifyLSRead original = Unchanged original
-
-simplifyRead :: ReadLExp -> Updated ASExp
-simplifyRead original@(ReadLExp (Update state lSExp aSExp) toRead) = case compareLSExp toRead lSExp of
-    MemEq -> Updated aSExp
-    MemNotEq -> Updated $ ASRead $ ReadLExp state toRead 
-    MemUndecidable -> Unchanged $ ASRead original
-simplifyRead original = Unchanged $ ASRead original
-
-simplifyState2 :: State -> Updated State
-simplifyState2  original@(Update (Update s l1 _) l2 w) = case compareLSExp l1 l2 of
-    MemEq -> Updated $ Update s l2 w
-    _ -> Unchanged original
-simplifyState2 original = Unchanged original
-
-simplifyState :: ReadLExp -> Updated ReadLExp
-simplifyState (ReadLExp s toRead) = do
-    updatedS <- simplifyState2 s
-    return $ ReadLExp updatedS toRead
-
-data Updated a = Updated a | Unchanged a deriving Show
-
-unwrap :: Updated a -> a
-unwrap (Updated a) = a
-unwrap (Unchanged a) = a
-
-instance Functor Updated where
-    fmap f a = pure f <*> a
-
-instance Applicative Updated where
-    pure a = Unchanged a
-    (Updated f) <*> a = Updated $ f $ unwrap a
-    f <*> (Updated a) = Updated $ unwrap f a
-    (Unchanged f) <*> (Unchanged a) = Unchanged $ f a
-
-instance Monad Updated where
-    return a = Unchanged a
-    (Updated a) >>= f = Updated $ unwrap $ f a
-    (Unchanged a) >>= f = f a
-
-data MemEq = MemEq | MemNotEq |MemUndecidable
-
-compareLSExp :: LSExp -> LSExp -> MemEq
-compareLSExp a@(LSRead _) b =  if a == b then MemEq else MemUndecidable
-compareLSExp a b@(LSRead _) =  if a == b then MemEq else MemUndecidable
-compareLSExp a b = if a == b then MemEq else MemNotEq
