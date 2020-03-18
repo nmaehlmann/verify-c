@@ -12,7 +12,6 @@ simplificationSpec :: IO Spec
 simplificationSpec = return $ describe "Simplification.simplify" $ do
     let x = LSIdt $ Idt "x"
     let y = LSIdt $ Idt "y"
-    let n = LSIdt $ Idt "n"
 
     it "simplifies a read of an update of the same value of plain state" $ do
         let fo = FOComp Equal (ASRead (ReadLExp (Update sigma x (ASLit 6)) x)) (ASLit 0)
@@ -38,7 +37,6 @@ simplifyASExpSpec :: IO Spec
 simplifyASExpSpec = return $ describe "Simplification.simplifyASExp" $ do
     let x = LSIdt $ Idt "x"
     let y = LSIdt $ Idt "y"
-    let n = LSIdt $ Idt "n"
 
     it "simplifies unneccessary updates" $ do
         let aSExp = ASRead (ReadLExp (Update sigma y (ASLit 6)) x)
@@ -49,9 +47,8 @@ simplifyReadSpec :: IO Spec
 simplifyReadSpec = return $ describe "Simplification.simplifyRead" $ do
     let x = LSIdt $ Idt "x"
     let y = LSIdt $ Idt "y"
-    let n = LSIdt $ Idt "n"
 
     it "simplifies unneccessary updates" $ do
         let readExp = ReadLExp (Update sigma y (ASLit 6)) x
         let aSExpSimplified = ASRead (ReadLExp sigma x)
-        runReaderT (simplifyRead readExp) Set.empty `shouldBe` (Updated aSExpSimplified)
+        runReaderT (simplifyASRead readExp) Set.empty `shouldBe` (Updated aSExpSimplified)

@@ -3,6 +3,7 @@ import AST
 import Control.Monad.Reader
 import Data.Set (Set)
 import qualified Data.Set as Set
+import Debug.Trace
 
 type Inequality = Set LSExp
 
@@ -22,7 +23,7 @@ findInequalities _ = Set.empty
 
 simplify :: FOSExp -> FOSExp
 simplify a =
-    let inequalities = findInequalities a
+    let inequalities = traceShowId $ findInequalities a
     in  case runReaderT (simplifyFOSExp a) inequalities of
             Updated updated -> simplify updated
             Unchanged unchanged -> unchanged
@@ -45,11 +46,7 @@ simplifyFOSExp (Predicate i fos) = Predicate i <$> mapM simplifyASExp fos
 
 simplifyASExp :: ASExp -> Simplified ASExp
 simplifyASExp (ASLit a) = return $ ASLit a
-simplifyASExp (ASRead (ReadLExp s l)) = do
-    newS <- simplifyState s
-    newL <- simplifyLSExp l
-    simplifyRead $ ReadLExp newS newL
-
+simplifyASExp (ASRead r) = simplifyASRead r
 simplifyASExp (ASBinExp op l r) = do
     updatedL <- simplifyASExp l
     updatedR <- simplifyASExp r
@@ -66,32 +63,50 @@ simplifyLSExp (LSArray name idx) = do
 simplifyLSExp (LSStructPart struct part) = do
     newStruct <- simplifyLSExp struct
     return $ LSStructPart newStruct part
-simplifyLSExp (LSRead r) = LSRead <$> simplifyLSRead r
+simplifyLSExp (LSRead r) = simplifyLSRead r
 
-simplifyLSRead :: ReadLExp -> Simplified ReadLExp
-simplifyLSRead original@(ReadLExp (Update state lSExp _) toRead) = do
+simplifyReadLExp :: ReadLExp -> Simplified ReadLExp
+simplifyReadLExp (ReadLExp state loc) = do
+    simplifiedState <- simplifyState state
+    simplifiedLoc <- simplifyLSExp loc
+    return $ ReadLExp simplifiedState simplifiedLoc
+
+simplifyLSRead :: ReadLExp -> Simplified LSExp
+simplifyLSRead l = simplifyReadLExp l >>= simplifyLSRead'
+simplifyLSRead' :: ReadLExp -> Simplified LSExp
+simplifyLSRead' original@(ReadLExp (Update state lSExp _) toRead) = do
     memComparison <- compareLSExp toRead lSExp
-    case memComparison of
+    LSRead <$> case memComparison of
+        MemEq -> error "do something here"
         MemNotEq -> update $ ReadLExp state toRead 
-        _ -> return original
-simplifyLSRead original = return original
+        MemUndecidable -> return original
+simplifyLSRead' original = return $ LSRead original
 
-simplifyRead :: ReadLExp -> Simplified ASExp
-simplifyRead original@(ReadLExp (Update state lSExp aSExp) toRead) = do
+simplifyASRead :: ReadLExp -> Simplified ASExp
+simplifyASRead l = simplifyReadLExp l >>= simplifyASRead'
+simplifyASRead' :: ReadLExp -> Simplified ASExp
+simplifyASRead' original@(ReadLExp (Update state lSExp aSExp) toRead) = do
     memComparison <- compareLSExp toRead lSExp
     case memComparison of
         MemEq -> update aSExp
         MemNotEq -> update $ ASRead $ ReadLExp state toRead 
         MemUndecidable -> return $ ASRead original
-simplifyRead original = return $ ASRead original
+simplifyASRead' original = return $ ASRead original
 
 simplifyState :: State -> Simplified State
-simplifyState  original@(Update (Update s l1 _) l2 w) = do
+simplifyState (Update state lSExp aSExp) = do
+    simplifiedState <- simplifyState state
+    simplifiedLSExp <- simplifyLSExp lSExp
+    simplifiedASExp <- simplifyASExp aSExp
+    simplifyState' (Update simplifiedState simplifiedLSExp simplifiedASExp)
+simplifyState atomic = return atomic    
+simplifyState' :: State -> Simplified State
+simplifyState'  original@(Update (Update s l1 _) l2 w) = do
     memComparison <- compareLSExp l1 l2
     case memComparison of
         MemEq -> update $ Update s l2 w
         _ -> return original
-simplifyState original = return original
+simplifyState' original = return original
 
 data Updated a = Updated a | Unchanged a deriving (Eq, Show)
 
@@ -130,12 +145,5 @@ isNotRead :: LSExp -> Bool
 isNotRead (LSRead _) = False
 isNotRead _ = True
 
--- compareLSExp a@(LSRead _) b =  if a == b then MemEq else MemUndecidable
--- compareLSExp a b@(LSRead _) =  if a == b then MemEq else MemUndecidable
--- compareLSExp a b = if a == b then MemEq else MemNotEq
-
 update :: a -> Simplified a
 update a = lift $ Updated a
-
-simplifyInt :: Int -> Simplified Int
-simplifyInt i = return i

@@ -1,0 +1,8 @@
+void setSame (int* x, int* y) {
+    precondition("y != *y && *y != X && *x == X");
+    postcondition("*y == X");
+
+    *y = *x;
+    
+    return;
+}
