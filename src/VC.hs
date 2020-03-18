@@ -78,6 +78,7 @@ replaceStateInASExp sOld sNew aSExp = replaceStateInASExp' sOld sNew aSExp
 
 replaceStateInASExp' :: State -> State -> ASExp -> ASExp
 replaceStateInASExp' _ _ (ASLit i) = ASLit i
+replaceStateInASExp' _ _ (ASLogVar v) = ASLogVar v
 replaceStateInASExp' sOld sNew (ASRead readLExp) = ASRead $ replaceStateInRead sOld sNew readLExp
 replaceStateInASExp' sOld sNew (ASBinExp op l r) = ASBinExp op (replaceStateInASExp sOld sNew l) (replaceStateInASExp sOld sNew r)
 replaceStateInASExp' sOld sNew (ASArray fields) = ASArray $ map (replaceStateInASExp sOld sNew) fields
@@ -125,5 +126,6 @@ hashmark (AIdt l) = ASRead $ ReadLExp sigma $ dagger l
 hashmark (ABinExp op l r) = ASBinExp op (hashmark l) (hashmark r)
 hashmark (AArray fields) = ASArray $ map hashmark fields
 hashmark (AFunCall name args) = ASFunCall name $ map hashmark args
+hashmark (ALogVar v) = ASLogVar v
 
 

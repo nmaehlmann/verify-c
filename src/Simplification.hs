@@ -46,6 +46,7 @@ simplifyFOSExp (Predicate i fos) = Predicate i <$> mapM simplifyASExp fos
 
 simplifyASExp :: ASExp -> Simplified ASExp
 simplifyASExp (ASLit a) = return $ ASLit a
+simplifyASExp (ASLogVar v) = return $ ASLogVar v
 simplifyASExp (ASRead r) = simplifyASRead r
 simplifyASExp (ASBinExp op l r) = do
     updatedL <- simplifyASExp l

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 8e34532b8ba96ec2338559d0bc2e762f05abafeeb7743e9faad68031cfb8511b
+-- hash: 5ff62368199d7fde80113d12d2650ce0c0a69e9057c1ca8fc1feb8b746e15197
 
 name:           verify-c
 version:        0.1.0.0
@@ -38,7 +38,6 @@ library
       Parser.Lexer
       Parser.LExpression
       Parser.Program
-      Parser.Sentence
       Parser.Statement
       Parser.Type
       Simplification

@@ -45,6 +45,7 @@ data AExp
     | ABinExp ABinOp AExp AExp
     | AArray [AExp]
     | AFunCall Idt [AExp]
+    | ALogVar Idt
     deriving (Eq, Show)
 
 data ASExp 
@@ -53,6 +54,7 @@ data ASExp
     | ASBinExp ABinOp ASExp ASExp
     | ASArray [ASExp]
     | ASFunCall Idt [ASExp]
+    | ASLogVar Idt
     deriving (Eq, Ord)
 
 data ReadLExp = ReadLExp State LSExp
@@ -143,6 +145,7 @@ instance Show ASExp where
         where showFields = concat $ intersperse "," $ map show fields
     show (ASFunCall name args) = show name ++ "(" ++ argsList ++ ")"
         where argsList = concat $ intersperse "," $ map show args
+    show (ASLogVar i) = show i
 
 instance Show ABinOp where
     show Add = "+"

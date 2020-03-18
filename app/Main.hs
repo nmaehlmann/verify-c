@@ -18,7 +18,7 @@ main = do
             src <- readFile t
             let ast = parse program "" src
             putStrLn $ case ast of
-                (Right (Program (f : _))) -> "vc: " ++ show (verify f)
+                (Right (Program (f : _))) -> "VCs: " ++ show (verify f)
                 _ -> "error: " ++ show ast
         
 
