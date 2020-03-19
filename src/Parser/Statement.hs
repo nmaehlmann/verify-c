@@ -14,7 +14,7 @@ statement :: Parser Stmt
 statement = whiteSpace >> chainl singleStatement (return Seq) Empty
 
 singleStatement :: Parser Stmt
-singleStatement = assignment <|> ifThenElse <|> while <|> returnStatement <|> assertion
+singleStatement = declAssignement <|> assignment <|> ifThenElse <|> while <|> returnStatement <|> assertion
 
 assertion :: Parser Stmt
 assertion = Assertion <$> fOAssertion "assertion"
@@ -22,9 +22,14 @@ assertion = Assertion <$> fOAssertion "assertion"
 invariant :: Parser FOExp
 invariant = fOAssertion "invariant"
 
+declAssignement :: Parser Stmt
+declAssignement = do
+    typeName
+    a@(Assignment idt _) <- assignment
+    return $ Seq (Declaration idt) a
+
 assignment :: Parser Stmt
 assignment = do
-    optional typeName
     idt <- lExp
     reservedOp "="
     expr <- aExp

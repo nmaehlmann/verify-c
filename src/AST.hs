@@ -90,6 +90,7 @@ data Stmt
     | Seq Stmt Stmt
     | Return (Maybe AExp)
     | Assertion FOExp 
+    | Declaration LExp
     | Empty
     deriving (Eq, Show)
 

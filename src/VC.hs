@@ -6,6 +6,7 @@ import Data.Map (Map)
 import qualified Data.Map as Map
 import Control.Monad.Reader
 import Simplification
+import qualified Data.Set as Set
 
 verify :: FunctionDefinition -> [FOSExp]
 verify f = map simplify $ FOBinExp Implies precondition awpBody : wvcs
@@ -51,12 +52,14 @@ awp (Assignment idt aExp) q _ =
     let newState = Update sigma (dagger idt) (hashmark aExp)
         oldState = sigma
     in  replaceState oldState newState q
+awp (Declaration idt) q _ = simplifyLocalVars (Set.singleton (dagger idt)) q
 awp (Return Nothing) _ qr = qr
 awp (Return _) _ _ = error "unsupported yet"
 
 wvc :: Stmt -> FOSExp -> FOSExp -> [FOSExp]
 wvc Empty _ _ = []
-wvc (Assignment _ _ ) _ _ = []
+wvc (Assignment _ _) _ _ = []
+wvc (Declaration _)  _ _ = []
 wvc (Seq s1 s2) q qr = wvc s1 (awp s2 q qr) qr ++ wvc s2 q qr
 wvc (ITE _ sTrue sFalse) q qr = wvc sTrue q qr ++ wvc sFalse q qr
 wvc (While cond inv body) q qr =

@@ -7,7 +7,12 @@ import Debug.Trace
 
 type Inequality = Set LSExp
 
-type Simplified = ReaderT (Set Inequality) Updated
+type Simplified = ReaderT SimplificationCtx Updated
+
+data SimplificationCtx = SimplificationCtx 
+    { inequalities :: Set Inequality
+    , localVars :: Set LSExp
+    }
 
 notEqual :: LSExp -> LSExp -> Inequality
 notEqual l r = Set.fromList [l, r]
@@ -21,11 +26,18 @@ findInequalities (FOBinExp And fo1 fo2) = Set.union (findInequalities fo1) (find
 findInequalities (FOBinExp Implies fo _) = findInequalities fo
 findInequalities _ = Set.empty
 
+
 simplify :: FOSExp -> FOSExp
-simplify a =
-    let inequalities = traceShowId $ findInequalities a
-    in  case runReaderT (simplifyFOSExp a) inequalities of
-            Updated updated -> simplify updated
+simplify = simplifyLocalVars Set.empty
+
+simplifyLocalVars :: Set LSExp -> FOSExp -> FOSExp
+simplifyLocalVars locals a =
+    let ctx = SimplificationCtx 
+            { inequalities = traceShowId $ findInequalities a
+            , localVars = locals
+            }
+    in  case runReaderT (simplifyFOSExp a) ctx of
+            Updated updated -> simplifyLocalVars locals updated
             Unchanged unchanged -> unchanged
 
 simplifyFOSExp :: FOSExp -> Simplified FOSExp
@@ -136,11 +148,12 @@ compareLSExp :: LSExp -> LSExp -> Simplified MemEq
 compareLSExp a b = if (a == b) 
     then return MemEq
     else do
-        inequalities <- ask
-        let predefindedNEq = Set.member (notEqual a b) inequalities
-        let noRefA = isNotRead a
-        let noRefB = isNotRead b
-        return $ if predefindedNEq || (noRefA && noRefB) then MemNotEq else MemUndecidable
+        ineqs <- inequalities <$> ask
+        decls <- localVars <$> ask
+        let predefindedNEq = Set.member (notEqual a b) ineqs
+        let bothAreNotRef = isNotRead a && isNotRead b
+        let anyIsFresh = Set.member a decls || Set.member b decls
+        return $ if predefindedNEq || bothAreNotRef || anyIsFresh then MemNotEq else MemUndecidable
 
 isNotRead :: LSExp -> Bool
 isNotRead (LSRead _) = False
