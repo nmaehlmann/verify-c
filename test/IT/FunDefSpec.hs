@@ -25,6 +25,18 @@ funDefSpec = return $ describe "Parser.FunctionDefinition" $ do
                 }
         parseFunDef s `shouldBe` (Right result)
 
+    it "parses boolean expressions in preconditions" $ do
+        let s = "void noOp(){ precondition(\"a != *b\"); postcondition(\"true\"); return; }"
+        let result = FunctionDefinition
+                { funDefType     = TVoid
+                , funDefName     = Idt "noOp"
+                , funDefArgs     = []
+                , funDefPrecond  = BComp NotEqual (AIdt a) (AIdt (LDeref b))
+                , funDefPostcond = BTrue
+                , funDefBody     = Return Nothing
+                }
+        parseFunDef s `shouldBe` (Right result)
+
     it "parses functions without arguments" $ do
         let s = "int one(){ precondition(\"true\"); postcondition(\"true\"); return 1; }"
         let result = FunctionDefinition

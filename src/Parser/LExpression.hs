@@ -32,6 +32,7 @@ lOperatorTableC0 =
 lOperatorTableFO :: OperatorTable String () Identity (LExp' FO)
 lOperatorTableFO = 
     [ [postfix (opArray (aExpFO lExpFO))]
+    , [prefix opDereference]
     , [postfix opPart]
     ]
 
@@ -42,7 +43,7 @@ opPart = do
     return $ \s -> LStructurePart s part
 
 -- TODO: why does this not work with reservedOp?
-opDereference :: Parser (LExp' C0 -> LExp' C0)
+opDereference :: Parser (LExp' l -> LExp' l)
 opDereference = char '*' >> return LDeref
 
 opArray :: Parser (AExp' l) -> Parser (LExp' l -> LExp' l)
