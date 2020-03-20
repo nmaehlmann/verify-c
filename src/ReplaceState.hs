@@ -20,14 +20,14 @@ rReplaceState sOld sNew (ReadLExpr sNested lSExp) = ReadLExpr (sReplaceState sOl
 
 sReplaceState :: ReplaceState State
 sReplaceState sOld sNew sNested | sOld == sNested = sNew
-sReplaceState sOld sNew (Update state lSExp aSExp) = Update 
+sReplaceState sOld sNew (Update state lExp aExp) = Update 
     (sReplaceState sOld sNew state) 
-    (lReplaceState sOld sNew lSExp)
-    (aReplaceState sOld sNew aSExp)
+    (lReplaceState sOld sNew lExp)
+    (aReplaceState sOld sNew aExp)
 sReplaceState _ _ s = s
 
 lReplaceState :: ReplaceState (LExpr FO Refs)
 lReplaceState _ _ (LIdt idt) = LIdt idt
-lReplaceState sOld sNew (LArray lSExp aSExp) = LArray (lReplaceState sOld sNew lSExp) (aReplaceState sOld sNew aSExp)
-lReplaceState sOld sNew (LStructurePart lSExp idt) = LStructurePart (lReplaceState sOld sNew lSExp) idt
+lReplaceState sOld sNew (LArray lExp aSExp) = LArray (lReplaceState sOld sNew lExp) (aReplaceState sOld sNew aSExp)
+lReplaceState sOld sNew (LStructurePart lExp idt) = LStructurePart (lReplaceState sOld sNew lExp) idt
 lReplaceState sOld sNew (LRead readLExp) = LRead $ rReplaceState sOld sNew readLExp

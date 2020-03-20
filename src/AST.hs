@@ -161,21 +161,21 @@ instance Show ABinOp where
 
 instance Show (ReadLExpr l) where
     -- show (ReadLExp (Atomic _) (LSIdt i)) = show i
-    show (ReadLExpr state lSExp) = "read(" ++ show state ++ ", " ++ show lSExp ++ ")"
+    show (ReadLExpr state lExp) = "read(" ++ show state ++ ", " ++ show lExp ++ ")"
 
 instance Show (LExpr l m) where
     show (LIdt i) = show i
-    show (LArray lSExp aSExp) = show lSExp ++ "[" ++ show aSExp ++ "]"
-    show (LStructurePart lSExp idt) = show lSExp ++ "." ++ show idt
+    show (LArray lExp aExp) = show lExp ++ "[" ++ show aExp ++ "]"
+    show (LStructurePart lExp idt) = show lExp ++ "." ++ show idt
     show (LRead r) = show r
     show (LDeref i) = '*' : show i
 
 instance Show State where
     show (Atomic s) = s
-    show (Update state lSExp aSExp) = "upd(" 
+    show (Update state lExp aExp) = "upd(" 
         ++ show state ++ ", " 
-        ++ show lSExp ++ ", "
-        ++ show aSExp ++ ")"
+        ++ show lExp ++ ", "
+        ++ show aExp ++ ")"
 
 instance Show BBinOp where
     show And = "&&"
