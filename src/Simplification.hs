@@ -112,10 +112,10 @@ simplifyARead' original@(ReadLExpr (Update state lExpr aExpr) toRead) = do
 simplifyARead' original = return $ ARead original
 
 simplifyState :: State -> Simplified State
-simplifyState (Update state lExpr aSExp) = do
+simplifyState (Update state lExpr aExpr) = do
     simplifiedState <- simplifyState state
     simplifiedLExpr <- simplifyLExpr lExpr
-    simplifiedAExpr <- simplifyAExprFO aSExp
+    simplifiedAExpr <- simplifyAExprFO aExpr
     simplifyState' (Update simplifiedState simplifiedLExpr simplifiedAExpr)
 simplifyState atomic = return atomic    
 simplifyState' :: State -> Simplified State
