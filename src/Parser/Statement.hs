@@ -19,7 +19,7 @@ singleStatement = declAssignement <|> assignment <|> ifThenElse <|> while <|> re
 assertion :: Parser Stmt
 assertion = Assertion <$> assertionFO "assertion"
 
-invariant :: Parser (BExpr' FO)
+invariant :: Parser (BExp' FO)
 invariant = assertionFO "invariant"
 
 declAssignement :: Parser Stmt

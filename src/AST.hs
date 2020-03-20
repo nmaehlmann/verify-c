@@ -9,19 +9,19 @@ import Data.List
 
 data State
     = Atomic String
-    | Update State (LExpr FO Refs) (AExpr FO Refs)
+    | Update State (LExp FO Refs) (AExp FO Refs)
     deriving (Eq, Ord)
 
-deriving instance Eq (LExpr FO Refs)
-deriving instance Eq (LExpr FO Plain)
-deriving instance Ord (LExpr FO Refs)
-deriving instance Ord (LExpr FO Plain)
-deriving instance Eq (AExpr FO Refs)
-deriving instance Eq (AExpr FO Plain)
-deriving instance Ord (AExpr FO Refs)
-deriving instance Ord (AExpr FO Plain)
-deriving instance Eq (ReadLExpr FO)
-deriving instance Ord (ReadLExpr FO)
+deriving instance Eq (LExp FO Refs)
+deriving instance Eq (LExp FO Plain)
+deriving instance Ord (LExp FO Refs)
+deriving instance Ord (LExp FO Plain)
+deriving instance Eq (AExp FO Refs)
+deriving instance Eq (AExp FO Plain)
+deriving instance Ord (AExp FO Refs)
+deriving instance Ord (AExp FO Plain)
+deriving instance Eq (ReadLExp FO)
+deriving instance Ord (ReadLExp FO)
 
 sigma :: State
 sigma = Atomic "s"
@@ -35,23 +35,23 @@ data CompOp = Less | LessOrEqual | Greater | GreaterOrEqual | Equal | NotEqual
 data BBinOp = And | Or | Implies
     deriving (Eq)
 
-type LExpr' l = LExpr l Plain
-type AExpr' l = AExpr l Plain
+type LExp' l = LExp l Plain
+type AExp' l = AExp l Plain
 
-type LExpr'' = LExpr' C0
-type AExpr'' = AExpr' C0
+type LExp'' = LExp' C0
+type AExp'' = AExp' C0
 
-type BExpr' l = BExpr l Plain
+type BExp' l = BExp l Plain
 
 data Stmt 
-    = Assignment LExpr'' AExpr''
-    | ITE (BExpr' C0) Stmt Stmt
-    | While (BExpr' C0) (BExpr' FO) Stmt
+    = Assignment LExp'' AExp''
+    | ITE (BExp' C0) Stmt Stmt
+    | While (BExp' C0) (BExp' FO) Stmt
     | Seq Stmt Stmt
-    | Return (Maybe AExpr'')
-    | Assertion (BExpr'  FO)
-    | Declaration LExpr''
-    | FunCall (Maybe LExpr'') Idt [AExpr'']
+    | Return (Maybe AExp'')
+    | Assertion (BExp'  FO)
+    | Declaration LExp''
+    | FunCall (Maybe LExp'') Idt [AExp'']
     | Empty
 
 data Program = Program [FunctionDefinition]
@@ -60,8 +60,8 @@ data FunctionDefinition = FunctionDefinition
     { funDefType      :: Type
     , funDefName      :: Idt
     , funDefArgs      :: [Decl]
-    , funDefPrecond   :: BExpr' FO
-    , funDefPostcond  :: BExpr' FO
+    , funDefPrecond   :: BExp' FO
+    , funDefPostcond  :: BExp' FO
     , funDefBody      :: Stmt
     }
 
@@ -85,35 +85,35 @@ data FO = FO
 data Refs = Refs
 data Plain = Plain
 
-data BExpr l m where
-    BTrue       :: BExpr l m
-    BFalse      :: BExpr l m
-    BNeg        :: BExpr l m -> BExpr l m
-    BBinExp     :: BBinOp -> BExpr l m -> BExpr l m -> BExpr l m
-    BComp       :: CompOp -> AExpr l m -> AExpr l m -> BExpr l m
-    BForall     :: Idt -> BExpr FO m -> BExpr FO m
-    BExists     :: Idt -> BExpr FO m -> BExpr FO m
-    BPredicate  :: Idt -> [AExpr FO m] -> BExpr FO m
+data BExp l m where
+    BTrue       :: BExp l m
+    BFalse      :: BExp l m
+    BNeg        :: BExp l m -> BExp l m
+    BBinExp     :: BBinOp -> BExp l m -> BExp l m -> BExp l m
+    BComp       :: CompOp -> AExp l m -> AExp l m -> BExp l m
+    BForall     :: Idt -> BExp FO m -> BExp FO m
+    BExists     :: Idt -> BExp FO m -> BExp FO m
+    BPredicate  :: Idt -> [AExp FO m] -> BExp FO m
 
-data LExpr l m where
-    LIdt            :: Idt -> LExpr l m
-    LArray          :: LExpr l m -> AExpr l m -> LExpr l m
-    LStructurePart  :: LExpr l m -> Idt -> LExpr l m
-    LRead           :: ReadLExpr l -> LExpr l Refs
-    LDeref          :: LExpr l Plain -> LExpr l Plain
+data LExp l m where
+    LIdt            :: Idt -> LExp l m
+    LArray          :: LExp l m -> AExp l m -> LExp l m
+    LStructurePart  :: LExp l m -> Idt -> LExp l m
+    LRead           :: ReadLExp l -> LExp l Refs
+    LDeref          :: LExp l Plain -> LExp l Plain
 
-data AExpr l m where
-    ALit        :: Integer -> AExpr l m
-    AIdt        :: LExpr l Plain -> AExpr l Plain
-    ARead       :: ReadLExpr FO -> AExpr FO Refs
-    ABinExp     :: ABinOp -> AExpr l m -> AExpr l m -> AExpr l m
-    AArray      :: [AExpr l m] -> AExpr l m
-    AFunCall    :: Idt -> [AExpr FO m] -> AExpr FO m
-    ALogVar     :: Idt -> AExpr FO m
+data AExp l m where
+    ALit        :: Integer -> AExp l m
+    AIdt        :: LExp l Plain -> AExp l Plain
+    ARead       :: ReadLExp FO -> AExp FO Refs
+    ABinExp     :: ABinOp -> AExp l m -> AExp l m -> AExp l m
+    AArray      :: [AExp l m] -> AExp l m
+    AFunCall    :: Idt -> [AExp FO m] -> AExp FO m
+    ALogVar     :: Idt -> AExp FO m
 
-data ReadLExpr l = ReadLExpr State (LExpr l Refs)
+data ReadLExp l = ReadLExp State (LExp l Refs)
 
-mapAExps :: (AExpr l m1 -> AExpr FO m2) -> (BExpr l m1) -> (BExpr FO m2)
+mapAExps :: (AExp l m1 -> AExp FO m2) -> (BExp l m1) -> (BExp FO m2)
 mapAExps _ BTrue = BTrue
 mapAExps _ BFalse = BFalse
 mapAExps f (BComp op l r) = BComp op (f l) (f r)
@@ -125,7 +125,7 @@ mapAExps f (BPredicate name args) = BPredicate name $ fmap f args
 
 -- Show instances
 
-instance Show (BExpr l m) where
+instance Show (BExp l m) where
     show BTrue = "true"
     show BFalse = "false"
     show (BComp op l r) = showBinExp op l r
@@ -142,7 +142,7 @@ showBinExp op l r = "(" ++ show l ++ " " ++ show op ++ " " ++ show r ++ ")"
 instance Show Idt where
     show (Idt s) = s
 
-instance Show (AExpr l m) where
+instance Show (AExp l m) where
     show (ALit i) = show i
     show (ARead readLExp) = show readLExp
     show (ABinExp op l r) = showBinExp op l r
@@ -159,11 +159,11 @@ instance Show ABinOp where
     show Mul = "*"
     show Div = "/"
 
-instance Show (ReadLExpr l) where
+instance Show (ReadLExp l) where
     -- show (ReadLExp (Atomic _) (LSIdt i)) = show i
-    show (ReadLExpr state lExp) = "read(" ++ show state ++ ", " ++ show lExp ++ ")"
+    show (ReadLExp state lExp) = "read(" ++ show state ++ ", " ++ show lExp ++ ")"
 
-instance Show (LExpr l m) where
+instance Show (LExp l m) where
     show (LIdt i) = show i
     show (LArray lExp aExp) = show lExp ++ "[" ++ show aExp ++ "]"
     show (LStructurePart lExp idt) = show lExp ++ "." ++ show idt

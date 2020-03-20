@@ -10,42 +10,42 @@ import qualified Parser.Lexer as Lex
 import Parser.Identifier
 import Parser.InternalArithmeticExpression
 
-lExpC0 :: Parser (LExpr' C0)
+lExpC0 :: Parser (LExp' C0)
 lExpC0 = buildExpressionParser lOperatorTableC0 lTerm
 
-lExpFO :: Parser (LExpr' FO)
+lExpFO :: Parser (LExp' FO)
 lExpFO = buildExpressionParser lOperatorTableFO lTerm
 
-lTerm :: Parser (LExpr' l)
+lTerm :: Parser (LExp' l)
 lTerm = lIdentifier
 
-lIdentifier :: Parser (LExpr' l)
+lIdentifier :: Parser (LExp' l)
 lIdentifier = LIdt <$> identifier
 
-lOperatorTableC0 :: OperatorTable String () Identity (LExpr' C0)
+lOperatorTableC0 :: OperatorTable String () Identity (LExp' C0)
 lOperatorTableC0 = 
     [ [postfix (opArray (aExpC0 lExpC0))]
     , [prefix opDereference]
     , [postfix opPart]
     ]
 
-lOperatorTableFO :: OperatorTable String () Identity (LExpr' FO)
+lOperatorTableFO :: OperatorTable String () Identity (LExp' FO)
 lOperatorTableFO = 
     [ [postfix (opArray (aExpFO lExpFO))]
     , [postfix opPart]
     ]
 
-opPart :: Parser (LExpr' l -> LExpr' l)
+opPart :: Parser (LExp' l -> LExp' l)
 opPart = do
     Lex.reservedOp "."
     part <- identifier
     return $ \s -> LStructurePart s part
 
 -- TODO: why does this not work with reservedOp?
-opDereference :: Parser (LExpr' C0 -> LExpr' C0)
+opDereference :: Parser (LExp' C0 -> LExp' C0)
 opDereference = char '*' >> return LDeref
 
-opArray :: Parser (AExpr' l) -> Parser (LExpr' l -> LExpr' l)
+opArray :: Parser (AExp' l) -> Parser (LExp' l -> LExp' l)
 opArray aExp = do
     idx <- Lex.brackets $ aExp
     return $ (\lExpression -> LArray lExpression idx)

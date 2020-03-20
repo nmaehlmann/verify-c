@@ -10,25 +10,25 @@ import Parser.ArithmeticExpression
 import Parser.Identifier
 import Parser.Lexer
 
-bExpC0 :: Parser (BExpr' C0)
+bExpC0 :: Parser (BExp' C0)
 bExpC0 = buildExpressionParser bOperatorTable bTermC0
 
-bTermC0 :: Parser (BExpr' C0)
+bTermC0 :: Parser (BExp' C0)
 bTermC0 = parens bExpC0 <|> bTrue <|> bFalse <|> bComparison aExpC0
 
-bExpFO :: Parser (BExpr' FO)
+bExpFO :: Parser (BExp' FO)
 bExpFO = buildExpressionParser bOperatorTable bTermFO
 
-bTermFO :: Parser (BExpr' FO)
+bTermFO :: Parser (BExp' FO)
 bTermFO = parens bTermFO <|> bTrue <|> bFalse <|> bComparison aExpFO <|> forall <|> exists <|> predicate
 
-forall :: Parser (BExpr' FO)
+forall :: Parser (BExp' FO)
 forall = quantifier "forall" BForall
 
-exists :: Parser (BExpr' FO)
+exists :: Parser (BExp' FO)
 exists = quantifier "exists" BExists
 
-quantifier :: String -> (Idt -> BExpr' FO -> BExpr' FO) -> Parser (BExpr' FO)
+quantifier :: String -> (Idt -> BExp' FO -> BExp' FO) -> Parser (BExp' FO)
 quantifier quantifierString quantifierConstructor = do
     reserved quantifierString
     (idt, fo) <- parens $ do
@@ -38,7 +38,7 @@ quantifier quantifierString quantifierConstructor = do
         return (idt, fo)
     return $ quantifierConstructor idt fo
 
-bComparison :: Parser (AExpr' l) -> Parser (BExpr' l)
+bComparison :: Parser (AExp' l) -> Parser (BExp' l)
 bComparison aExp = try $ do
     lhs <- aExp
     op  <- comparisonOperator
@@ -59,31 +59,31 @@ comparisonOperators =
     , (">" , Greater)
     ]
 
-bOperatorTable :: OperatorTable String () Identity (BExpr' l)
+bOperatorTable :: OperatorTable String () Identity (BExp' l)
 bOperatorTable =
     [ [Prefix opNeg]
     , [Infix opAnd AssocLeft, Infix opOr AssocLeft, Infix opImplies AssocLeft]
     ]
 
-opAnd, opOr, opImplies :: Parser (BExpr' l -> BExpr' l -> BExpr' l)
+opAnd, opOr, opImplies :: Parser (BExp' l -> BExp' l -> BExp' l)
 opAnd = reservedOp "&&" >> return (BBinExp And)
 opOr = reservedOp "||" >> return (BBinExp Or)
 opImplies = reservedOp "->" >> return (BBinExp Implies)
 
-opNeg :: Parser (BExpr' l -> BExpr' l)
+opNeg :: Parser (BExp' l -> BExp' l)
 opNeg = reservedOp "!" >> return BNeg
 
-bTrue, bFalse :: Parser (BExpr' l)
+bTrue, bFalse :: Parser (BExp' l)
 bTrue = reserved "true" >> return BTrue
 bFalse = reserved "false" >> return BFalse
 
-predicate :: Parser (BExpr' FO)
+predicate :: Parser (BExp' FO)
 predicate = do
     predName <- identifier
     predArgs <- parens $ commaSep aExpFO
     return $ BPredicate predName predArgs
 
-assertionFO :: String -> Parser (BExpr' FO)
+assertionFO :: String -> Parser (BExp' FO)
 assertionFO keyword = do
     reserved keyword
     fo <- parens (quotes bExpFO)

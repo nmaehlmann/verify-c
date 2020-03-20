@@ -30,8 +30,8 @@ funDef = do
         , funDefBody     = body
         }
 
-precondition :: Parser (BExpr' FO)
+precondition :: Parser (BExp' FO)
 precondition = assertionFO "precondition"
 
-postcondition :: Parser (BExpr' FO)
+postcondition :: Parser (BExp' FO)
 postcondition = assertionFO "postcondition"

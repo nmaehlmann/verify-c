@@ -84,7 +84,7 @@ awpSpec = return $ describe "VC.awp" $ do
         awp assnCPlusTwoToC facFormula FOTrue  `shouldBe` facFormulaUpdated
         
 
-facFormulaForState :: State -> BExprFO
+facFormulaForState :: State -> BExpFO
 facFormulaForState state = 
     let fac = Idt $ "fac"
         p = LSIdt $ Idt $ "p"

@@ -6,10 +6,10 @@ import AST
 import qualified Parser.InternalArithmeticExpression as IAExp
 import Parser.LExpression
 
-aExpC0 :: Parser (AExpr' C0)
+aExpC0 :: Parser (AExp' C0)
 aExpC0 = IAExp.aExpC0 lExpC0
 
-aExpFO :: Parser (AExpr' FO)
+aExpFO :: Parser (AExp' FO)
 aExpFO = IAExp.aExpFO lExpFO
 
 

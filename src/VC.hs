@@ -12,7 +12,7 @@ import LiftLogic
 import LiftMemory
 import ReplaceState
 
-verify :: FunctionDefinition -> [BExprFO]
+verify :: FunctionDefinition -> [BExpFO]
 verify f = map simplify $ BBinExp Implies precondition awpBody : wvcs
     where
         awpBody = awp (funDefBody f) postcondition postcondition
@@ -23,15 +23,15 @@ verify f = map simplify $ BBinExp Implies precondition awpBody : wvcs
 type VC = Reader Ctx
 
 data Ctx = Ctx 
-    { preconditions :: Map Idt BExprFO
-    , postconditions :: Map Idt BExprFO
+    { preconditions :: Map Idt BExpFO
+    , postconditions :: Map Idt BExpFO
     }
 
 generateContext :: Program -> Ctx
 generateContext (Program fs) = Ctx {preconditions = pres, postconditions = posts}
     where (pres, posts) = generateContext' fs
 
-generateContext' :: [FunctionDefinition] -> (Map Idt BExprFO, Map Idt BExprFO)
+generateContext' :: [FunctionDefinition] -> (Map Idt BExpFO, Map Idt BExpFO)
 generateContext' [] = (Map.empty, Map.empty)
 generateContext' (f:fs) = 
     let insert = Map.insert (funDefName f)
@@ -40,7 +40,7 @@ generateContext' (f:fs) =
         (prevPre, prevPost) = generateContext' fs
     in  (insert pre prevPre, insert post prevPost)
 
-awp :: Stmt -> BExprFO -> BExprFO -> BExprFO
+awp :: Stmt -> BExpFO -> BExpFO -> BExpFO
 awp Empty q _ = q
 awp (Assertion q) _ _ = bLiftMemory q
 awp (ITE condition sTrue sFalse) q qr = 
@@ -61,7 +61,7 @@ awp (Return Nothing) _ qr = qr
 awp (Return _) _ _ = error "unsupported yet"
 awp (FunCall _ _ _) _ _ = error "unsupported yet"
 
-wvc :: Stmt -> BExprFO -> BExprFO -> [BExprFO]
+wvc :: Stmt -> BExpFO -> BExpFO -> [BExpFO]
 wvc Empty _ _ = []
 wvc (Assignment _ _) _ _ = []
 wvc (Declaration _)  _ _ = []

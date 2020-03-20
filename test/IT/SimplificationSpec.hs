@@ -41,9 +41,9 @@ simplifyASExpSpec = return $ describe "Simplification.simplifyASExp" $ do
     let y = LSIdt $ Idt "y"
 
     it "simplifies unneccessary updates" $ do
-        let AExprFO = ASRead (ReadLExp (Update sigma y (ASLit 6)) x)
+        let AExpFO = ASRead (ReadLExp (Update sigma y (ASLit 6)) x)
         let aSExpSimplified = ASRead (ReadLExp sigma x)
-        runReaderT (simplifyAExprFO aSExp) emptySimplificationCtx `shouldBe` (Updated aSExpSimplified)
+        runReaderT (simplifyAExpFO aSExp) emptySimplificationCtx `shouldBe` (Updated aSExpSimplified)
 
 simplifyReadSpec :: IO Spec
 simplifyReadSpec = return $ describe "Simplification.simplifyRead" $ do
