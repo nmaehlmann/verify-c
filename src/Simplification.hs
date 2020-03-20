@@ -1,3 +1,4 @@
+{-# LANGUAGE GADTs #-}
 module Simplification where
 import AST
 import Control.Monad.Reader
@@ -9,6 +10,11 @@ type Inequality = Set LSExp
 
 type Simplified = ReaderT SimplificationCtx Updated
 
+type BExprFO = BExpr FO Refs
+type ASExp = AExpr FO Refs
+type LSExp = LExpr FO Refs
+type ReadLSExp = ReadLExpr FO
+
 data SimplificationCtx = SimplificationCtx 
     { inequalities :: Set Inequality
     , localVars :: Set LSExp
@@ -17,105 +23,104 @@ data SimplificationCtx = SimplificationCtx
 notEqual :: LSExp -> LSExp -> Inequality
 notEqual l r = Set.fromList [l, r]
 
-findInequalities :: FOSExp -> Set Inequality
-findInequalities (FOComp NotEqual (ASRead (ReadLExp s1 l)) (ASRead (ReadLExp s2 r))) = 
+findInequalities :: BExprFO -> Set Inequality
+findInequalities (BComp NotEqual (ARead (ReadLExpr s1 l)) (ARead (ReadLExpr s2 r))) = 
     if s1 == s2 
         then Set.singleton $ notEqual l r
         else Set.empty
-findInequalities (FOBinExp And fo1 fo2) = Set.union (findInequalities fo1) (findInequalities fo2)
-findInequalities (FOBinExp Implies fo _) = findInequalities fo
+findInequalities (BBinExp And fo1 fo2) = Set.union (findInequalities fo1) (findInequalities fo2)
+findInequalities (BBinExp Implies fo _) = findInequalities fo
 findInequalities _ = Set.empty
 
-
-simplify :: FOSExp -> FOSExp
+simplify :: BExprFO -> BExprFO
 simplify = simplifyLocalVars Set.empty
 
-simplifyLocalVars :: Set LSExp -> FOSExp -> FOSExp
+simplifyLocalVars :: Set LSExp -> BExprFO -> BExprFO
 simplifyLocalVars locals a =
     let ctx = SimplificationCtx 
             { inequalities = traceShowId $ findInequalities a
             , localVars = locals
             }
-    in  case runReaderT (simplifyFOSExp a) ctx of
+    in  case runReaderT (simplifyBExprFO a) ctx of
             Updated updated -> simplifyLocalVars locals updated
             Unchanged unchanged -> unchanged
 
-simplifyFOSExp :: FOSExp -> Simplified FOSExp
-simplifyFOSExp FOTrue = return FOTrue
-simplifyFOSExp FOFalse = return FOFalse
-simplifyFOSExp (FOComp op l r) = do
+simplifyBExprFO :: BExprFO -> Simplified BExprFO
+simplifyBExprFO BTrue = return BTrue
+simplifyBExprFO BFalse = return BFalse
+simplifyBExprFO (BComp op l r) = do
     updatedL <- simplifyASExp l
     updatedR <- simplifyASExp r
-    return $ FOComp op updatedL updatedR
-simplifyFOSExp (FONeg fo) = FONeg <$> simplifyFOSExp fo
-simplifyFOSExp (FOBinExp op l r) = do
-    updatedL <- simplifyFOSExp l
-    updatedR <- simplifyFOSExp r
-    return $ FOBinExp op updatedL updatedR
-simplifyFOSExp (Forall i fo) = Forall i <$> simplifyFOSExp fo
-simplifyFOSExp (Exists i fo) = Exists i <$> simplifyFOSExp fo
-simplifyFOSExp (Predicate i fos) = Predicate i <$> mapM simplifyASExp fos 
+    return $ BComp op updatedL updatedR
+simplifyBExprFO (BNeg fo) = BNeg <$> simplifyBExprFO fo
+simplifyBExprFO (BBinExp op l r) = do
+    updatedL <- simplifyBExprFO l
+    updatedR <- simplifyBExprFO r
+    return $ BBinExp op updatedL updatedR
+simplifyBExprFO (BForall i fo) = BForall i <$> simplifyBExprFO fo
+simplifyBExprFO (BExists i fo) = BExists i <$> simplifyBExprFO fo
+simplifyBExprFO (BPredicate i fos) = BPredicate i <$> mapM simplifyASExp fos 
 
 simplifyASExp :: ASExp -> Simplified ASExp
-simplifyASExp (ASLit a) = return $ ASLit a
-simplifyASExp (ASLogVar v) = return $ ASLogVar v
-simplifyASExp (ASRead r) = simplifyASRead r
-simplifyASExp (ASBinExp op l r) = do
+simplifyASExp (ALit a) = return $ ALit a
+simplifyASExp (ALogVar v) = return $ ALogVar v
+simplifyASExp (ARead r) = simplifyARead r
+simplifyASExp (ABinExp op l r) = do
     updatedL <- simplifyASExp l
     updatedR <- simplifyASExp r
-    return $ ASBinExp op updatedL updatedR
-simplifyASExp (ASArray fields) = ASArray <$> mapM simplifyASExp fields
-simplifyASExp (ASFunCall funName funArgs) = ASFunCall funName <$> mapM simplifyASExp funArgs
+    return $ ABinExp op updatedL updatedR
+simplifyASExp (AArray fields) = AArray <$> mapM simplifyASExp fields
+simplifyASExp (AFunCall funName funArgs) = AFunCall funName <$> mapM simplifyASExp funArgs
 
-simplifyLSExp :: LSExp -> Simplified LSExp
-simplifyLSExp (LSIdt i) = return $ LSIdt i
-simplifyLSExp (LSArray name idx) = do
-    newName <- simplifyLSExp name
+simplifyLExpr :: LSExp -> Simplified LSExp
+simplifyLExpr (LIdt i) = return $ LIdt i
+simplifyLExpr (LArray name idx) = do
+    newName <- simplifyLExpr name
     newIdx <- simplifyASExp idx
-    return $ LSArray newName newIdx
-simplifyLSExp (LSStructPart struct part) = do
-    newStruct <- simplifyLSExp struct
-    return $ LSStructPart newStruct part
-simplifyLSExp (LSRead r) = simplifyLSRead r
+    return $ LArray newName newIdx
+simplifyLExpr (LStructurePart struct part) = do
+    newStruct <- simplifyLExpr struct
+    return $ LStructurePart newStruct part
+simplifyLExpr (LRead r) = simplifyLRead r
 
-simplifyReadLExp :: ReadLExp -> Simplified ReadLExp
-simplifyReadLExp (ReadLExp state loc) = do
+simplifyReadLExpr :: ReadLSExp -> Simplified ReadLSExp
+simplifyReadLExpr (ReadLExpr state loc) = do
     simplifiedState <- simplifyState state
-    simplifiedLoc <- simplifyLSExp loc
-    return $ ReadLExp simplifiedState simplifiedLoc
+    simplifiedLoc <- simplifyLExpr loc
+    return $ ReadLExpr simplifiedState simplifiedLoc
 
-simplifyLSRead :: ReadLExp -> Simplified LSExp
-simplifyLSRead l = simplifyReadLExp l >>= simplifyLSRead'
-simplifyLSRead' :: ReadLExp -> Simplified LSExp
-simplifyLSRead' original@(ReadLExp (Update state lSExp _) toRead) = do
-    memComparison <- compareLSExp toRead lSExp
-    LSRead <$> case memComparison of
+simplifyLRead :: ReadLSExp -> Simplified LSExp
+simplifyLRead l = simplifyReadLExpr l >>= simplifyLRead'
+simplifyLRead' :: ReadLSExp -> Simplified LSExp
+simplifyLRead' original@(ReadLExpr (Update state lExpr _) toRead) = do
+    memComparison <- compareLExpr toRead lExpr
+    LRead <$> case memComparison of
         MemEq -> error "do something here"
-        MemNotEq -> update $ ReadLExp state toRead 
+        MemNotEq -> update $ ReadLExpr state toRead 
         MemUndecidable -> return original
-simplifyLSRead' original = return $ LSRead original
+simplifyLRead' original = return $ LRead original
 
-simplifyASRead :: ReadLExp -> Simplified ASExp
-simplifyASRead l = simplifyReadLExp l >>= simplifyASRead'
-simplifyASRead' :: ReadLExp -> Simplified ASExp
-simplifyASRead' original@(ReadLExp (Update state lSExp aSExp) toRead) = do
-    memComparison <- compareLSExp toRead lSExp
+simplifyARead :: ReadLSExp -> Simplified ASExp
+simplifyARead l = simplifyReadLExpr l >>= simplifyARead'
+simplifyARead' :: ReadLSExp -> Simplified ASExp
+simplifyARead' original@(ReadLExpr (Update state lExpr aSExp) toRead) = do
+    memComparison <- compareLExpr toRead lExpr
     case memComparison of
         MemEq -> update aSExp
-        MemNotEq -> update $ ASRead $ ReadLExp state toRead 
-        MemUndecidable -> return $ ASRead original
-simplifyASRead' original = return $ ASRead original
+        MemNotEq -> update $ ARead $ ReadLExpr state toRead 
+        MemUndecidable -> return $ ARead original
+simplifyARead' original = return $ ARead original
 
 simplifyState :: State -> Simplified State
-simplifyState (Update state lSExp aSExp) = do
+simplifyState (Update state lExpr aSExp) = do
     simplifiedState <- simplifyState state
-    simplifiedLSExp <- simplifyLSExp lSExp
+    simplifiedLExpr <- simplifyLExpr lExpr
     simplifiedASExp <- simplifyASExp aSExp
-    simplifyState' (Update simplifiedState simplifiedLSExp simplifiedASExp)
+    simplifyState' (Update simplifiedState simplifiedLExpr simplifiedASExp)
 simplifyState atomic = return atomic    
 simplifyState' :: State -> Simplified State
 simplifyState'  original@(Update (Update s l1 _) l2 w) = do
-    memComparison <- compareLSExp l1 l2
+    memComparison <- compareLExpr l1 l2
     case memComparison of
         MemEq -> update $ Update s l2 w
         _ -> return original
@@ -144,8 +149,8 @@ instance Monad Updated where
 data MemEq = MemEq | MemNotEq |MemUndecidable
 
 
-compareLSExp :: LSExp -> LSExp -> Simplified MemEq
-compareLSExp a b = if (a == b) 
+compareLExpr :: LSExp -> LSExp -> Simplified MemEq
+compareLExpr a b = if (a == b) 
     then return MemEq
     else do
         ineqs <- inequalities <$> ask
@@ -156,7 +161,7 @@ compareLSExp a b = if (a == b)
         return $ if predefindedNEq || bothAreNotRef || anyIsFresh then MemNotEq else MemUndecidable
 
 isNotRead :: LSExp -> Bool
-isNotRead (LSRead _) = False
+isNotRead (LRead _) = False
 isNotRead _ = True
 
 update :: a -> Simplified a

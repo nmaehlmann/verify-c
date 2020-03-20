@@ -1,4 +1,4 @@
-module Parser.LExpression (lExp) where
+module Parser.LExpression (lExpC0, lExpFO) where
 
 import Data.Functor.Identity
 import Text.Parsec.String (Parser)
@@ -10,35 +10,44 @@ import qualified Parser.Lexer as Lex
 import Parser.Identifier
 import Parser.InternalArithmeticExpression
 
-lExp :: Parser LExp
-lExp = buildExpressionParser lOperatorTable lTerm
+lExpC0 :: Parser (LExpr' C0)
+lExpC0 = buildExpressionParser lOperatorTableC0 lTerm
 
-lTerm :: Parser LExp
+lExpFO :: Parser (LExpr' FO)
+lExpFO = buildExpressionParser lOperatorTableFO lTerm
+
+lTerm :: Parser (LExpr' l)
 lTerm = lIdentifier
 
-lIdentifier :: Parser LExp
+lIdentifier :: Parser (LExpr' l)
 lIdentifier = LIdt <$> identifier
 
-lOperatorTable :: OperatorTable String () Identity LExp
-lOperatorTable = 
-    [ [postfix opArray]
+lOperatorTableC0 :: OperatorTable String () Identity (LExpr' C0)
+lOperatorTableC0 = 
+    [ [postfix (opArray (aExpC0 lExpC0))]
     , [prefix opDereference]
     , [postfix opPart]
     ]
 
-opPart :: Parser (LExp -> LExp)
+lOperatorTableFO :: OperatorTable String () Identity (LExpr' FO)
+lOperatorTableFO = 
+    [ [postfix (opArray (aExpFO lExpFO))]
+    , [postfix opPart]
+    ]
+
+opPart :: Parser (LExpr' l -> LExpr' l)
 opPart = do
     Lex.reservedOp "."
     part <- identifier
-    return $ \s -> LStructPart s part
+    return $ \s -> LStructurePart s part
 
 -- TODO: why does this not work with reservedOp?
-opDereference :: Parser (LExp -> LExp)
-opDereference = char '*' >> return LDereference
+opDereference :: Parser (LExpr' C0 -> LExpr' C0)
+opDereference = char '*' >> return LDeref
 
-opArray :: Parser (LExp -> LExp)
-opArray = do
-    idx <- Lex.brackets $ aExp lExp
+opArray :: Parser (AExpr' l) -> Parser (LExpr' l -> LExpr' l)
+opArray aExp = do
+    idx <- Lex.brackets $ aExp
     return $ (\lExpression -> LArray lExpression idx)
 
 -- prefix & postfix copied from: https://stackoverflow.com/questions/10475337/parsec-expr-repeated-prefix-postfix-operator-not-supported    

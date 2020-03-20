@@ -17,10 +17,10 @@ singleStatement :: Parser Stmt
 singleStatement = declAssignement <|> assignment <|> ifThenElse <|> while <|> returnStatement <|> assertion
 
 assertion :: Parser Stmt
-assertion = Assertion <$> fOAssertion "assertion"
+assertion = Assertion <$> assertionFO "assertion"
 
-invariant :: Parser FOExp
-invariant = fOAssertion "invariant"
+invariant :: Parser (BExpr' FO)
+invariant = assertionFO "invariant"
 
 declAssignement :: Parser Stmt
 declAssignement = do
@@ -30,16 +30,16 @@ declAssignement = do
 
 assignment :: Parser Stmt
 assignment = do
-    idt <- lExp
+    idt <- lExpC0
     reservedOp "="
-    expr <- aExp
+    expr <- aExpC0
     semi
     return $ Assignment idt expr
 
 ifThenElse :: Parser Stmt
 ifThenElse = do
     reserved "if"
-    condition <- parens bExp
+    condition <- parens bExpC0
     ifCase <- braces statement
     reserved "else"
     elseCase <- braces statement
@@ -48,7 +48,7 @@ ifThenElse = do
 while :: Parser Stmt
 while = do
     reserved "while"
-    condition <- parens bExp
+    condition <- parens bExpC0
     (inv, body) <- braces $ do
         inv <- invariant
         body <- statement
@@ -58,6 +58,6 @@ while = do
 returnStatement :: Parser Stmt
 returnStatement = do
     reserved "return"
-    returnValue <- optionMaybe aExp
+    returnValue <- optionMaybe aExpC0
     semi
     return $ Return returnValue
