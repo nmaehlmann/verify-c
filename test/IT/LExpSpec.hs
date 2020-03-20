@@ -8,7 +8,7 @@ import Parser.LExpression
 
 lExpSpec :: IO Spec
 lExpSpec = return $ describe "Parser.LExpression" $ do
-    let parseLExp t = parse lExp "" t
+    let parseLExp t = parse lExpC0 "" t
     let a = LIdt $ Idt "a"
     let arr = LIdt $ Idt "arr"
     let x = AIdt $ LIdt $ Idt "x"
@@ -31,19 +31,19 @@ lExpSpec = return $ describe "Parser.LExpression" $ do
         parseLExp "arr[x * y]" `shouldBe` (Right (LArray arr (ABinExp Mul x y)))
 
     it "parses derefenced symbols" $ do
-        parseLExp "*referencedVar" `shouldBe` (Right (LDereference (LIdt (Idt "referencedVar"))))
+        parseLExp "*referencedVar" `shouldBe` (Right (LDeref (LIdt (Idt "referencedVar"))))
 
     it "parses doubly derefenced symbols" $ do
-        parseLExp "**a" `shouldBe` (Right (LDereference (LDereference a)))
+        parseLExp "**a" `shouldBe` (Right (LDeref (LDeref a)))
 
     it "parses triply derefenced symbols" $ do
-        parseLExp "***a" `shouldBe` (Right (LDereference (LDereference (LDereference a))))    
+        parseLExp "***a" `shouldBe` (Right (LDeref (LDeref (LDeref a))))    
 
     it "parses array brackets with higher precedence than derefs" $ do
-        parseLExp "*a[x]" `shouldBe` (Right (LDereference (LArray a x)))
+        parseLExp "*a[x]" `shouldBe` (Right (LDeref (LArray a x)))
 
     it "parses structure parts" $ do
-        parseLExp "arr.a" `shouldBe` (Right (LStructPart arr (Idt "a")))
+        parseLExp "arr.a" `shouldBe` (Right (LStructurePart arr (Idt "a")))
 
     it "parses structure parts" $ do
-        parseLExp "arr.a.arr" `shouldBe` (Right (LStructPart (LStructPart arr (Idt "a")) (Idt "arr")))
+        parseLExp "arr.a.arr" `shouldBe` (Right (LStructurePart (LStructurePart arr (Idt "a")) (Idt "arr")))

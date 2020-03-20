@@ -11,7 +11,7 @@ import IT.Whitespaces
     
 bExpSpec :: IO Spec
 bExpSpec = return $ describe "Parser.BooleanExpression" $ do
-    let parseBExp t = parse bExp "" t
+    let parseBExp t = parse bExpC0 "" t
     let x = AIdt $ LIdt $ Idt "x"
     let y = AIdt $ LIdt $ Idt "y"
     let z = AIdt $ LIdt $ Idt "z"

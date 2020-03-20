@@ -19,8 +19,8 @@ funDefSpec = return $ describe "Parser.FunctionDefinition" $ do
                 { funDefType     = TVoid
                 , funDefName     = Idt "noOp"
                 , funDefArgs     = []
-                , funDefPrecond  = FOTrue
-                , funDefPostcond = FOTrue
+                , funDefPrecond  = BTrue
+                , funDefPostcond = BTrue
                 , funDefBody     = Return Nothing
                 }
         parseFunDef s `shouldBe` (Right result)
@@ -31,8 +31,8 @@ funDefSpec = return $ describe "Parser.FunctionDefinition" $ do
                 { funDefType     = TInt
                 , funDefName     = Idt "one"
                 , funDefArgs     = []
-                , funDefPrecond  = FOTrue
-                , funDefPostcond = FOTrue
+                , funDefPrecond  = BTrue
+                , funDefPostcond = BTrue
                 , funDefBody     = Return $ Just $ ALit $ 1
                 }
         parseFunDef s `shouldBe` (Right result)
@@ -45,8 +45,8 @@ funDefSpec = return $ describe "Parser.FunctionDefinition" $ do
                 { funDefType     = TInt
                 , funDefName     = Idt "add"
                 , funDefArgs     = [Decl TInt (Idt "a"), Decl TInt (Idt "b")]
-                , funDefPrecond  = FOTrue
-                , funDefPostcond = FOComp Equal (mkIdt x) $ ABinExp Add (mkIdt a) (mkIdt b)
+                , funDefPrecond  = BTrue
+                , funDefPostcond = BComp Equal (mkIdt x) $ ABinExp Add (mkIdt a) (mkIdt b)
                 , funDefBody     = Return $ Just $ ABinExp Add (mkIdt a) (mkIdt b)
                 }
         parseFunDef s `shouldBe` (Right result)
@@ -57,8 +57,8 @@ funDefSpec = return $ describe "Parser.FunctionDefinition" $ do
                 { funDefType     = TVoid
                 , funDefName     = Idt "noSwap"
                 , funDefArgs     = [Decl (TReference TInt) (Idt "a")]
-                , funDefPrecond  = FOTrue
-                , funDefPostcond = FOTrue
+                , funDefPrecond  = BTrue
+                , funDefPostcond = BTrue
                 , funDefBody     = Return Nothing
                 }
         parseFunDef s `shouldBe` (Right result)
@@ -69,8 +69,8 @@ funDefSpec = return $ describe "Parser.FunctionDefinition" $ do
                 { funDefType     = TVoid
                 , funDefName     = Idt "noSwap"
                 , funDefArgs     = [Decl (TReference TInt) (Idt "a"), Decl (TReference TInt) (Idt "b")]
-                , funDefPrecond  = FOTrue
-                , funDefPostcond = FOTrue
+                , funDefPrecond  = BTrue
+                , funDefPostcond = BTrue
                 , funDefBody     = Return Nothing
                 }
         parseFunDef s `shouldBe` (Right result)

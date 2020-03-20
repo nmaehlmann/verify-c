@@ -12,15 +12,25 @@ data State
     | Update State (LExp FO Refs) (AExp FO Refs)
     deriving (Eq, Ord)
 
+
+deriving instance Eq (BExp C0 Plain)
+deriving instance Eq (BExp FO Plain)
+deriving instance Eq (BExp FO Refs)
+deriving instance Eq (BExp C0 Refs)
 deriving instance Eq (LExp FO Refs)
 deriving instance Eq (LExp FO Plain)
 deriving instance Ord (LExp FO Refs)
 deriving instance Ord (LExp FO Plain)
+deriving instance Eq (LExp C0 Plain)
+deriving instance Eq (LExp C0 Refs)
 deriving instance Eq (AExp FO Refs)
 deriving instance Eq (AExp FO Plain)
+deriving instance Eq (AExp C0 Plain)
+deriving instance Eq (AExp C0 Refs)
 deriving instance Ord (AExp FO Refs)
 deriving instance Ord (AExp FO Plain)
 deriving instance Eq (ReadLExp FO)
+deriving instance Eq (ReadLExp C0)
 deriving instance Ord (ReadLExp FO)
 
 sigma :: State
@@ -53,8 +63,10 @@ data Stmt
     | Declaration LExp''
     | FunCall (Maybe LExp'') Idt [AExp'']
     | Empty
+    deriving (Eq, Show)
 
 data Program = Program [FunctionDefinition]
+    deriving (Eq, Show)
 
 data FunctionDefinition = FunctionDefinition 
     { funDefType      :: Type
@@ -64,6 +76,7 @@ data FunctionDefinition = FunctionDefinition
     , funDefPostcond  :: BExp' FO
     , funDefBody      :: Stmt
     }
+    deriving (Eq, Show)
 
 data Type
     = TInt
@@ -160,7 +173,7 @@ instance Show ABinOp where
     show Div = "/"
 
 instance Show (ReadLExp l) where
-    -- show (ReadLExp (Atomic _) (LSIdt i)) = show i
+    -- show (ReadLExp (Atomic _) (LIdt i)) = show i
     show (ReadLExp state lExp) = "read(" ++ show state ++ ", " ++ show lExp ++ ")"
 
 instance Show (LExp l m) where
