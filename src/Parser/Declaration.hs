@@ -7,7 +7,7 @@ import Parser.Identifier
 import Parser.Type
 
 declaration :: Parser Decl
-declaration = do
-    typ <- typeName
-    name <- identifier
-    return $ Decl typ name
+declaration = Decl <$> typeName <*> identifier
+    -- typ <- typeName
+    -- name <- identifier
+    -- return $ Decl typ name

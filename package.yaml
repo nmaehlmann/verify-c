@@ -26,6 +26,8 @@ library:
   source-dirs: src
   dependencies:
     - parsec
+    - containers
+    - mtl
 
 executables:
   verify-c:
@@ -54,3 +56,5 @@ tests:
     - hspec
     - QuickCheck
     - parsec
+    - containers
+    - mtl

@@ -1,0 +1,8 @@
+void setATo5(){
+    precondition("true");
+    postcondition("a == 5");
+    a = 5;
+    b = 6;
+    c = 7;
+    return;
+}

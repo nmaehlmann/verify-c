@@ -1,21 +1,8 @@
 void swap (int* x, int* y) {
-    pre("true");
-    post("read(s,read(s,x)) = read(p, read(p,y)) and read(s,read(s,y)) = read(p, read(p,x))");
+    precondition("y != *x && x != *y && x != *x && y != *y && *x != *y && *x == X && *y == Y");
+    postcondition("*x == Y && *y == X");
 
-    int tmp;
-    tmp = *x;
-    *x = *y;
-    *y = tmp;
-    
-    return;
-}
-
-void swap (int* x, int* y) {
-    pre("*x = X and *y = Y");
-    post("*x = Y and *y = X");
-
-    int tmp;
-    tmp = *x;
+    int tmp = *x;
     *x = *y;
     *y = tmp;
     

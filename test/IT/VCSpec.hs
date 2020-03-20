@@ -81,7 +81,7 @@ awpSpec = return $ describe "VC.awp" $ do
         -- upd(s,c, read(c,s) + 1)
         let updatedState = Update sigma sC cPlus2
         let facFormulaUpdated = facFormulaForState updatedState
-        awp assnCPlusTwoToC facFormula `shouldBe` facFormulaUpdated
+        awp assnCPlusTwoToC facFormula FOTrue  `shouldBe` facFormulaUpdated
         
 
 facFormulaForState :: State -> FOSExp

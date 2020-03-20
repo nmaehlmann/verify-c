@@ -1,6 +1,8 @@
 module Parser.InternalArithmeticExpression (aExp) where
 
 import Data.Functor.Identity
+import Control.Monad
+import Data.Char
 import Text.Parsec.String (Parser)
 import Text.Parsec.Expr
 import Text.Parsec
@@ -13,7 +15,7 @@ aExp :: Parser LExp -> Parser AExp
 aExp lExpParser = buildExpressionParser aOperatorTable $ aTerm lExpParser
 
 aTerm :: Parser LExp -> Parser AExp
-aTerm lExpParser = parens (aExp lExpParser) <|> aLit <|> aArray lExpParser <|> try (funCall lExpParser) <|> aLExp lExpParser
+aTerm lExpParser = parens (aExp lExpParser) <|> aLogVar <|> aLit <|> aArray lExpParser <|> try (funCall lExpParser) <|> aLExp lExpParser
 
 aOperatorTable :: OperatorTable String () Identity AExp
 aOperatorTable =
@@ -29,6 +31,16 @@ opSub = reservedOp "-" >> return (ABinExp Sub)
 
 aLit :: Parser AExp
 aLit = ALit <$> integer
+
+aLogVar :: Parser AExp
+aLogVar = try $ do
+    (Idt str) <- identifier
+    when (startsWithLowerCase str) $ fail $ "Logic variable " ++ str ++ " is supposed to start with a capital letter."
+    return $ ALogVar $ Idt str
+
+startsWithLowerCase :: String -> Bool
+startsWithLowerCase (h:_) = isLower h
+startsWithLowerCase _ = False
 
 aLExp :: Parser LExp -> Parser AExp
 aLExp = fmap AIdt

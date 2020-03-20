@@ -7,7 +7,16 @@ import AST
 import Parser.Lexer
 
 typeName :: Parser Type
-typeName = tVoid <|> tInt <|> tChar
+typeName = do
+    baseType <- tBaseType
+    refs <- many opReference
+    return $ foldl (\t ref -> ref t) baseType refs
+
+tBaseType :: Parser Type
+tBaseType = tVoid <|> tInt <|> tChar
+
+opReference :: Parser (Type -> Type)
+opReference = reserved "*" >> return TReference
 
 tInt :: Parser Type
 tInt = reserved "int" >> return TInt

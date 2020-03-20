@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b0aeca617b6ed93f52aac0bf64232bbbb02982a095383083855a2b83c9998d6d
+-- hash: 5ff62368199d7fde80113d12d2650ce0c0a69e9057c1ca8fc1feb8b746e15197
 
 name:           verify-c
 version:        0.1.0.0
@@ -37,9 +37,10 @@ library
       Parser.InternalArithmeticExpression
       Parser.Lexer
       Parser.LExpression
-      Parser.Sentence
+      Parser.Program
       Parser.Statement
       Parser.Type
+      Simplification
       VC
   other-modules:
       Paths_verify_c
@@ -47,6 +48,8 @@ library
       src
   build-depends:
       base >=4.7 && <5
+    , containers
+    , mtl
     , parsec
   default-language: Haskell2010
 
@@ -74,7 +77,9 @@ test-suite verify-c-test
       IT.FunDefSpec
       IT.LExpSpec
       IT.MaxSpec
+      IT.SimplificationSpec
       IT.StatementSpec
+      IT.TypeSpec
       IT.VCSpec
       IT.Whitespaces
       Paths_verify_c
@@ -84,7 +89,9 @@ test-suite verify-c-test
   build-depends:
       QuickCheck
     , base >=4.7 && <5
+    , containers
     , hspec
+    , mtl
     , parsec
     , verify-c
   default-language: Haskell2010

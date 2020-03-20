@@ -9,6 +9,8 @@ import IT.StatementSpec
 import IT.MaxSpec
 import IT.FunDefSpec
 import IT.VCSpec
+import IT.TypeSpec
+import IT.SimplificationSpec
 
 main :: IO ()
 main = do
@@ -25,5 +27,9 @@ main = do
         , hashmarkSpec
         , replaceStateSpec
         , awpSpec
+        , typeSpec
+        , simplificationSpec
+        , simplifyASExpSpec
+        , simplifyReadSpec
         ]
     hspec $ foldl1 (>>) specs
