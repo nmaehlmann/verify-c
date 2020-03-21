@@ -9,7 +9,7 @@ import IT.Whitespaces
 
 aExpSpec :: IO Spec
 aExpSpec = return $ describe "Parser.ArithmeticExpression" $ do
-    let parseAExp t = parse aExp "" t
+    let parseAExp t = parse aExpFO "" t
     let x = AIdt $ LIdt $ Idt "x"
     let y = AIdt $ LIdt $ Idt "y"
     let z = AIdt $ LIdt $ Idt "z"

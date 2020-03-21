@@ -53,11 +53,11 @@ statementSpec = return $ describe "Parser.Statement" $ do
     it "parses while blocks" $ do
         let s = "while( 0 < x ){ invariant(\"true\"); x = x - 1; }"
         let condition = BComp Less (ALit 0) (mkIdt x)
-        let inv = FOTrue
+        let inv = BTrue
         let body = Assignment x (ABinExp Sub (mkIdt x) (ALit 1))
         parseStmt s `shouldBe` (Right (While condition inv body))
 
     it "parses assertions" $ do
         let s = "assertion(\"x != 0\");"
-        parseStmt s `shouldBe` (Right (Assertion (FOComp NotEqual (mkIdt x) (ALit 0))))
+        parseStmt s `shouldBe` (Right (Assertion (BComp NotEqual (mkIdt x) (ALit 0))))
 

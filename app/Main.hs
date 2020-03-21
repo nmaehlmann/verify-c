@@ -19,7 +19,8 @@ main = do
             let ast = parse program "" src
             putStrLn $ case ast of
                 (Right (Program (f : _))) -> "VCs: " ++ show (verify f)
-                _ -> "error: " ++ show ast
+                (Right (Program _)) -> "error: something went wrong while parsing"
+                (Left err) -> "error: " ++ show err
         
 
 

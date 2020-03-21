@@ -1,4 +1,4 @@
-module Parser.BooleanExpression (bExp, fOExp, fOAssertion) where
+module Parser.BooleanExpression (bExpC0, bExpFO, assertionFO) where
 
 import Data.Functor.Identity
 import Text.Parsec.String (Parser)
@@ -6,45 +6,44 @@ import Text.Parsec.Expr
 import Text.Parsec
 
 import AST
-import LogicExpression
 import Parser.ArithmeticExpression
 import Parser.Identifier
 import Parser.Lexer
 
-bExp :: Parser BExp
-bExp = buildExpressionParser bOperatorTable bTerm
+bExpC0 :: Parser (BExp' C0)
+bExpC0 = buildExpressionParser bOperatorTable bTermC0
 
-bTerm :: Parser BExp
-bTerm = parens bExp <|> bTrue <|> bFalse <|> bComparison
+bTermC0 :: Parser (BExp' C0)
+bTermC0 = parens bExpC0 <|> bTrue <|> bFalse <|> bComparison aExpC0
 
-fOExp :: Parser FOExp
-fOExp = buildExpressionParser bOperatorTable fOTerm
+bExpFO :: Parser (BExp' FO)
+bExpFO = buildExpressionParser bOperatorTable bTermFO
 
-fOTerm :: Parser FOExp
-fOTerm = parens fOExp <|> bTrue <|> bFalse <|> bComparison <|> forall <|> exists <|> predicate
+bTermFO :: Parser (BExp' FO)
+bTermFO = parens bTermFO <|> bTrue <|> bFalse <|> bComparison aExpFO <|> forall <|> exists <|> predicate
 
-forall :: Parser FOExp
-forall = quantifier "forall" Forall
+forall :: Parser (BExp' FO)
+forall = quantifier "forall" BForall
 
-exists :: Parser FOExp
-exists = quantifier "exists" Exists
+exists :: Parser (BExp' FO)
+exists = quantifier "exists" BExists
 
-quantifier :: String -> (Idt -> FOExp -> FOExp) -> Parser FOExp
+quantifier :: String -> (Idt -> BExp' FO -> BExp' FO) -> Parser (BExp' FO)
 quantifier quantifierString quantifierConstructor = do
     reserved quantifierString
     (idt, fo) <- parens $ do
         idt <- identifier
         _ <- comma
-        fo <- fOExp
+        fo <- bExpFO
         return (idt, fo)
     return $ quantifierConstructor idt fo
 
-bComparison :: LogicExpression a => Parser a
-bComparison = try $ do
+bComparison :: Parser (AExp' l) -> Parser (BExp' l)
+bComparison aExp = try $ do
     lhs <- aExp
     op  <- comparisonOperator
     rhs <- aExp
-    return $ comparison op lhs rhs
+    return $ BComp op lhs rhs
 
 comparisonOperator :: Parser CompOp
 comparisonOperator = choice $ toParser <$> comparisonOperators
@@ -60,33 +59,33 @@ comparisonOperators =
     , (">" , Greater)
     ]
 
-bOperatorTable :: LogicExpression a => OperatorTable String () Identity a
+bOperatorTable :: OperatorTable String () Identity (BExp' l)
 bOperatorTable =
     [ [Prefix opNeg]
     , [Infix opAnd AssocLeft, Infix opOr AssocLeft, Infix opImplies AssocLeft]
     ]
 
-opAnd, opOr, opImplies :: LogicExpression a => Parser (a -> a -> a)
-opAnd = reservedOp "&&" >> return (binaryExpression And)
-opOr = reservedOp "||" >> return (binaryExpression Or)
-opImplies = reservedOp "->" >> return (binaryExpression Implies)
+opAnd, opOr, opImplies :: Parser (BExp' l -> BExp' l -> BExp' l)
+opAnd = reservedOp "&&" >> return (BBinExp And)
+opOr = reservedOp "||" >> return (BBinExp Or)
+opImplies = reservedOp "->" >> return (BBinExp Implies)
 
-opNeg :: LogicExpression a => Parser (a -> a)
-opNeg = reservedOp "!" >> return negation
+opNeg :: Parser (BExp' l -> BExp' l)
+opNeg = reservedOp "!" >> return BNeg
 
-bTrue, bFalse :: LogicExpression a => Parser a
-bTrue = reserved "true" >> return true
-bFalse = reserved "false" >> return false
+bTrue, bFalse :: Parser (BExp' l)
+bTrue = reserved "true" >> return BTrue
+bFalse = reserved "false" >> return BFalse
 
-predicate :: Parser FOExp
+predicate :: Parser (BExp' FO)
 predicate = do
     predName <- identifier
-    predArgs <- parens $ commaSep aExp
-    return $ Predicate predName predArgs
+    predArgs <- parens $ commaSep aExpFO
+    return $ BPredicate predName predArgs
 
-fOAssertion :: String -> Parser FOExp
-fOAssertion keyword = do
+assertionFO :: String -> Parser (BExp' FO)
+assertionFO keyword = do
     reserved keyword
-    fo <- parens (quotes fOExp)
+    fo <- parens (quotes bExpFO)
     semi
     return fo

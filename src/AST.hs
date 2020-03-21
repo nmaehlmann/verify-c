@@ -1,96 +1,37 @@
-{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 module AST where
 import Data.List
 
-data BExp 
-    = BTrue
-    | BFalse
-    | BComp CompOp AExp AExp
-    | BNeg BExp
-    | BBinExp BBinOp BExp BExp
-    deriving (Eq, Show)
-
-data FO a
-    = FOTrue
-    | FOFalse
-    | FOComp CompOp a a
-    | FONeg (FO a)
-    | FOBinExp BBinOp (FO a) (FO a)
-    | Forall Idt (FO a)
-    | Exists Idt (FO a)
-    | Predicate Idt [a]
-    deriving (Eq, Functor)
-
-type FOExp = FO AExp
-type FOSExp = FO ASExp
-
-data LExp
-    = LIdt Idt
-    | LArray LExp AExp
-    | LStructPart LExp Idt
-    | LDereference LExp
-    deriving (Eq, Show)
-
-data LSExp
-    = LSIdt Idt
-    | LSArray LSExp ASExp
-    | LSStructPart LSExp Idt
-    | LSRead ReadLExp
-    deriving (Eq, Ord)
-
-data AExp 
-    = ALit Integer
-    | AIdt LExp
-    | ABinExp ABinOp AExp AExp
-    | AArray [AExp]
-    | AFunCall Idt [AExp]
-    | ALogVar Idt
-    deriving (Eq, Show)
-
-data ASExp 
-    = ASLit Integer
-    | ASRead ReadLExp
-    | ASBinExp ABinOp ASExp ASExp
-    | ASArray [ASExp]
-    | ASFunCall Idt [ASExp]
-    | ASLogVar Idt
-    deriving (Eq, Ord)
-
-data ReadLExp = ReadLExp State LSExp
-    deriving (Eq, Ord)
-
 data State
     = Atomic String
-    | Update State LSExp ASExp
+    | Update State (LExp FO Refs) (AExp FO Refs)
     deriving (Eq, Ord)
+
+sigma :: State
+sigma = Atomic "s"
 
 data ABinOp = Add | Sub | Mul | Div
     deriving (Eq, Ord)
 
-data CompOp 
-    = Less 
-    | LessOrEqual 
-    | Greater 
-    | GreaterOrEqual 
-    | Equal 
-    | NotEqual
+data CompOp = Less | LessOrEqual | Greater | GreaterOrEqual | Equal | NotEqual
     deriving (Eq)
 
-data BBinOp
-    = And
-    | Or
-    | Implies
+data BBinOp = And | Or | Implies
     deriving (Eq)
 
 data Stmt 
-    = Assignment LExp AExp
-    | ITE BExp Stmt Stmt
-    | While BExp FOExp Stmt
+    = Assignment LExp'' AExp''
+    | ITE (BExp' C0) Stmt Stmt
+    | While (BExp' C0) (BExp' FO) Stmt
     | Seq Stmt Stmt
-    | Return (Maybe AExp)
-    | Assertion FOExp 
-    | Declaration LExp
+    | Return (Maybe AExp'')
+    | Assertion (BExp'  FO)
+    | Declaration LExp''
+    | FunCall (Maybe LExp'') Idt [AExp'']
     | Empty
     deriving (Eq, Show)
 
@@ -101,10 +42,11 @@ data FunctionDefinition = FunctionDefinition
     { funDefType      :: Type
     , funDefName      :: Idt
     , funDefArgs      :: [Decl]
-    , funDefPrecond   :: FOExp
-    , funDefPostcond  :: FOExp
+    , funDefPrecond   :: BExp' FO
+    , funDefPostcond  :: BExp' FO
     , funDefBody      :: Stmt
-    } deriving (Eq, Show)
+    }
+    deriving (Eq, Show)
 
 data Type
     = TInt
@@ -121,15 +63,66 @@ data Idt = Idt String
 data Decl = Decl Type Idt
     deriving (Eq, Show)
 
-instance (Show a) => Show (FO a) where
-    show FOTrue = "true"
-    show FOFalse = "false"
-    show (FOComp op l r) = showBinExp op l r
-    show (FONeg f) = "!(" ++ show f ++ ")"
-    show (FOBinExp op l r) = showBinExp op l r
-    show (Forall i f) = "forall(" ++ show i ++ ", " ++ show f ++ ")"
-    show (Exists i f) = "exists(" ++ show i ++ ", " ++ show f ++ ")"
-    show (Predicate name args) = show name ++ "(" ++ argsList ++ ")"
+data C0 = C0
+data FO = FO
+data Refs = Refs
+data Plain = Plain
+
+data BExp l m where
+    BTrue       :: BExp l m
+    BFalse      :: BExp l m
+    BNeg        :: BExp l m -> BExp l m
+    BBinExp     :: BBinOp -> BExp l m -> BExp l m -> BExp l m
+    BComp       :: CompOp -> AExp l m -> AExp l m -> BExp l m
+    BForall     :: Idt -> BExp FO m -> BExp FO m
+    BExists     :: Idt -> BExp FO m -> BExp FO m
+    BPredicate  :: Idt -> [AExp FO m] -> BExp FO m
+
+data LExp l m where
+    LIdt            :: Idt -> LExp l m
+    LArray          :: LExp l m -> AExp l m -> LExp l m
+    LStructurePart  :: LExp l m -> Idt -> LExp l m
+    LRead           :: ReadLExp l -> LExp l Refs
+    LDeref          :: LExp l Plain -> LExp l Plain
+
+data AExp l m where
+    ALit        :: Integer -> AExp l m
+    AIdt        :: LExp l Plain -> AExp l Plain
+    ARead       :: ReadLExp FO -> AExp FO Refs
+    ABinExp     :: ABinOp -> AExp l m -> AExp l m -> AExp l m
+    AArray      :: [AExp l m] -> AExp l m
+    AFunCall    :: Idt -> [AExp FO m] -> AExp FO m
+    ALogVar     :: Idt -> AExp FO m
+
+data ReadLExp l = ReadLExp State (LExp l Refs)
+
+type BExp' l = BExp l Plain
+type AExp' l = AExp l Plain
+type LExp' l = LExp l Plain
+type AExp'' = AExp' C0
+type LExp'' = LExp' C0
+
+mapAExps :: (AExp l m1 -> AExp FO m2) -> (BExp l m1) -> (BExp FO m2)
+mapAExps _ BTrue = BTrue
+mapAExps _ BFalse = BFalse
+mapAExps f (BComp op l r) = BComp op (f l) (f r)
+mapAExps f (BNeg b) = BNeg $ mapAExps f b
+mapAExps f (BBinExp op l r) = BBinExp op (mapAExps f l) (mapAExps f r)
+mapAExps f (BForall i b) = BForall i $ mapAExps f b
+mapAExps f (BExists i b) = BExists i $ mapAExps f b
+mapAExps f (BPredicate name args) = BPredicate name $ fmap f args
+
+-- Show instances
+
+instance Show (BExp l m) where
+    show BTrue = "true"
+    show BFalse = "false"
+    show (BComp op l r) = showBinExp op l r
+    show (BNeg f) = "!(" ++ show f ++ ")"
+    show (BBinExp op l r) = showBinExp op l r
+    show (BForall i f) = "forall(" ++ show i ++ ", " ++ show f ++ ")"
+    show (BExists i f) = "exists(" ++ show i ++ ", " ++ show f ++ ")"
+    show (BPredicate name args) = show name ++ "(" ++ argsList ++ ")"
         where argsList = concat $ intersperse "," $ map show args
 
 showBinExp :: (Show a, Show o) => o -> a -> a -> String
@@ -138,15 +131,16 @@ showBinExp op l r = "(" ++ show l ++ " " ++ show op ++ " " ++ show r ++ ")"
 instance Show Idt where
     show (Idt s) = s
 
-instance Show ASExp where
-    show (ASLit i) = show i
-    show (ASRead readLExp) = show readLExp
-    show (ASBinExp op l r) = showBinExp op l r
-    show (ASArray fields) = "[" ++ showFields ++ "]" 
+instance Show (AExp l m) where
+    show (ALit i) = show i
+    show (ARead readLExp) = show readLExp
+    show (ABinExp op l r) = showBinExp op l r
+    show (AArray fields) = "[" ++ showFields ++ "]" 
         where showFields = concat $ intersperse "," $ map show fields
-    show (ASFunCall name args) = show name ++ "(" ++ argsList ++ ")"
+    show (AFunCall name args) = show name ++ "(" ++ argsList ++ ")"
         where argsList = concat $ intersperse "," $ map show args
-    show (ASLogVar i) = show i
+    show (ALogVar i) = show i
+    show (AIdt i) = show i
 
 instance Show ABinOp where
     show Add = "+"
@@ -154,22 +148,23 @@ instance Show ABinOp where
     show Mul = "*"
     show Div = "/"
 
-instance Show ReadLExp where
-    -- show (ReadLExp (Atomic _) (LSIdt i)) = show i
-    show (ReadLExp state lSExp) = "read(" ++ show state ++ ", " ++ show lSExp ++ ")"
+instance Show (ReadLExp l) where
+    -- show (ReadLExp (Atomic _) (LIdt i)) = show i
+    show (ReadLExp state lExp) = "read(" ++ show state ++ ", " ++ show lExp ++ ")"
 
-instance Show LSExp where
-    show (LSIdt i) = show i
-    show (LSArray lSExp aSExp) = show lSExp ++ "[" ++ show aSExp ++ "]"
-    show (LSStructPart lSExp idt) = show lSExp ++ "." ++ show idt
-    show (LSRead r) = show r
+instance Show (LExp l m) where
+    show (LIdt i) = show i
+    show (LArray lExp aExp) = show lExp ++ "[" ++ show aExp ++ "]"
+    show (LStructurePart lExp idt) = show lExp ++ "." ++ show idt
+    show (LRead r) = show r
+    show (LDeref i) = '*' : show i
 
 instance Show State where
     show (Atomic s) = s
-    show (Update state lSExp aSExp) = "upd(" 
+    show (Update state lExp aExp) = "upd(" 
         ++ show state ++ ", " 
-        ++ show lSExp ++ ", "
-        ++ show aSExp ++ ")"
+        ++ show lExp ++ ", "
+        ++ show aExp ++ ")"
 
 instance Show BBinOp where
     show And = "&&"
@@ -184,5 +179,30 @@ instance Show CompOp where
     show Equal = "="
     show NotEqual = "!="
 
-sigma :: State
-sigma = Atomic "s"
+-- Eq and Ord instances
+
+deriving instance Eq (BExp C0 Plain)
+deriving instance Eq (BExp C0 Refs)
+deriving instance Eq (BExp FO Plain)
+deriving instance Eq (BExp FO Refs)
+
+deriving instance Eq (LExp C0 Plain)
+deriving instance Eq (LExp C0 Refs)
+deriving instance Eq (LExp FO Refs)
+deriving instance Eq (LExp FO Plain)
+
+deriving instance Ord (LExp FO Refs)
+deriving instance Ord (LExp FO Plain)
+
+deriving instance Eq (AExp C0 Plain)
+deriving instance Eq (AExp C0 Refs)
+deriving instance Eq (AExp FO Plain)
+deriving instance Eq (AExp FO Refs)
+
+deriving instance Ord (AExp FO Refs)
+deriving instance Ord (AExp FO Plain)
+
+deriving instance Eq (ReadLExp FO)
+deriving instance Eq (ReadLExp C0)
+
+deriving instance Ord (ReadLExp FO)

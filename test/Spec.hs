@@ -11,6 +11,9 @@ import IT.FunDefSpec
 import IT.VCSpec
 import IT.TypeSpec
 import IT.SimplificationSpec
+import IT.LiftMemorySpec
+import IT.ReplaceStateSpec
+import IT.SwapSpec
 
 main :: IO ()
 main = do
@@ -31,5 +34,6 @@ main = do
         , simplificationSpec
         , simplifyASExpSpec
         , simplifyReadSpec
+        , swapSpec
         ]
     hspec $ foldl1 (>>) specs

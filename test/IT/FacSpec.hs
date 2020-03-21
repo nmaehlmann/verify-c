@@ -22,6 +22,6 @@ fac = Right (Seq (Seq assn1ToP assn1ToC) (While cLessEqN inv (Seq assnPMulCToP a
 assn1ToP = Assignment p (ALit 1)
 assn1ToC = Assignment c (ALit 1)
 cLessEqN = BComp LessOrEqual (mkIdt c) (mkIdt n)
-inv = FOComp Equal (mkIdt p) (AFunCall (Idt "fac") [ABinExp Sub (mkIdt c) (ALit 1)])
+inv = BComp Equal (mkIdt p) (AFunCall (Idt "fac") [ABinExp Sub (mkIdt c) (ALit 1)])
 assnPMulCToP = Assignment p (ABinExp Mul (mkIdt p) (mkIdt c))
 assnCPlus1ToC = Assignment c (ABinExp Add (mkIdt c) (ALit 1))
