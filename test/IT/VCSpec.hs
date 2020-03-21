@@ -3,6 +3,7 @@ import Test.Hspec
 import AST
 import VC
 import IT.FacFormula
+import Control.Monad.Reader
 
 awpSpec :: IO Spec
 awpSpec = return $ describe "VC.awp" $ do
@@ -18,7 +19,8 @@ awpSpec = return $ describe "VC.awp" $ do
         -- upd(s,c, read(c,s) + 1)
         let updatedState = Update sigma sC cPlus2
         let facFormulaUpdated = facFormulaForState updatedState
-        awp assnCPlusTwoToC facFormula BTrue  `shouldBe` facFormulaUpdated
+
+        runReader (awp assnCPlusTwoToC facFormula BTrue) emptyCtx  `shouldBe` facFormulaUpdated
         
 
 

@@ -4,7 +4,6 @@ import Data.Maybe
 import Text.Parsec
 import System.Environment
 
-import AST
 import VC
 import Parser.Program
 
@@ -18,8 +17,7 @@ main = do
             src <- readFile t
             let ast = parse program "" src
             putStrLn $ case ast of
-                (Right (Program (f : _))) -> "VCs: " ++ show (verify f)
-                (Right (Program _)) -> "error: something went wrong while parsing"
+                (Right prog) -> "VCs: " ++ show (verifyProgram prog)
                 (Left err) -> "error: " ++ show err
         
 
