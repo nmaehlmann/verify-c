@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE StandaloneDeriving #-}
@@ -12,27 +11,6 @@ data State
     | Update State (LExp FO Refs) (AExp FO Refs)
     deriving (Eq, Ord)
 
-
-deriving instance Eq (BExp C0 Plain)
-deriving instance Eq (BExp FO Plain)
-deriving instance Eq (BExp FO Refs)
-deriving instance Eq (BExp C0 Refs)
-deriving instance Eq (LExp FO Refs)
-deriving instance Eq (LExp FO Plain)
-deriving instance Ord (LExp FO Refs)
-deriving instance Ord (LExp FO Plain)
-deriving instance Eq (LExp C0 Plain)
-deriving instance Eq (LExp C0 Refs)
-deriving instance Eq (AExp FO Refs)
-deriving instance Eq (AExp FO Plain)
-deriving instance Eq (AExp C0 Plain)
-deriving instance Eq (AExp C0 Refs)
-deriving instance Ord (AExp FO Refs)
-deriving instance Ord (AExp FO Plain)
-deriving instance Eq (ReadLExp FO)
-deriving instance Eq (ReadLExp C0)
-deriving instance Ord (ReadLExp FO)
-
 sigma :: State
 sigma = Atomic "s"
 
@@ -44,14 +22,6 @@ data CompOp = Less | LessOrEqual | Greater | GreaterOrEqual | Equal | NotEqual
 
 data BBinOp = And | Or | Implies
     deriving (Eq)
-
-type LExp' l = LExp l Plain
-type AExp' l = AExp l Plain
-
-type LExp'' = LExp' C0
-type AExp'' = AExp' C0
-
-type BExp' l = BExp l Plain
 
 data Stmt 
     = Assignment LExp'' AExp''
@@ -125,6 +95,12 @@ data AExp l m where
     ALogVar     :: Idt -> AExp FO m
 
 data ReadLExp l = ReadLExp State (LExp l Refs)
+
+type BExp' l = BExp l Plain
+type AExp' l = AExp l Plain
+type LExp' l = LExp l Plain
+type AExp'' = AExp' C0
+type LExp'' = LExp' C0
 
 mapAExps :: (AExp l m1 -> AExp FO m2) -> (BExp l m1) -> (BExp FO m2)
 mapAExps _ BTrue = BTrue
@@ -202,3 +178,31 @@ instance Show CompOp where
     show GreaterOrEqual = ">="
     show Equal = "="
     show NotEqual = "!="
+
+-- Eq and Ord instances
+
+deriving instance Eq (BExp C0 Plain)
+deriving instance Eq (BExp C0 Refs)
+deriving instance Eq (BExp FO Plain)
+deriving instance Eq (BExp FO Refs)
+
+deriving instance Eq (LExp C0 Plain)
+deriving instance Eq (LExp C0 Refs)
+deriving instance Eq (LExp FO Refs)
+deriving instance Eq (LExp FO Plain)
+
+deriving instance Ord (LExp FO Refs)
+deriving instance Ord (LExp FO Plain)
+
+deriving instance Eq (AExp C0 Plain)
+deriving instance Eq (AExp C0 Refs)
+deriving instance Eq (AExp FO Plain)
+deriving instance Eq (AExp FO Refs)
+
+deriving instance Ord (AExp FO Refs)
+deriving instance Ord (AExp FO Plain)
+
+deriving instance Eq (ReadLExp FO)
+deriving instance Eq (ReadLExp C0)
+
+deriving instance Ord (ReadLExp FO)

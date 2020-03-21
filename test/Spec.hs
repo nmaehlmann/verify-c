@@ -11,6 +11,8 @@ import IT.FunDefSpec
 import IT.VCSpec
 import IT.TypeSpec
 import IT.SimplificationSpec
+import IT.LiftMemorySpec
+import IT.ReplaceStateSpec
 
 main :: IO ()
 main = do
