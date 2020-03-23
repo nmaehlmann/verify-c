@@ -68,7 +68,14 @@ awp (Assignment idt aExp) q _ =
 awp (Declaration idt) q _ = return $ simplifyLocalVars (Set.singleton (dagger (lLiftLogic idt))) q
 awp (Return Nothing) _ qr = return qr
 awp (Return (Just e)) _ qr = return $ bReplaceAExp (hashmark (AIdt resultLExp)) (hashmark (aLiftLogic e)) qr
-awp (FunCall _ _ _) _ _ = error "unsupported yet"
+awp (FunCall _ funName _) _ _ = do
+    calledFunction <- lookupFunction funName
+    return $ bLiftMemory $ funDefPrecond calledFunction
+
+lookupFunction :: Idt -> VC FunctionDefinition
+lookupFunction i = do
+    funMap <- functionMap <$> ask
+    return $ funMap Map.! i
 
 wvc :: Stmt -> BExpFO -> BExpFO -> VC [BExpFO]
 wvc Empty _ _ = return []
@@ -95,4 +102,23 @@ wvc (While cond inv body) q qr = do
         : wvcBody
 wvc (Assertion fo) q _ = return [BBinExp Implies (bLiftMemory fo) q]
 wvc (Return _) _ _ = return []
-wvc (FunCall _ _ _) _ _ = error "unsupported yet"
+wvc (FunCall maybeAssignment funName suppliedArgs) q _ = do
+    calledFunction <- lookupFunction funName
+    let funPostcond = bLiftMemory $ funDefPostcond calledFunction
+    let funArgs = fmap (hashmark . AIdt . LIdt . idtFromDecl) $ funDefArgs calledFunction
+    let suppliedArgsRefs = fmap (hashmark . aLiftLogic) suppliedArgs
+    let resultReplace = case maybeAssignment of
+            (Just assignTo) ->
+                let aResult = hashmark $ AIdt resultLExp
+                    aTarget = hashmark $ aLiftLogic $ AIdt $ assignTo
+                in  [(aResult, aTarget)]
+            Nothing -> []
+    let replacements = zip funArgs suppliedArgsRefs
+    let replacedPostcondition = foldl replace funPostcond (resultReplace ++ replacements)
+    return $ [BBinExp Implies replacedPostcondition q]
+
+replace :: BExp FO Refs -> (AExp FO Refs, AExp FO Refs) -> BExp FO Refs
+replace fo (toReplace, replaceWith) = bReplaceAExp toReplace replaceWith fo
+
+idtFromDecl :: Decl -> Idt
+idtFromDecl (Decl _ idt) = idt
