@@ -12,6 +12,7 @@ import LiftLogic
 import LiftMemory
 import ReplaceState
 import ReplaceLExp
+import ReplaceAExp
 
 verifyFunction :: FunctionDefinition -> VC [BExpFO]
 verifyFunction f = do
@@ -29,28 +30,24 @@ verifyProgram program@(Program functions) = concat $ runReader (sequence (map ve
 type VC = Reader Ctx
 
 data Ctx = Ctx 
-    { preconditions :: Map Idt BExpFO
-    , postconditions :: Map Idt BExpFO
+    { functionMap :: Map Idt FunctionDefinition
     }
 
 emptyCtx :: Ctx
 emptyCtx = Ctx 
-    { preconditions = Map.empty
-    , postconditions = Map.empty
+    { functionMap = Map.empty
     }
 
 generateContext :: Program -> Ctx
-generateContext (Program fs) = Ctx {preconditions = pres, postconditions = posts}
-    where (pres, posts) = generateContext' fs
+generateContext (Program fs) = Ctx {functionMap = functionMap'}
+    where functionMap' = generateContext' fs
 
-generateContext' :: [FunctionDefinition] -> (Map Idt BExpFO, Map Idt BExpFO)
-generateContext' [] = (Map.empty, Map.empty)
+generateContext' :: [FunctionDefinition] -> Map Idt FunctionDefinition
+generateContext' [] = Map.empty
 generateContext' (f:fs) = 
     let insert = Map.insert (funDefName f)
-        pre = bLiftMemory $ funDefPrecond f
-        post = bLiftMemory $ funDefPostcond f
-        (prevPre, prevPost) = generateContext' fs
-    in  (insert pre prevPre, insert post prevPost)
+        prevCtx = generateContext' fs
+    in  insert f prevCtx
 
 awp :: Stmt -> BExpFO -> BExpFO -> VC BExpFO
 awp Empty q _ = return q
@@ -70,7 +67,7 @@ awp (Assignment idt aExp) q _ =
     in  return $ bReplaceState oldState newState q
 awp (Declaration idt) q _ = return $ simplifyLocalVars (Set.singleton (dagger (lLiftLogic idt))) q
 awp (Return Nothing) _ qr = return qr
-awp (Return _) _ _ = error "unsupported yet"
+awp (Return (Just e)) _ qr = return $ bReplaceAExp (hashmark (AIdt resultLExp)) (hashmark (aLiftLogic e)) qr
 awp (FunCall _ _ _) _ _ = error "unsupported yet"
 
 wvc :: Stmt -> BExpFO -> BExpFO -> VC [BExpFO]

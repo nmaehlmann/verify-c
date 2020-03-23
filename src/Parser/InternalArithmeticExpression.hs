@@ -49,12 +49,12 @@ aLit = ALit <$> integer
 aLogVar :: Parser (AExp FO m)
 aLogVar = try $ do
     (Idt str) <- identifier
-    when (startsWithLowerCase str) $ fail $ "Logic variable " ++ str ++ " is supposed to start with a capital letter."
+    when (not (startsWithUpperCase str)) $ fail $ "Logic variable " ++ str ++ " is supposed to start with a capital letter."
     return $ ALogVar $ Idt str
 
-startsWithLowerCase :: String -> Bool
-startsWithLowerCase (h:_) = isLower h
-startsWithLowerCase _ = False
+startsWithUpperCase :: String -> Bool
+startsWithUpperCase (h:_) = isUpper h
+startsWithUpperCase _ = False
 
 aLExp :: Parser (LExp l Plain) -> Parser (AExp l Plain)
 aLExp = fmap AIdt
