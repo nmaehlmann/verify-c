@@ -11,7 +11,6 @@ import qualified Data.Set as Set
 import LiftLogic
 import LiftMemory
 import ReplaceState
-import ReplaceLExp
 import ReplaceAExp
 
 verifyFunction :: FunctionDefinition -> VC [BExpFO]
@@ -68,9 +67,14 @@ awp (Assignment idt aExp) q _ =
 awp (Declaration idt) q _ = return $ simplifyLocalVars (Set.singleton (dagger (lLiftLogic idt))) q
 awp (Return Nothing) _ qr = return qr
 awp (Return (Just e)) _ qr = return $ bReplaceAExp (hashmark (AIdt resultLExp)) (hashmark (aLiftLogic e)) qr
-awp (FunCall _ funName _) _ _ = do
+awp (FunCall _ funName suppliedArgs) _ _ = do
     calledFunction <- lookupFunction funName
-    return $ bLiftMemory $ funDefPrecond calledFunction
+    let funPrecond = bLiftMemory $ funDefPrecond calledFunction
+    let funArgs = fmap (hashmark . AIdt . LIdt . idtFromDecl) $ funDefArgs calledFunction
+    let suppliedArgsRefs = fmap (hashmark . aLiftLogic) suppliedArgs
+    let replacements = zip funArgs suppliedArgsRefs
+    let replacedPrecondition = foldl replace funPrecond replacements
+    return replacedPrecondition
 
 lookupFunction :: Idt -> VC FunctionDefinition
 lookupFunction i = do
