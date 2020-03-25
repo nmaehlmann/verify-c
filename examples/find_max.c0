@@ -1,0 +1,20 @@
+int find_max(int* arr, int len) {
+    precondition("len > 0");
+    postcondition("forall(idx, (idx >= 0 && idx < len) -> \result >= arr[idx])");
+    
+    int i = 0;
+    int r = 0;
+    
+    while (i < len) {
+        invariant("forall(idx, (idx >= 0 && idx < i) -> r >= arr[idx]) && i < (len + 1)");
+
+        if(r < a[i]) {
+            r = a[i];
+        } else {
+            // do nothing
+        }
+        i = i + 1;
+    }
+
+    return r;
+}
