@@ -11,9 +11,6 @@ data State
     | Update State (LExp FO Refs) (AExp FO Refs)
     deriving (Eq, Ord)
 
-sigma :: State
-sigma = Atomic "s"
-
 data ABinOp = Add | Sub | Mul | Div
     deriving (Eq, Ord)
 
@@ -111,6 +108,14 @@ mapAExps f (BBinExp op l r) = BBinExp op (mapAExps f l) (mapAExps f r)
 mapAExps f (BForall i b) = BForall i $ mapAExps f b
 mapAExps f (BExists i b) = BExists i $ mapAExps f b
 mapAExps f (BPredicate name args) = BPredicate name $ fmap f args
+
+-- Constants
+
+sigma :: State
+sigma = Atomic "s"
+
+resultLExp :: LExp FO Plain
+resultLExp = LIdt $ Idt "\\result"
 
 -- Show instances
 

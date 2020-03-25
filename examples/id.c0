@@ -1,0 +1,6 @@
+int id (int a) {
+    precondition("true");
+    postcondition("\result == a");
+    int b = a;
+    return b;
+}

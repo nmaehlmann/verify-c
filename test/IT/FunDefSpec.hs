@@ -1,3 +1,4 @@
+{-# LANGUAGE GADTs #-}
 module IT.FunDefSpec where
 
 import Test.Hspec
@@ -87,4 +88,15 @@ funDefSpec = return $ describe "Parser.FunctionDefinition" $ do
                 }
         parseFunDef s `shouldBe` (Right result)
 
+    it "parses a return types" $ do
+        let s = "int fac(int f){ precondition(\"true\"); postcondition(\"\\result == fac(f)\"); return; }"
+        let result = FunctionDefinition
+                { funDefType     = TInt
+                , funDefName     = Idt "fac"
+                , funDefArgs     = [Decl TInt (Idt "f")]
+                , funDefPrecond  = BTrue
+                , funDefPostcond = BComp Equal (AIdt (LIdt (Idt "\\result"))) (AFunCall (Idt "fac") [AIdt (LIdt (Idt "f"))])
+                , funDefBody     = Return Nothing
+                }
+        parseFunDef s `shouldBe` (Right result)
 
