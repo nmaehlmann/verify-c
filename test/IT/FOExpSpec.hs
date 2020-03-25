@@ -48,7 +48,28 @@ fOExpSpec = return $ describe "Parser.BooleanExpression" $ do
         parseFOExp "x == fib(n) + fib(n)" `shouldBe` (Right (BComp Equal x (ABinExp Add fibN fibN)))
 
     it "parses binary expressions" $ do
-        parseFOExp "(x < 1) && (x < 1)" `shouldBe` (Right (BBinExp And xLess1 xLess1))
         parseFOExp "x < 1 && x < 1" `shouldBe` (Right (BBinExp And xLess1 xLess1))
         parseFOExp "x < 1 || x < 1" `shouldBe` (Right (BBinExp Or xLess1 xLess1))
         parseFOExp "x < 1 -> x < 1" `shouldBe` (Right (BBinExp Implies xLess1 xLess1))
+
+    it "parses parens" $ do
+        parseFOExp "(((x < 1)))" `shouldBe` (Right xLess1)
+        parseFOExp "(x < 1) && (x < 1)" `shouldBe` (Right (BBinExp And xLess1 xLess1))
+        parseFOExp "((x < 1) && (x < 1))" `shouldBe` (Right (BBinExp And xLess1 xLess1))
+
+    it "parses the postcondition of a max program" $ do
+        let idx = AIdt $ LIdt $ Idt "idx"
+        let len = AIdt $ LIdt $ Idt "len"
+        let result = AIdt $ LIdt $ Idt "\\result"
+        let arr = LIdt $ Idt "arr"
+        let arrAtIdx = AIdt $ LArray arr idx
+        
+        let input = "forall(idx, (idx >= 0 && idx < len) -> \\result >= arr[idx])"
+        let expectedOutput = BForall (Idt "idx") $ 
+                BBinExp Implies 
+                    (BBinExp And 
+                        (BComp GreaterOrEqual idx (ALit 0))
+                        (BComp Less idx len))
+                    (BComp GreaterOrEqual result arrAtIdx)
+
+        parseFOExp input `shouldBe` (Right expectedOutput)

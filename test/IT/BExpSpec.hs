@@ -52,3 +52,5 @@ bExpSpec = return $ describe "Parser.BooleanExpression" $ do
 
     it "parses parentheses" $ do
         parseBExp "(x < y) || ((y < z) && true)" `shouldBe` (Right (BBinExp Or (BComp Less x y) (BBinExp And (BComp Less y z) BTrue)))
+        
+                

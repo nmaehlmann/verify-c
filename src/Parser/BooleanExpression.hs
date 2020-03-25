@@ -20,7 +20,7 @@ bExpFO :: Parser (BExp' FO)
 bExpFO = buildExpressionParser bOperatorTable bTermFO
 
 bTermFO :: Parser (BExp' FO)
-bTermFO = parens bTermFO <|> bTrue <|> bFalse <|> bComparison aExpFO <|> forall <|> exists <|> predicate
+bTermFO = parens bExpFO <|> bTrue <|> bFalse <|> bComparison aExpFO <|> forall <|> exists <|> predicate
 
 forall :: Parser (BExp' FO)
 forall = quantifier "forall" BForall
