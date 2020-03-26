@@ -1,8 +1,6 @@
 {-# LANGUAGE GADTs #-}
 module VC where
-
 import AST
-
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Control.Monad.Reader
@@ -12,6 +10,7 @@ import LiftLogic
 import LiftMemory
 import ReplaceState
 import ReplaceAExp
+import FOTypes
 
 verifyFunction :: FunctionDefinition -> VC [BExpFO]
 verifyFunction f = do

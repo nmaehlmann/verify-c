@@ -4,6 +4,7 @@ import Test.Hspec
 
 import AST
 import Simplification
+import Simplified
 import qualified Data.Set as Set
 import Control.Monad.Reader
 

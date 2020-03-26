@@ -5,23 +5,9 @@ import Control.Monad.Reader
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Debug.Trace
-
-type Inequality = Set LExpFO
-
-type Simplified = ReaderT SimplificationCtx Updated
-
-type BExpFO = BExp FO Refs
-type AExpFO = AExp FO Refs
-type LExpFO = LExp FO Refs
-type ReadLExpFO = ReadLExp FO
-
-data SimplificationCtx = SimplificationCtx 
-    { inequalities :: Set Inequality
-    , localVars :: Set LExpFO
-    }
-
-notEqual :: LExpFO -> LExpFO -> Inequality
-notEqual l r = Set.fromList [l, r]
+import Simplified
+import FOTypes
+import MemEq
 
 findInequalities :: BExpFO -> Set Inequality
 findInequalities (BComp NotEqual (ARead (ReadLExp s1 l)) (ARead (ReadLExp s2 r))) = 
@@ -125,77 +111,3 @@ simplifyState'  original@(Update (Update s l1 _) l2 w) = do
         MemEq -> update $ Update s l2 w
         _ -> return original
 simplifyState' original = return original
-
-data Updated a = Updated a | Unchanged a deriving (Eq, Show)
-
-unwrap :: Updated a -> a
-unwrap (Updated a) = a
-unwrap (Unchanged a) = a
-
-instance Functor Updated where
-    fmap f a = pure f <*> a
-
-instance Applicative Updated where
-    pure a = Unchanged a
-    (Updated f) <*> a = Updated $ f $ unwrap a
-    f <*> (Updated a) = Updated $ unwrap f a
-    (Unchanged f) <*> (Unchanged a) = Unchanged $ f a
-
-instance Monad Updated where
-    return a = Unchanged a
-    (Updated a) >>= f = Updated $ unwrap $ f a
-    (Unchanged a) >>= f = f a
-
-data MemEq = MemEq | MemNotEq |MemUndecidable
-
-
-compareDifferentLExp :: LExpFO -> LExpFO -> Simplified MemEq
-compareDifferentLExp (LRead _) _ = return MemUndecidable
-compareDifferentLExp _ (LRead _) = return MemUndecidable
-compareDifferentLExp (LStructurePart struct1 idt1) (LStructurePart struct2 idt2) =
-    if idt1 == idt2 then compareLExp struct1 struct2 else return MemNotEq
-compareDifferentLExp (LArray arr1 idx1) (LArray arr2 idx2) = do
-    eqArray <- compareLExp arr1 arr2
-    eqIdx <- compareAExp idx1 idx2
-    return $ eqArray `memAnd` eqIdx
-compareDifferentLExp _ _ = return MemNotEq
-
--- data ReadLExp l = ReadLExp State (LExp l Refs)
-
-
-compareAExp :: AExpFO -> AExpFO -> Simplified MemEq
-compareAExp a b | a == b = return MemEq
-compareAExp (ALit _) (ALit _) = return MemNotEq
-compareAExp (ARead (ReadLExp s1 l1)) (ARead (ReadLExp s2 l2)) | s1 == s2 = do
-    ineqs <- inequalities <$> ask
-    let predefindedNEq = Set.member (notEqual l1 l2) ineqs
-    sameLExp <- compareLExp l1 l2
-    return $ case sameLExp of
-        MemEq -> MemEq
-        _ -> if predefindedNEq then MemNotEq else MemUndecidable
-compareAExp _ _ = return MemUndecidable
-
-memAnd :: MemEq -> MemEq -> MemEq
-memAnd MemUndecidable _ = MemUndecidable
-memAnd _ MemUndecidable = MemUndecidable
-memAnd MemEq MemEq = MemEq
-memAnd _ _ = MemNotEq
-
-
-compareLExp :: LExpFO -> LExpFO -> Simplified MemEq
-compareLExp a b | (a == b) = return MemEq
-compareLExp a b = do
-    ineqs <- inequalities <$> ask
-    decls <- localVars <$> ask
-    let predefindedNEq = Set.member (notEqual a b) ineqs
-    let anyIsFresh = Set.member a decls || Set.member b decls
-    if predefindedNEq || anyIsFresh 
-        then return MemNotEq 
-        else compareDifferentLExp a b
-
-isNotRead :: LExpFO -> Bool
-isNotRead (LRead _) = False
-isNotRead _ = True
-
-update :: a -> Simplified a
-update a = lift $ Updated a
