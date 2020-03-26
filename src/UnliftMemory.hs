@@ -20,8 +20,8 @@ undagger (LRead r) = unread r
 
 unread :: ReadLExp FO -> Maybe (LExp FO Plain)
 unread (ReadLExp s _) | s /= sigma = Nothing
-unread (ReadLExp _ (LIdt i)) = Just $ LIdt i
-unread (ReadLExp _ l) = LDeref <$> undagger l
+unread (ReadLExp _ (LRead r)) = LDeref <$> unread r
+unread (ReadLExp _ l) = undagger l
 
 unhashmark :: AExp FO Refs -> Maybe (AExp FO Plain)
 unhashmark (ALit i) = Just $ ALit i
