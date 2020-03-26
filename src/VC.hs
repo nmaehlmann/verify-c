@@ -8,6 +8,7 @@ import Simplification
 import qualified Data.Set as Set
 import LiftLogic
 import LiftMemory
+import UnliftMemory
 import ReplaceState
 import ReplaceAExp
 import FOTypes
@@ -20,10 +21,13 @@ verifyFunction f = do
     wvcs <- wvc (funDefBody f) BFalse postcondition
     return $ map simplify $ BBinExp Implies precondition awpBody : wvcs
 
-
-verifyProgram :: Program -> [BExpFO]
-verifyProgram program@(Program functions) = concat $ runReader (sequence (map verifyFunction functions)) ctx
-    where ctx = generateContext program
+verifyProgram :: Program -> Either [BExpFO] [BExp FO Plain]
+verifyProgram program@(Program functions) = 
+    let ctx = generateContext program
+        vcs = concat $ runReader (sequence (map verifyFunction functions)) ctx
+    in  case mapM bUnliftMemory vcs of
+        (Just plainVCs) -> Right plainVCs
+        Nothing         -> Left vcs
 
 type VC = Reader Ctx
 
