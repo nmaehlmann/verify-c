@@ -5,11 +5,11 @@ import Data.List
 import Data.Set (Set)
 import qualified Data.Set as Set
 
-toSMT :: BExp FO Plain -> String
-toSMT b =
+toSMT :: String -> BExp FO Plain -> String
+toSMT env b =
     let decls = map mkDecl $ Set.toList $ bDecls b
         assertion = bAssert b
-    in  unlines $ [arrayAccessDecl, derefDecl] ++ decls ++ [assertion, checkSat]
+    in  unlines $ [arrayAccessDecl, derefDecl] ++ decls ++ [env, assertion, checkSat]
 
 bAssert :: BExp FO Plain -> String
 bAssert b = sExp ["assert", bToSMT (BNeg b)]
@@ -56,8 +56,8 @@ bDecls BFalse = Set.empty
 bDecls (BComp _ l r) = Set.union (aDecls l) (aDecls r)
 bDecls (BNeg b) = bDecls b
 bDecls (BBinExp _ l r) = Set.union (bDecls l) (bDecls r)
-bDecls (BForall _ b) = bDecls b
-bDecls (BExists _ b) = bDecls b
+bDecls (BForall (Idt s) b) = Set.delete (SMTConst s) $ bDecls b
+bDecls (BExists (Idt s) b) = Set.delete (SMTConst s) $ bDecls b
 bDecls (BPredicate _ args) = foldl Set.union Set.empty $ map aDecls args
 
 aDecls :: AExp FO Plain -> Set SMTDecl
@@ -71,7 +71,7 @@ aDecls (AArray _) = error "unsupported array"
 lDecls :: LExp FO Plain -> Set SMTDecl
 lDecls (LIdt (Idt s)) = Set.singleton $ SMTConst s
 lDecls (LArray lExp aExp) = Set.union (lDecls lExp) (aDecls aExp)
-lDecls (LStructurePart lExp (Idt accessor)) = Set.insert (SMTUnary accessor) (lDecls lExp)
+lDecls (LStructurePart lExp (Idt accessor)) = (lDecls lExp) -- Set.insert (SMTUnary accessor) (lDecls lExp)
 lDecls (LDeref i) = lDecls i
 
 readArray :: String
