@@ -15,11 +15,11 @@ statement :: Parser Stmt
 statement = whiteSpace >> chainl singleStatement (return Seq) Empty
 
 singleStatement :: Parser Stmt
-singleStatement = declAssignement 
-    <|> declAssignFunCall
+singleStatement = try declAssignement 
+    <|> try declAssignFunCall
     <|> assignFunCall
     <|> voidFunCall
-    <|> decl 
+    <|> try decl 
     <|> assignment 
     <|> ifThenElse 
     <|> while 

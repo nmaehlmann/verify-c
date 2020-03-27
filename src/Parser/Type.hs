@@ -13,7 +13,7 @@ typeName = do
     return $ foldl (\t ref -> ref t) baseType refs
 
 tBaseType :: Parser Type
-tBaseType = tVoid <|> tInt <|> tChar
+tBaseType = tVoid <|> tInt <|> tChar <|> tStruct
 
 opReference :: Parser (Type -> Type)
 opReference = reserved "*" >> return TReference
@@ -26,3 +26,6 @@ tChar = reserved "char" >> return TChar
 
 tVoid :: Parser Type
 tVoid = reserved "void" >> return TVoid
+
+tStruct :: Parser Type
+tStruct = TStruct <$> lIdentifier

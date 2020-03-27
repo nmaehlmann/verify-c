@@ -4,7 +4,6 @@ import AST
 import Control.Monad.Reader
 import Data.Set (Set)
 import qualified Data.Set as Set
-import Debug.Trace
 import Simplified
 import FOTypes
 import MemEq
@@ -24,7 +23,7 @@ simplify = simplifyLocalVars Set.empty
 simplifyLocalVars :: Set LExpFO -> BExpFO -> BExpFO
 simplifyLocalVars locals a =
     let ctx = SimplificationCtx 
-            { inequalities = traceShowId $ findInequalities a
+            { inequalities = findInequalities a
             , localVars = locals
             }
     in  case runReaderT (simplifyBExpFO a) ctx of

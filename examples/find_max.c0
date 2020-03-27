@@ -2,7 +2,7 @@ int find_max(int* arr, int len) {
     precondition("len > 0");
     postcondition("forall(idx, (idx >= 0 && idx < len) -> \result >= arr[idx])");
     
-    int i = 1;
+    int i = 0;
     int r = 0;
     
     while (i < len) {

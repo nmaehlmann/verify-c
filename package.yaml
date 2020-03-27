@@ -42,6 +42,8 @@ executables:
     dependencies:
     - verify-c
     - parsec
+    - directory
+    - process
 
 tests:
   verify-c-test:
