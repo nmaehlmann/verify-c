@@ -23,20 +23,21 @@ bToSMT (BNeg b) = sExp ["not", bToSMT b]
 bToSMT (BBinExp op l r) = sExp [binOpToSMT op, bToSMT l, bToSMT r]
 bToSMT (BForall i b) = sExp ["forall", "((" ++ show i ++ " Int" ++ "))", bToSMT b]
 bToSMT (BExists i b) = sExp ["exists", "((" ++ show i ++ " Int" ++ "))", bToSMT b]
-bToSMT (BPredicate name args) = error "unsupported predicate"
+bToSMT (BPredicate (Idt name) args) = sExp $ name : map aToSMT args
 
 binOpToSMT :: BBinOp -> String
 binOpToSMT And = "and"
 binOpToSMT Or = "or"
 binOpToSMT Implies = "implies"
+binOpToSMT Iff = "="
 
 aToSMT :: AExp FO Plain -> String
 aToSMT (ALit i) = show i
 aToSMT (AIdt l) = lToSMT l
 aToSMT (ABinExp op l r) = sExp [show op, aToSMT l, aToSMT r]
 aToSMT (ALogVar v) = show v
-aToSMT (AArray fields) = error "unsupported array"
-aToSMT (AFunCall _ _) = error "unsupported fun call"
+aToSMT (AFunCall (Idt name) args) = sExp $ name : map aToSMT args
+aToSMT (AArray _) = error "unsupported array"
 
 lToSMT :: LExp FO Plain -> String
 lToSMT (LIdt i) = show i
@@ -57,15 +58,15 @@ bDecls (BNeg b) = bDecls b
 bDecls (BBinExp _ l r) = Set.union (bDecls l) (bDecls r)
 bDecls (BForall _ b) = bDecls b
 bDecls (BExists _ b) = bDecls b
-bDecls (BPredicate name args) = error "unsupported predicate"
+bDecls (BPredicate _ args) = foldl Set.union Set.empty $ map aDecls args
 
 aDecls :: AExp FO Plain -> Set SMTDecl
 aDecls (ALit _) = Set.empty
 aDecls (AIdt l) = lDecls l
 aDecls (ABinExp _ l r) = Set.union (aDecls l) (aDecls r)
 aDecls (ALogVar (Idt v)) = Set.singleton $ SMTConst v
-aDecls (AArray fields) = error "unsupported array"
-aDecls (AFunCall _ _) = error "unsupported fun call"
+aDecls (AFunCall _ args) = foldl Set.union Set.empty $ map aDecls args
+aDecls (AArray _) = error "unsupported array"
 
 lDecls :: LExp FO Plain -> Set SMTDecl
 lDecls (LIdt (Idt s)) = Set.singleton $ SMTConst s

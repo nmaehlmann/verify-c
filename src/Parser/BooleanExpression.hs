@@ -62,13 +62,14 @@ comparisonOperators =
 bOperatorTable :: OperatorTable String () Identity (BExp' l)
 bOperatorTable =
     [ [Prefix opNeg]
-    , [Infix opAnd AssocLeft, Infix opOr AssocLeft, Infix opImplies AssocLeft]
+    , [Infix opAnd AssocLeft, Infix opOr AssocLeft, Infix opImplies AssocLeft, Infix opIff AssocLeft]
     ]
 
 opAnd, opOr, opImplies :: Parser (BExp' l -> BExp' l -> BExp' l)
 opAnd = reservedOp "&&" >> return (BBinExp And)
 opOr = reservedOp "||" >> return (BBinExp Or)
 opImplies = reservedOp "->" >> return (BBinExp Implies)
+opIff = reservedOp "<->" >> return (BBinExp Iff)
 
 opNeg :: Parser (BExp' l -> BExp' l)
 opNeg = reservedOp "!" >> return BNeg

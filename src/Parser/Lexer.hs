@@ -10,7 +10,8 @@ operators =
     [ "+" , "-" , "*" , "/"  
     , "=" , "==", "!=", "<=" 
     , "<" , ">=", ">" , "&&"
-    , "||", "[" , "]" , "->"]
+    , "||", "[" , "]" , "->"
+    , "<->", "[]" ]
 
 operatorSymbols :: [Char]
 operatorSymbols = nub $ mconcat operators

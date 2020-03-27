@@ -17,7 +17,7 @@ data ABinOp = Add | Sub | Mul | Div
 data CompOp = Less | LessOrEqual | Greater | GreaterOrEqual | Equal | NotEqual
     deriving (Eq)
 
-data BBinOp = And | Or | Implies
+data BBinOp = And | Or | Implies | Iff
     deriving (Eq)
 
 data Stmt 
@@ -175,6 +175,7 @@ instance Show BBinOp where
     show And = "&&"
     show Or = "||"
     show Implies = "->"
+    show Iff = "<->"
 
 instance Show CompOp where
     show Less = "<"
