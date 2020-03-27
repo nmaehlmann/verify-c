@@ -1,11 +1,11 @@
 module Main where
-
 import Data.Maybe
 import Text.Parsec
 import System.Environment
-
-import VC
 import Parser.Program
+import VC
+import SMTExport
+import AST
 
 main :: IO ()
 main = do
@@ -16,9 +16,15 @@ main = do
         (Just t) -> do
             src <- readFile t
             let ast = parse program "" src
-            putStrLn $ case ast of
-                (Right prog) -> "VCs: " ++ show (verifyProgram prog)
-                (Left err) -> "error: " ++ show err
+            case ast of
+                (Right prog) -> case (verifyProgram prog) of
+                    (Right plain) -> do
+                        putStrLn $ show plain
+                        let conjunction = foldl1 (BBinExp And) plain
+                        putStrLn $ bAssert conjunction
+                        putStrLn $ "(check-sat)"
+                    (Left stateful) -> putStrLn $ "could not simplify: " ++ show stateful
+                (Left err) -> putStrLn $ "error: " ++ show err
         
 
 
