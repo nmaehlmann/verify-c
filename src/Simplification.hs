@@ -80,7 +80,7 @@ simplifyLRead' :: ReadLExpFO -> Simplified LExpFO
 simplifyLRead' original@(ReadLExp (Update state lExp _) toRead) = do
     memComparison <- compareLExp toRead lExp
     LRead <$> case memComparison of
-        MemEq -> error "do something here"
+        MemEq -> error "TODO: handle equal LExp in read"
         MemNotEq -> update $ ReadLExp state toRead 
         MemUndecidable -> return original
 simplifyLRead' original = return $ LRead original

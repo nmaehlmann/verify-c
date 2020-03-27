@@ -84,8 +84,12 @@ ifThenElse = do
     reserved "if"
     condition <- parens bExpC0
     ifCase <- braces statement
-    reserved "else"
-    elseCase <- braces statement
+    optionalElseCase <- optionMaybe $ do
+        reserved "else"
+        braces statement
+    let elseCase = case optionalElseCase of
+            (Just e) -> e
+            (Nothing) -> Empty
     return $ ITE condition ifCase elseCase
 
 while :: Parser Stmt
