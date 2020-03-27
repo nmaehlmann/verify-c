@@ -24,3 +24,6 @@ cabal.project.local~
 stack.yaml.lock
 verify-c.cabal
 .vscode/
+vcs.txt
+vcs.z3
+z3.log
