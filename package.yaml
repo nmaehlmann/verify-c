@@ -46,6 +46,8 @@ executables:
     - process
     - pretty-terminal
     - filepath
+    - options
+    - mtl
 
 tests:
   verify-c-test:

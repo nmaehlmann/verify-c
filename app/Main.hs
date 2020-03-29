@@ -6,7 +6,6 @@ import System.Process hiding (env)
 import System.IO.Error
 import System.Console.Pretty
 import System.FilePath
-import System.Environment
 import Data.Maybe
 import Data.List
 import Data.Char
@@ -15,6 +14,14 @@ import Parser.Program
 import VC
 import SMTExport
 import AST
+import qualified Options as Options
+import qualified VerificationOptions as VerificationOptions
+import Control.Monad.Reader
+import System.IO
+
+type App = ReaderT Settings IO
+
+data Settings = VerifyCSettings { smtEnvironment :: String, hasColor :: Bool}
 
 vcPath :: FilePath
 vcPath = "vcs.txt"
@@ -25,28 +32,31 @@ z3InputPath = "vcs.z3"
 z3OutputPath :: FilePath
 z3OutputPath = "z3.log"
 
-clearTempPaths :: IO ()
+clearTempPaths :: App ()
 clearTempPaths = do
-    removeIfExists vcPath
-    removeIfExists z3InputPath
-    removeIfExists z3OutputPath
+    lift $ removeIfExists vcPath
+    lift $ removeIfExists z3InputPath
+    lift $ removeIfExists z3OutputPath
 
 main :: IO ()
-main = do
-    textToParse <- fmap listToMaybe getArgs
+main = Options.runCommand $ \opts args -> do
+    let textToParse = listToMaybe args
     case textToParse of 
         Nothing -> putStrLn "error: input file was not specified."
         (Just path) -> do
             
             -- load source and environment
-            src <- readFile path
+            src <- readFile (path :: String)
             let envPath = addExtension (fst (splitExtension path)) "env"
             envExists <- doesFileExist envPath
             env <- if envExists then readFile envPath else return ""
 
+            -- build settings
+            let settings = VerifyCSettings { smtEnvironment = env, hasColor = VerificationOptions.hasColor opts }
+
             let ast = parse program "" src
             case ast of
-                (Right prog) -> do
+                (Right prog) -> flip runReaderT settings $ do
                     let vcs = verifyProgram prog
                     let vcInfos = map printVC vcs
                     let maxLen = maximum $ map length vcInfos
@@ -54,9 +64,12 @@ main = do
                     let maxRank = length vcs
                     let rankedVCInfos = zipWith (\r s -> printRank r maxRank ++ s) [1..] paddedVCInfos
                     
-                    putStrLn $ "Generated " ++ show (length vcs) ++ " verification condition(s). Starting proof:"
+                    lift $ putStrLn $ "Generated " ++ show (length vcs) ++ " verification condition(s). Starting proof:"
                     
                     result <- verifyVCs env VOk $ zip rankedVCInfos vcs
+
+                    -- print result
+                    lift $ putStrLn ""
                     case result of
                         VOk -> printVerificationOK
                         VError -> printVerificationFailed
@@ -65,15 +78,15 @@ main = do
                     putStrLn "parser error:"
                     putStrLn $ show err
 
-printVerificationOK :: IO ()
+printVerificationOK :: App ()
 printVerificationOK = do
-    inColor <- supportsPretty
-    putStrLn $ withBGColor Green "VERIFICATION OK" inColor
+    inColor <- hasColor <$> ask
+    lift $ putStrLn $ "Summary: " ++ withColor Green "VERIFICATION OK" inColor
 
-printVerificationFailed :: IO ()
+printVerificationFailed :: App ()
 printVerificationFailed = do
-    inColor <- supportsPretty
-    putStrLn $ withBGColor Red "VERIFICATION FAILED" inColor
+    inColor <- hasColor <$> ask
+    lift $ putStrLn $ "Summary: " ++ withColor Red "VERIFICATION FAILED" inColor
 
         
 printVC :: VC a -> String
@@ -100,18 +113,18 @@ data VerificationStatus = Verified | Violated | SimplifyFailed | Timeout | SMTEr
 
 data VerificationResult = VError | VOk
 
-verifyVCs :: String -> VerificationResult -> [(String, VC Refs)] -> IO VerificationResult
+verifyVCs :: String -> VerificationResult -> [(String, VC Refs)] -> App VerificationResult
 verifyVCs _ s [] = return s
 verifyVCs env VError ((description, _) : vcs) = printVCResult description Skipped >> verifyVCs env VError vcs
-verifyVCs env VOk ((description, vc@(VC _ refsFO)) : vcs) = clearTempPaths >> do
+verifyVCs env VOk ((description, vc@(VC _ refsFO)) : vcs) = clearTempPaths >> lift (hFlush stdout) >> do
     case vcUnliftMemory vc of
 
         Just (VC _ plainFO) -> do
-            writeFile vcPath $ show plainFO
+            lift $ writeFile vcPath $ show plainFO
             let smt = toSMT env plainFO
-            writeFile z3InputPath smt
-            (_, z3Result, z3Err) <- readProcessWithExitCode "z3" [z3InputPath, "-T:5"] ""
-            writeFile z3OutputPath z3Result
+            lift $ writeFile z3InputPath smt
+            (_, z3Result, z3Err) <- lift $ readProcessWithExitCode "z3" [z3InputPath, "-T:5"] ""
+            lift $ writeFile z3OutputPath z3Result
 
             let trimmedZ3Result = trim z3Result
             case trimmedZ3Result of
@@ -121,31 +134,31 @@ verifyVCs env VOk ((description, vc@(VC _ refsFO)) : vcs) = clearTempPaths >> do
                 _ -> do 
                     printVCResult description SMTError
                     _ <- verifyVCs env VError vcs
-                    when (not (null z3Result)) $ putStrLn z3Result
-                    when (not (null z3Err)) $ putStrLn z3Result
+                    when (not (null z3Result)) $ lift $ putStrLn z3Result
+                    when (not (null z3Err)) $ lift $ putStrLn z3Result
                     return VError
 
         Nothing -> do
-            writeFile vcPath $ show refsFO
+            lift $ writeFile vcPath $ show refsFO
             printVCResult description SimplifyFailed
             verifyVCs env VError vcs
 
-printVCResult :: String -> VerificationStatus -> IO ()
+printVCResult :: String -> VerificationStatus -> App ()
 printVCResult description status = do
-    inColor <- supportsPretty
-    putStrLn $ description ++ printStatus status inColor
+    inColor <- hasColor <$> ask
+    lift $ putStrLn $ description ++ printStatus status inColor
 
 printStatus :: VerificationStatus -> Bool -> String
-printStatus Verified        = withBGColor Green   "OK"
-printStatus Violated        = withBGColor Red     "VIOLATED"
-printStatus SimplifyFailed  = withBGColor Red     "SIMPLIFY FAILED"
-printStatus Timeout         = withBGColor Red     "TIMEOUT"
-printStatus SMTError        = withBGColor Red     "SMT ERROR"
-printStatus Skipped         = withBGColor Yellow  "SKIPPED"
+printStatus Verified        = withColor Green   "OK"
+printStatus Violated        = withColor Red     "VIOLATED"
+printStatus SimplifyFailed  = withColor Red     "SIMPLIFY FAILED"
+printStatus Timeout         = withColor Red     "TIMEOUT"
+printStatus SMTError        = withColor Red     "SMT ERROR"
+printStatus Skipped         = withColor Default "SKIPPED"
 
-withBGColor :: Color -> String -> Bool -> String
-withBGColor c s True = bgColor c $ " " ++ s ++ " "
-withBGColor _ s False =  " " ++ s ++ " "
+withColor :: Color -> String -> Bool -> String
+withColor c s True = color c $ s
+withColor _ s False =  s
 
 trim:: String -> String
 trim = dropWhileEnd isSpace . dropWhile isSpace
