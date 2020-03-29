@@ -71,7 +71,7 @@ aDecls (AArray _) = error "unsupported array"
 lDecls :: LExp FO Plain -> Set SMTDecl
 lDecls (LIdt (Idt s)) = Set.singleton $ SMTConst s
 lDecls (LArray lExp aExp) = Set.union (lDecls lExp) (aDecls aExp)
-lDecls (LStructurePart lExp (Idt accessor)) = (lDecls lExp) -- Set.insert (SMTUnary accessor) (lDecls lExp)
+lDecls (LStructurePart lExp _) = (lDecls lExp) -- Set.insert (SMTUnary accessor) (lDecls lExp)
 lDecls (LDeref i) = lDecls i
 
 readArray :: String

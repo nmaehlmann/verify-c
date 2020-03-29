@@ -20,15 +20,17 @@ data CompOp = Less | LessOrEqual | Greater | GreaterOrEqual | Equal | NotEqual
 data BBinOp = And | Or | Implies | Iff
     deriving (Eq)
 
+newtype LineNo = LineNo Int deriving (Eq, Show)
+
 data Stmt 
     = Assignment LExp'' AExp''
     | ITE (BExp' C0) Stmt Stmt
-    | While (BExp' C0) (BExp' FO) Stmt
+    | While (BExp' C0) (BExp' FO) Stmt LineNo
     | Seq Stmt Stmt
     | Return (Maybe AExp'')
-    | Assertion (BExp'  FO)
+    | Assertion (BExp'  FO) LineNo
     | Declaration LExp''
-    | FunCall (Maybe LExp'') Idt [AExp'']
+    | FunCall (Maybe LExp'') Idt [AExp''] LineNo
     | Empty
     deriving (Eq, Show)
 

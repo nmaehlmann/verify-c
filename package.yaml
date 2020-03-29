@@ -35,7 +35,7 @@ executables:
     source-dirs:         app
     ghc-options:
     - -Wall
-    - -Werror
+    # - -Werror
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
@@ -44,6 +44,8 @@ executables:
     - parsec
     - directory
     - process
+    - pretty-terminal
+    - filepath
 
 tests:
   verify-c-test:

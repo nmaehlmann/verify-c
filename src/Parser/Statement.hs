@@ -27,7 +27,7 @@ singleStatement = try declAssignement
     <|> assertion
 
 assertion :: Parser Stmt
-assertion = Assertion <$> assertionFO "assertion"
+assertion = Assertion <$> assertionFO "assertion" <*> lineNo
 
 invariant :: Parser (BExp' FO)
 invariant = assertionFO "invariant"
@@ -37,7 +37,8 @@ voidFunCall = try $ do
     funName <- identifier
     funArgs <- parens $ commaSep aExpC0
     semi
-    return $ FunCall Nothing funName funArgs
+    line <- lineNo
+    return $ FunCall Nothing funName funArgs line
 
 declAssignFunCall :: Parser Stmt
 declAssignFunCall = try $ do
@@ -47,7 +48,8 @@ declAssignFunCall = try $ do
     funName <- identifier
     funArgs <- parens $ commaSep aExpC0
     semi
-    return $  Seq (Declaration idt) (FunCall (Just idt) funName funArgs)
+    line <- lineNo
+    return $  Seq (Declaration idt) (FunCall (Just idt) funName funArgs line)
 
 assignFunCall :: Parser Stmt
 assignFunCall = try $ do
@@ -56,7 +58,8 @@ assignFunCall = try $ do
     funName <- identifier
     funArgs <- parens $ commaSep aExpC0
     semi
-    return $ FunCall (Just idt) funName funArgs
+    line <- lineNo
+    return $ FunCall (Just idt) funName funArgs line
 
 decl :: Parser Stmt
 decl = do
@@ -96,11 +99,12 @@ while :: Parser Stmt
 while = do
     reserved "while"
     condition <- parens bExpC0
-    (inv, body) <- braces $ do
+    (line, inv, body) <- braces $ do
+        line <- lineNo
         inv <- invariant
         body <- statement
-        return (inv, body)
-    return $ While condition inv body
+        return (line, inv, body)
+    return $ While condition inv body line
     
 returnStatement :: Parser Stmt
 returnStatement = do
@@ -108,3 +112,6 @@ returnStatement = do
     returnValue <- optionMaybe aExpC0
     semi
     return $ Return returnValue
+
+lineNo :: Parser LineNo
+lineNo = LineNo <$> sourceLine <$> getPosition 
