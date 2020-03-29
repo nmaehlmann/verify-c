@@ -21,7 +21,7 @@ import System.IO
 
 type App = ReaderT Settings IO
 
-data Settings = VerifyCSettings { smtEnvironment :: String, hasColor :: Bool}
+data Settings = VerifyCSettings { smtEnvironment :: String, hasColor :: Bool, smtTimeout :: Int}
 
 vcPath :: FilePath
 vcPath = "vcs.txt"
@@ -52,7 +52,11 @@ main = Options.runCommand $ \opts args -> do
             env <- if envExists then readFile envPath else return ""
 
             -- build settings
-            let settings = VerifyCSettings { smtEnvironment = env, hasColor = VerificationOptions.hasColor opts }
+            let settings = VerifyCSettings 
+                    { smtEnvironment = env
+                    , hasColor = VerificationOptions.hasColor opts
+                    , smtTimeout = VerificationOptions.smtTimeout opts 
+                    }
 
             let ast = parse program "" src
             case ast of
@@ -123,7 +127,8 @@ verifyVCs env VOk ((description, vc@(VC _ refsFO)) : vcs) = clearTempPaths >> li
             lift $ writeFile vcPath $ show plainFO
             let smt = toSMT env plainFO
             lift $ writeFile z3InputPath smt
-            (_, z3Result, z3Err) <- lift $ readProcessWithExitCode "z3" [z3InputPath, "-T:5"] ""
+            timeout <- smtTimeout <$> ask
+            (_, z3Result, z3Err) <- lift $ readProcessWithExitCode "z3" [z3InputPath, "-T:" ++ show timeout] ""
             lift $ writeFile z3OutputPath z3Result
 
             let trimmedZ3Result = trim z3Result
