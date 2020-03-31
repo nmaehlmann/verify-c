@@ -1,9 +1,9 @@
 {-# LANGUAGE GADTs #-}
-module LiftLogic where
+module Logic.Lift (liftLogic, aLiftLogic, lLiftLogic) where
 import AST
 
-bLiftLogic :: BExp C0 Plain -> BExp FO Plain
-bLiftLogic = mapAExps aLiftLogic
+liftLogic :: BExp C0 Plain -> BExp FO Plain
+liftLogic = mapAExps aLiftLogic
 
 aLiftLogic :: AExp C0 Plain -> AExp FO Plain
 aLiftLogic (ALit i) = ALit i

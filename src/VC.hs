@@ -6,7 +6,7 @@ import qualified Data.Map as Map
 import Control.Monad.Reader
 import Simplification
 import qualified Data.Set as Set
-import LiftLogic
+import Logic.Lift
 import Memory.Lift
 import Memory.Unlift
 import Replace.State
@@ -72,7 +72,7 @@ awp' (Assertion q _) _ _ = return $ liftMemory q
 awp' (ITE condition sTrue sFalse) q qr = do
     awpTrue <- awp sTrue q qr
     awpFalse <- awp sFalse q qr
-    let foCondition = liftMemory $ bLiftLogic condition
+    let foCondition = liftMemory $ liftLogic condition
     let foTrue  = BBinExp And foCondition awpTrue
     let foFalse = BBinExp And (BNeg foCondition) awpFalse
     return $ BBinExp Or foTrue foFalse
@@ -113,7 +113,7 @@ wvc (ITE _ sTrue sFalse) q qr = do
     wvcCaseFalse <- wvc sFalse q qr
     return $ wvcCaseTrue ++ wvcCaseFalse
 wvc (While cond inv body line) q qr = do
-    let foCond = liftMemory $ bLiftLogic cond
+    let foCond = liftMemory $ liftLogic cond
     let foInv = liftMemory inv
     let foInvAndCond = BBinExp And foInv foCond
     let foInvAndNotCond = BBinExp And foInv $ BNeg foCond
