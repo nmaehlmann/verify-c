@@ -1,5 +1,5 @@
 {-# LANGUAGE GADTs #-}
-module MemEq (MemEq(..), compareLExp) where
+module Memory.Eq (MemEq(..), compareLExp) where
 import Control.Monad.Reader
 import qualified Data.Set as Set
 import AST

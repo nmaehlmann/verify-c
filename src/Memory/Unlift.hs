@@ -1,16 +1,16 @@
 {-# LANGUAGE GADTs #-}
-module UnliftMemory where
+module Memory.Unlift (unliftMemory) where
 import AST
 
-bUnliftMemory :: BExp FO Refs -> Maybe (BExp FO Plain)
-bUnliftMemory BTrue = Just BTrue
-bUnliftMemory BFalse = Just BFalse
-bUnliftMemory (BComp op l r) = BComp op <$> unhashmark l <*> unhashmark r
-bUnliftMemory (BNeg b) = BNeg <$> bUnliftMemory b
-bUnliftMemory (BBinExp op l r) = BBinExp op <$> bUnliftMemory l <*> bUnliftMemory r
-bUnliftMemory (BForall i b) = BForall i <$> bUnliftMemory b
-bUnliftMemory (BExists i b) = BExists i <$> bUnliftMemory b
-bUnliftMemory (BPredicate name args) = BPredicate name <$> mapM unhashmark args
+unliftMemory :: BExp FO Refs -> Maybe (BExp FO Plain)
+unliftMemory BTrue = Just BTrue
+unliftMemory BFalse = Just BFalse
+unliftMemory (BComp op l r) = BComp op <$> unhashmark l <*> unhashmark r
+unliftMemory (BNeg b) = BNeg <$> unliftMemory b
+unliftMemory (BBinExp op l r) = BBinExp op <$> unliftMemory l <*> unliftMemory r
+unliftMemory (BForall i b) = BForall i <$> unliftMemory b
+unliftMemory (BExists i b) = BExists i <$> unliftMemory b
+unliftMemory (BPredicate name args) = BPredicate name <$> mapM unhashmark args
 
 undagger :: LExp FO Refs -> Maybe (LExp FO Plain)
 undagger (LIdt idt) = Just $ LIdt idt

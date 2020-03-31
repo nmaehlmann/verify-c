@@ -6,7 +6,7 @@ import Data.Set (Set)
 import qualified Data.Set as Set
 import Simplified
 import FOTypes
-import MemEq
+import Memory.Eq
 
 findInequalities :: BExpFO -> Set Inequality
 findInequalities (BComp NotEqual (ARead (ReadLExp s1 l)) (ARead (ReadLExp s2 r))) = 

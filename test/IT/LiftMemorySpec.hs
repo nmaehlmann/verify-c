@@ -1,7 +1,7 @@
 module IT.LiftMemorySpec where
 import Test.Hspec
 import AST
-import LiftMemory
+import Memory.Lift
 
 spec :: Spec
 spec = do

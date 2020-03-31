@@ -1,9 +1,9 @@
 {-# LANGUAGE GADTs #-}
-module LiftMemory where
+module Memory.Lift (liftMemory, dagger, hashmark) where
 import AST
 
-bLiftMemory :: BExp FO Plain -> BExp FO Refs
-bLiftMemory = mapAExps hashmark
+liftMemory :: BExp FO Plain -> BExp FO Refs
+liftMemory = mapAExps hashmark
 
 dagger :: LExp FO Plain -> LExp FO Refs
 dagger (LIdt idt) = LIdt idt
