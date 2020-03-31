@@ -6,14 +6,12 @@ import Parser.Program
 import AST
 import VC
 
-idSpec :: IO Spec
-idSpec = do
-    swapSrc <- readFile "examples/id.c0" 
-    return $ do
-        describe "VC.verify" $ do
-            let (Right swapProgram) = parse program "" swapSrc
-            let swapImplicationTxt = "a == a"
-            let (Right swapImplication) = parse bExpFO "" swapImplicationTxt
-            let [Just (VC _ (BBinExp Implies _ implication))] = map vcUnliftMemory $ verifyProgram swapProgram
-            it "generates a truthy implication for the id program" $ do
-                implication `shouldBe` swapImplication
+spec :: Spec
+spec = describe "VC.verify" $ do
+    swapSrc <- runIO $ readFile "examples/id.c0" 
+    let (Right swapProgram) = parse program "" swapSrc
+    let swapImplicationTxt = "a == a"
+    let (Right swapImplication) = parse bExpFO "" swapImplicationTxt
+    let [Just (VC _ (BBinExp Implies _ implication))] = map vcUnliftMemory $ verifyProgram swapProgram
+    it "generates a truthy implication for the id program" $ do
+        implication `shouldBe` swapImplication

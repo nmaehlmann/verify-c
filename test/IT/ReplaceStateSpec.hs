@@ -4,8 +4,8 @@ import AST
 import ReplaceState
 import IT.FacFormula
 
-replaceStateSpec :: IO Spec
-replaceStateSpec = return $ describe "ReplaceState.bReplaceState" $ do
+spec :: Spec
+spec = describe "ReplaceState.bReplaceState" $ do
     it "replaces c with c + 1 in an assertion of the fac program" $ do
         let facFormula = facFormulaForState sigma
     

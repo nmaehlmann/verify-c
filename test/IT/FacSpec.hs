@@ -6,13 +6,11 @@ import Text.Parsec
 import AST
 import Parser.Statement
 
-facSpec :: IO Spec
-facSpec = do
-    facSrc <- readFile "examples/fac.c0" 
-    return $ do
-        describe "Parser.Statement" $ do
-            it "parses a faculty program" $ do
-                (parse statement "" facSrc) `shouldBe` fac
+spec :: Spec
+spec = describe "Parser.Statement" $ do
+    facSrc <- runIO $ readFile "examples/fac.c0" 
+    it "parses a faculty program" $ do
+        (parse statement "" facSrc) `shouldBe` fac
 
 mkIdt = AIdt
 n = LIdt $ Idt "n"                

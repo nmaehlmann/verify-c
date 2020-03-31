@@ -7,8 +7,8 @@ import AST
 import Parser.BooleanExpression
 
     
-fOExpSpec :: IO Spec
-fOExpSpec = return $ describe "Parser.BooleanExpression" $ do
+spec :: Spec
+spec = describe "Parser.BooleanExpression" $ do
     let parseFOExp t = parse bExpFO "" t
     let x = AIdt $ LIdt $ Idt "x"
     let y = AIdt $ LIdt $ Idt "y"

@@ -6,8 +6,8 @@ import Text.Parsec
 import AST
 import Parser.Type
 
-typeSpec :: IO Spec
-typeSpec = return $ describe "Parser.Statement" $ do
+spec :: Spec
+spec = describe "Parser.Statement" $ do
     let parseStmt t = parse typeName "" t
 
     it "parses void" $ do

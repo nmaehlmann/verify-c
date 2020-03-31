@@ -6,13 +6,11 @@ import Text.Parsec hiding (Empty)
 import AST
 import Parser.Statement
 
-maxSpec :: IO Spec
-maxSpec = do
-    maxSrc <- readFile "examples/max.c0" 
-    return $ do
-        describe "Parser.Statement" $ do
-            it "parses a program that finds the maximal element of an array" $ do
-                (parse statement "" maxSrc) `shouldBe` maxExp
+spec :: Spec
+spec = describe "Parser.Statement" $ do
+    maxSrc <- runIO $ readFile "examples/max.c0" 
+    it "parses a program that finds the maximal element of an array" $ do
+        (parse statement "" maxSrc) `shouldBe` maxExp
 
 mkIdt = AIdt
 a = LIdt $ Idt "a"                

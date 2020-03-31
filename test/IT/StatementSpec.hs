@@ -9,8 +9,8 @@ import Parser.Statement
 
 import IT.Whitespaces
 
-statementSpec :: IO Spec
-statementSpec = return $ describe "Parser.Statement" $ do
+spec :: Spec
+spec = describe "Parser.Statement" $ do
     let isValid = isRight
     let parseStmt t = parse statement "" t
     let mkIdt = AIdt

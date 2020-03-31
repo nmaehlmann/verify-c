@@ -6,8 +6,8 @@ import Text.Parsec
 import AST
 import Parser.LExpression
 
-lExpSpec :: IO Spec
-lExpSpec = return $ describe "Parser.LExpression" $ do
+spec :: Spec
+spec = describe "Parser.LExpression" $ do
     let parseLExp t = parse lExpC0 "" t
     let a = LIdt $ Idt "a"
     let arr = LIdt $ Idt "arr"

@@ -7,8 +7,8 @@ import Text.Parsec
 import AST
 import Parser.FunctionDefinition
 
-funDefSpec :: IO Spec
-funDefSpec = return $ describe "Parser.FunctionDefinition" $ do
+spec :: Spec
+spec = describe "Parser.FunctionDefinition" $ do
     let parseFunDef t = parse funDef "" t
     let x = LIdt $ Idt "x"
     let a = LIdt $ Idt "a"

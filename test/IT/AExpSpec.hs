@@ -7,8 +7,8 @@ import AST
 import Parser.ArithmeticExpression
 import IT.Whitespaces
 
-aExpSpec :: IO Spec
-aExpSpec = return $ describe "Parser.ArithmeticExpression" $ do
+spec :: Spec
+spec = describe "Parser.ArithmeticExpression" $ do
     let parseAExp t = parse aExpFO "" t
     let x = AIdt $ LIdt $ Idt "x"
     let y = AIdt $ LIdt $ Idt "y"
