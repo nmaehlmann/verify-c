@@ -12,7 +12,7 @@ import Data.Char
 import Text.Parsec
 import Parser.Program
 import VC
-import SMTExport
+import qualified SMT.Export as SMT
 import AST
 import qualified Options as Options
 import qualified VerificationOptions as VerificationOptions
@@ -125,7 +125,7 @@ verifyVCs env VOk ((description, vc@(VC _ refsFO)) : vcs) = clearTempPaths >> li
 
         Just (VC _ plainFO) -> do
             lift $ writeFile vcPath $ show plainFO
-            let smt = toSMT env plainFO
+            let smt = SMT.export env plainFO
             lift $ writeFile z3InputPath smt
             timeout <- smtTimeout <$> ask
             (_, z3Result, z3Err) <- lift $ readProcessWithExitCode "z3" [z3InputPath, "-T:" ++ show timeout] ""

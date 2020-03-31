@@ -1,12 +1,12 @@
 {-# LANGUAGE GADTs #-}
-module SMTExport where
+module SMT.Export (export) where
 import AST
 import Data.List
 import Data.Set (Set)
 import qualified Data.Set as Set
 
-toSMT :: String -> BExp FO Plain -> String
-toSMT env b =
+export :: String -> BExp FO Plain -> String
+export env b =
     let decls = map mkDecl $ Set.toList $ bDecls b
         assertion = bAssert b
     in  unlines $ [arrayAccessDecl, derefDecl] ++ decls ++ [env, assertion, checkSat]
