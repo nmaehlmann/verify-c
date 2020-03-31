@@ -16,8 +16,5 @@ typeSpec = return $ describe "Parser.Statement" $ do
     it "parses int" $ do
         parseStmt "int" `shouldBe` (Right TInt)
 
-    it "parses char" $ do
-        parseStmt "char" `shouldBe` (Right TChar)
-
     it "parses int references" $ do
         parseStmt "int*" `shouldBe` (Right (TReference TInt))

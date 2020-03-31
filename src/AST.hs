@@ -49,7 +49,6 @@ data FunctionDefinition = FunctionDefinition
 
 data Type
     = TInt
-    | TChar
     | TStruct String
     | TArray Type
     | TReference Type
@@ -89,7 +88,6 @@ data AExp l m where
     AIdt        :: LExp l Plain -> AExp l Plain
     ARead       :: ReadLExp FO -> AExp FO Refs
     ABinExp     :: ABinOp -> AExp l m -> AExp l m -> AExp l m
-    AArray      :: [AExp l m] -> AExp l m
     AFunCall    :: Idt -> [AExp FO m] -> AExp FO m
     ALogVar     :: Idt -> AExp FO m
 
@@ -142,8 +140,6 @@ instance Show (AExp l m) where
     show (ALit i) = show i
     show (ARead readLExp) = show readLExp
     show (ABinExp op l r) = showBinExp op l r
-    show (AArray fields) = "[" ++ showFields ++ "]" 
-        where showFields = concat $ intersperse "," $ map show fields
     show (AFunCall name args) = show name ++ "(" ++ argsList ++ ")"
         where argsList = concat $ intersperse "," $ map show args
     show (ALogVar i) = show i

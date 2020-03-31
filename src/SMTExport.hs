@@ -37,7 +37,6 @@ aToSMT (AIdt l) = lToSMT l
 aToSMT (ABinExp op l r) = sExp [show op, aToSMT l, aToSMT r]
 aToSMT (ALogVar v) = show v
 aToSMT (AFunCall (Idt name) args) = sExp $ name : map aToSMT args
-aToSMT (AArray _) = error "unsupported array"
 
 lToSMT :: LExp FO Plain -> String
 lToSMT (LIdt i) = show i
@@ -66,7 +65,6 @@ aDecls (AIdt l) = lDecls l
 aDecls (ABinExp _ l r) = Set.union (aDecls l) (aDecls r)
 aDecls (ALogVar (Idt v)) = Set.singleton $ SMTConst v
 aDecls (AFunCall _ args) = foldl Set.union Set.empty $ map aDecls args
-aDecls (AArray _) = error "unsupported array"
 
 lDecls :: LExp FO Plain -> Set SMTDecl
 lDecls (LIdt (Idt s)) = Set.singleton $ SMTConst s

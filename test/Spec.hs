@@ -8,7 +8,6 @@ import IT.LExpSpec
 import IT.StatementSpec
 import IT.MaxSpec
 import IT.FunDefSpec
-import IT.VCSpec
 import IT.TypeSpec
 import IT.SimplificationSpec
 import IT.LiftMemorySpec
@@ -30,7 +29,6 @@ main = do
         , daggerSpec
         , hashmarkSpec
         , replaceStateSpec
-        , awpSpec
         , typeSpec
         , simplificationSpec
         , simplifyASExpSpec

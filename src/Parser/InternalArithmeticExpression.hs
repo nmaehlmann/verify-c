@@ -17,7 +17,6 @@ aExpC0 lExpParser = buildExpressionParser aOperatorTable $ aTermC0 lExpParser
 aTermC0 :: Parser (LExp C0 Plain) -> Parser (AExp C0 Plain)
 aTermC0 lExpParser = parens (aExpC0 lExpParser) 
     <|> aLit 
-    <|> aArray (aExpC0 lExpParser) 
     <|> aLExp lExpParser
 
 aExpFO :: Parser (LExp FO Plain) -> Parser (AExp FO Plain)
@@ -28,7 +27,6 @@ aTermFO lExpParser = parens (aExpFO lExpParser)
     <|> aLogVar
     <|> funCall (aExpFO lExpParser)
     <|> aLit 
-    <|> aArray (aExpFO lExpParser)
     <|> aLExp lExpParser
 
 aOperatorTable :: OperatorTable String () Identity (AExp l m)
@@ -58,11 +56,6 @@ startsWithUpperCase _ = False
 
 aLExp :: Parser (LExp l Plain) -> Parser (AExp l Plain)
 aLExp = fmap AIdt
-
-aArray :: Parser (AExp l m) -> Parser (AExp l m)
-aArray aExpParser = do 
-    fields <- braces $ aExpParser `sepBy` comma
-    return $ AArray fields
 
 funCall :: Parser (AExp FO m) ->  Parser (AExp FO m)
 funCall aExpParser = try $ do

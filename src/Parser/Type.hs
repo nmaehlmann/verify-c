@@ -12,13 +12,10 @@ typeName :: Parser Type
 typeName = buildExpressionParser tOperatorTable tTerm
 
 tTerm :: Parser Type
-tTerm = tVoid <|> tInt <|> tChar <|> tStruct
+tTerm = tVoid <|> tInt <|> tStruct
 
 tInt :: Parser Type
 tInt = reserved "int" >> return TInt
-
-tChar :: Parser Type
-tChar = reserved "char" >> return TChar
 
 tVoid :: Parser Type
 tVoid = reserved "void" >> return TVoid

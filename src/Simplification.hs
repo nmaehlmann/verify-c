@@ -54,7 +54,6 @@ simplifyAExpFO (ABinExp op l r) = do
     updatedL <- simplifyAExpFO l
     updatedR <- simplifyAExpFO r
     return $ ABinExp op updatedL updatedR
-simplifyAExpFO (AArray fields) = AArray <$> mapM simplifyAExpFO fields
 simplifyAExpFO (AFunCall funName funArgs) = AFunCall funName <$> mapM simplifyAExpFO funArgs
 
 simplifyLExp :: LExpFO -> Simplified LExpFO

@@ -12,7 +12,6 @@ aReplaceLExp _ _ (ALit i) = ALit i
 aReplaceLExp _ _ (ALogVar v) = ALogVar v
 aReplaceLExp lOld lNew (ARead readLExp) = ARead $ rReplaceLExp lOld lNew readLExp
 aReplaceLExp lOld lNew (ABinExp op l r) = ABinExp op (aReplaceLExp lOld lNew l) (aReplaceLExp lOld lNew r)
-aReplaceLExp lOld lNew (AArray fields) = AArray $ map (aReplaceLExp lOld lNew) fields
 aReplaceLExp lOld lNew (AFunCall name args) = AFunCall name $ map (aReplaceLExp lOld lNew) args
 
 rReplaceLExp :: ReplaceLExp (ReadLExp FO)

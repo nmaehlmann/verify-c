@@ -14,6 +14,6 @@ swapSpec = do
             let (Right swapProgram) = parse program "" swapSrc
             let swapImplicationTxt = "*y == Y && *x == X"
             let (Right swapImplication) = parse bExpFO "" swapImplicationTxt
-            let (Right [(BBinExp Implies _ implication)]) = verifyProgram swapProgram
+            let [Just (VC _ (BBinExp Implies _ implication))] = map vcUnliftMemory $ verifyProgram swapProgram
             it "generates a truthy implication for the swap program" $ do
                 implication `shouldBe` swapImplication

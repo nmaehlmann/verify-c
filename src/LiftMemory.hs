@@ -15,6 +15,5 @@ hashmark :: AExp FO Plain -> AExp FO Refs
 hashmark (ALit i) = ALit i
 hashmark (AIdt l) = ARead $ ReadLExp sigma $ dagger l
 hashmark (ABinExp op l r) = ABinExp op (hashmark l) (hashmark r)
-hashmark (AArray fields) = AArray $ map hashmark fields
 hashmark (AFunCall name args) = AFunCall name $ map hashmark args
 hashmark (ALogVar v) = ALogVar v

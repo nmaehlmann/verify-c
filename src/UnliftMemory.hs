@@ -27,6 +27,5 @@ unhashmark :: AExp FO Refs -> Maybe (AExp FO Plain)
 unhashmark (ALit i) = Just $ ALit i
 unhashmark (ARead r) = AIdt <$> unread r
 unhashmark (ABinExp op l r) = ABinExp op <$> (unhashmark l) <*> (unhashmark r)
-unhashmark (AArray fields) = AArray <$> mapM unhashmark fields
 unhashmark (AFunCall name args) = AFunCall name <$> mapM unhashmark args
 unhashmark (ALogVar v) = Just $ ALogVar v

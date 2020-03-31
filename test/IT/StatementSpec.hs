@@ -28,10 +28,6 @@ statementSpec = return $ describe "Parser.Statement" $ do
 
     it "parses assignments to fields of an array" $ do
         parseStmt "a[1] = y;" `shouldBe` (Right (Assignment (LArray a (ALit 1)) (mkIdt y)))
-    
-    it "parses assignments to arrays" $ do
-        let arrayExp = AArray $ ALit <$> [1..6]
-        parseStmt "a = {1, 2, 3, 4, 5, 6};" `shouldBe` (Right (Assignment a arrayExp))
 
     it "ignores whitespaces in assignments" $ do
         whitespaceIndependent ["x", "=", "y", ";"] $ 
@@ -55,9 +51,9 @@ statementSpec = return $ describe "Parser.Statement" $ do
         let condition = BComp Less (ALit 0) (mkIdt x)
         let inv = BTrue
         let body = Assignment x (ABinExp Sub (mkIdt x) (ALit 1))
-        parseStmt s `shouldBe` (Right (While condition inv body))
+        parseStmt s `shouldBe` (Right (While condition inv body (LineNo 1)))
 
     it "parses assertions" $ do
         let s = "assertion(\"x != 0\");"
-        parseStmt s `shouldBe` (Right (Assertion (BComp NotEqual (mkIdt x) (ALit 0))))
+        parseStmt s `shouldBe` (Right (Assertion (BComp NotEqual (mkIdt x) (ALit 0)) (LineNo 1)))
 
