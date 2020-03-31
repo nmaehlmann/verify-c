@@ -1,11 +1,11 @@
 {-# LANGUAGE GADTs #-}
-module ReplaceAExp where
+module Replace.AExp (replaceAExp) where
 import AST
 
 type ReplaceAExp a = (AExp FO Refs) -> (AExp FO Refs) -> a -> a
 
-bReplaceAExp :: ReplaceAExp (BExp FO Refs)
-bReplaceAExp aOld aNew = mapAExps (aReplaceAExp aOld aNew)
+replaceAExp :: ReplaceAExp (BExp FO Refs)
+replaceAExp aOld aNew = mapAExps (aReplaceAExp aOld aNew)
 
 aReplaceAExp :: ReplaceAExp (AExp FO Refs)
 aReplaceAExp aOld aNew aCurrent | aOld == aCurrent = aNew

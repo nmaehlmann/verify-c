@@ -1,11 +1,11 @@
 {-# LANGUAGE GADTs #-}
-module ReplaceState where
+module Replace.State (replaceState) where
 import AST
 
 type ReplaceState a = State -> State -> a -> a
 
-bReplaceState :: ReplaceState (BExp FO Refs)
-bReplaceState sOld sNew = mapAExps (aReplaceState sOld sNew)
+replaceState :: ReplaceState (BExp FO Refs)
+replaceState sOld sNew = mapAExps (aReplaceState sOld sNew)
 
 aReplaceState :: ReplaceState (AExp FO Refs)
 aReplaceState _ _ (ALit i) = ALit i

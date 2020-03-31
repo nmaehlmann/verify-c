@@ -9,8 +9,8 @@ import qualified Data.Set as Set
 import LiftLogic
 import Memory.Lift
 import Memory.Unlift
-import ReplaceState
-import ReplaceAExp
+import Replace.State
+import Replace.AExp
 import FOTypes
 
 data VC a = VC VCInfo (BExp FO a) deriving Show
@@ -81,10 +81,10 @@ awp' (Seq s1 s2) q qr = awp s2 q qr >>= \awpS2 -> awp s1 awpS2 qr
 awp' (Assignment idt aExp) q _ = 
     let newState = Update sigma (dagger (lLiftLogic idt)) (hashmark (aLiftLogic aExp))
         oldState = sigma
-    in  return $ bReplaceState oldState newState q
+    in  return $ replaceState oldState newState q
 awp' (Declaration idt) q _ = return $ simplifyLocalVars (Set.singleton (dagger (lLiftLogic idt))) q
 awp' (Return Nothing) _ qr = return qr
-awp' (Return (Just e)) _ qr = return $ bReplaceAExp (hashmark (AIdt resultLExp)) (hashmark (aLiftLogic e)) qr
+awp' (Return (Just e)) _ qr = return $ replaceAExp (hashmark (AIdt resultLExp)) (hashmark (aLiftLogic e)) qr
 awp' (FunCall _ funName suppliedArgs _) _ _ = do
     calledFunction <- lookupFunction funName
     let funPrecond = liftMemory $ funDefPrecond calledFunction
@@ -142,7 +142,7 @@ wvc (FunCall maybeAssignment funName suppliedArgs line) q _ = do
     return $ return $ VC (CFunCall funName line) $ BBinExp Implies replacedPostcondition q
 
 replace :: BExp FO Refs -> (AExp FO Refs, AExp FO Refs) -> BExp FO Refs
-replace fo (toReplace, replaceWith) = bReplaceAExp toReplace replaceWith fo
+replace fo (toReplace, replaceWith) = replaceAExp toReplace replaceWith fo
 
 idtFromDecl :: Decl -> Idt
 idtFromDecl (Decl _ idt) = idt

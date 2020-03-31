@@ -1,11 +1,11 @@
 module IT.ReplaceStateSpec where
 import Test.Hspec
 import AST
-import ReplaceState
+import Replace.State
 import IT.FacFormula
 
 spec :: Spec
-spec = describe "ReplaceState.bReplaceState" $ do
+spec = describe "ReplaceState.replaceState" $ do
     it "replaces c with c + 1 in an assertion of the fac program" $ do
         let facFormula = facFormulaForState sigma
     
@@ -17,4 +17,4 @@ spec = describe "ReplaceState.bReplaceState" $ do
         let updatedState = Update sigma c cPlus1
         
         let facFormulaUpdated = facFormulaForState updatedState
-        bReplaceState sigma updatedState facFormula `shouldBe` facFormulaUpdated
+        replaceState sigma updatedState facFormula `shouldBe` facFormulaUpdated
