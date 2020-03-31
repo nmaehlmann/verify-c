@@ -4,7 +4,7 @@ import Control.Monad.Reader
 import qualified Data.Set as Set
 import AST
 import Logic.FO
-import Simplified
+import Logic.Simplified
 
 data MemEq = MemEq | MemNotEq |MemUndecidable
 

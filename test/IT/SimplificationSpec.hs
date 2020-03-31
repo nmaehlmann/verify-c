@@ -3,8 +3,8 @@ module IT.SimplificationSpec where
 import Test.Hspec
 
 import AST
-import Simplification
-import Simplified
+import Logic.Simplify
+import Logic.Simplified
 import qualified Data.Set as Set
 import Control.Monad.Reader
 

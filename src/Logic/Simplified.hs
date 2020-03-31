@@ -1,4 +1,4 @@
-module Simplified where
+module Logic.Simplified where
 import Control.Monad.Reader
 import Data.Set (Set)
 import qualified Data.Set as Set

@@ -4,7 +4,7 @@ import AST
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Control.Monad.Reader
-import Simplification
+import Logic.Simplify
 import qualified Data.Set as Set
 import Logic.Lift
 import Memory.Lift

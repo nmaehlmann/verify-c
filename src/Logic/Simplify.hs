@@ -1,10 +1,10 @@
 {-# LANGUAGE GADTs #-}
-module Simplification where
+module Logic.Simplify where
 import AST
 import Control.Monad.Reader
 import Data.Set (Set)
 import qualified Data.Set as Set
-import Simplified
+import Logic.Simplified
 import Logic.FO
 import Memory.Eq
 
