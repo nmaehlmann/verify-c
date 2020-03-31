@@ -1,4 +1,4 @@
-module FOTypes where
+module Logic.FO where
 import AST
 
 type BExpFO = BExp FO Refs

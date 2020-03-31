@@ -5,7 +5,7 @@ import Control.Monad.Reader
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Simplified
-import FOTypes
+import Logic.FO
 import Memory.Eq
 
 findInequalities :: BExpFO -> Set Inequality

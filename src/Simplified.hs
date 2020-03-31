@@ -2,7 +2,7 @@ module Simplified where
 import Control.Monad.Reader
 import Data.Set (Set)
 import qualified Data.Set as Set
-import FOTypes
+import Logic.FO
 
 type Inequality = Set LExpFO
 

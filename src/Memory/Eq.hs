@@ -3,7 +3,7 @@ module Memory.Eq (MemEq(..), compareLExp) where
 import Control.Monad.Reader
 import qualified Data.Set as Set
 import AST
-import FOTypes
+import Logic.FO
 import Simplified
 
 data MemEq = MemEq | MemNotEq |MemUndecidable

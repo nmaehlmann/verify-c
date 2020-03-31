@@ -11,7 +11,7 @@ import Memory.Lift
 import Memory.Unlift
 import Replace.State
 import Replace.AExp
-import FOTypes
+import Logic.FO
 
 data VC a = VC VCInfo (BExp FO a) deriving Show
 
