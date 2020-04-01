@@ -1,4 +1,4 @@
-module IT.SimplificationSpec where
+module Logic.SimplifySpec where
 
 import Test.Hspec
 
@@ -11,7 +11,7 @@ import Control.Monad.Reader
     
 spec :: Spec
 spec = do
-    describe "Simplification.simplify" $ do
+    describe "simplify" $ do
         let x = LIdt $ Idt "x"
         let y = LIdt $ Idt "y"
 
@@ -35,7 +35,7 @@ spec = do
             let foSimplified = BComp Equal (ALit 6) (ALit 0)
             simplify fo `shouldBe` foSimplified
 
-    describe "Simplification.simplifyASExp" $ do
+    describe "simplifyAExpFO" $ do
         let x = LIdt $ Idt "x"
         let y = LIdt $ Idt "y"
 
@@ -44,7 +44,7 @@ spec = do
             let aExpSimplified = ARead (ReadLExp sigma x)
             runReaderT (simplifyAExpFO aExp) emptySimplificationCtx `shouldBe` (Updated aExpSimplified)
 
-    describe "Simplification.simplifyRead" $ do
+    describe "simplifyARead" $ do
         let x = LIdt $ Idt "x"
         let y = LIdt $ Idt "y"
 

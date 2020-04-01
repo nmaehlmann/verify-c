@@ -1,4 +1,4 @@
-module IT.TypeSpec where
+module Parser.TypeSpec where
 
 import Test.Hspec
 import Text.Parsec
@@ -7,7 +7,7 @@ import AST
 import Parser.Type
 
 spec :: Spec
-spec = describe "Parser.Statement" $ do
+spec = describe "typeName" $ do
     let parseStmt t = parse typeName "" t
 
     it "parses void" $ do

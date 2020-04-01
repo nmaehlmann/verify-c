@@ -1,4 +1,4 @@
-module IT.FacFormula where
+module Replace.FacFormula where
 import AST
 
 facFormulaForState :: State -> BExp FO Refs

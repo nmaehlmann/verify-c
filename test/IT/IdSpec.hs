@@ -7,11 +7,11 @@ import AST
 import VC
 
 spec :: Spec
-spec = describe "VC.verify" $ do
+spec = describe "VC" $ do
     swapSrc <- runIO $ readFile "examples/id.c0" 
     let (Right swapProgram) = parse program "" swapSrc
     let swapImplicationTxt = "a == a"
     let (Right swapImplication) = parse bExpFO "" swapImplicationTxt
-    let [Just (VC _ (BBinExp Implies _ implication))] = map vcUnliftMemory $ verifyProgram swapProgram
+    let [Just (VC _ (BBinExp Implies _ implication))] = map unliftMemory $ verifyProgram swapProgram
     it "generates a truthy implication for the id program" $ do
         implication `shouldBe` swapImplication

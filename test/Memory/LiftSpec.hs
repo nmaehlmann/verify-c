@@ -1,11 +1,11 @@
-module IT.LiftMemorySpec where
+module Memory.LiftSpec where
 import Test.Hspec
 import AST
 import Memory.Lift
 
 spec :: Spec
 spec = do
-    describe "LiftMemory.dagger" $ do
+    describe "dagger" $ do
         let x = Idt "x"
 
         it "resolves references" $ do
@@ -18,7 +18,7 @@ spec = do
             let doublyDerefedX = LRead $ ReadLExp sigma $ LRead $ ReadLExp sigma $ LIdt x
             dagger doublyDerefX `shouldBe` doublyDerefedX
 
-    describe "LiftMemory.hashmark" $ do
+    describe "hashmark" $ do
         let x = Idt "x"
 
         it "resolves regular variables" $ do

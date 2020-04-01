@@ -1,4 +1,4 @@
-module IT.Whitespaces (whitespaceIndependent) where
+module Parser.Whitespaces (whitespaceIndependent) where
 
 import Test.QuickCheck
 

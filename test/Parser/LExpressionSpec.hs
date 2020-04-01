@@ -1,4 +1,4 @@
-module IT.LExpSpec where
+module Parser.LExpressionSpec where
 
 import Test.Hspec
 import Text.Parsec
@@ -7,7 +7,7 @@ import AST
 import Parser.LExpression
 
 spec :: Spec
-spec = describe "Parser.LExpression" $ do
+spec = describe "lExpC0" $ do
     let parseLExp t = parse lExpC0 "" t
     let a = LIdt $ Idt "a"
     let arr = LIdt $ Idt "arr"

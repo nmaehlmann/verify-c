@@ -1,5 +1,5 @@
 {-# LANGUAGE GADTs #-}
-module IT.FunDefSpec where
+module Parser.FunctionDefinitionSpec where
 
 import Test.Hspec
 import Text.Parsec
@@ -8,7 +8,7 @@ import AST
 import Parser.FunctionDefinition
 
 spec :: Spec
-spec = describe "Parser.FunctionDefinition" $ do
+spec = describe "funDef" $ do
     let parseFunDef t = parse funDef "" t
     let x = LIdt $ Idt "x"
     let a = LIdt $ Idt "a"

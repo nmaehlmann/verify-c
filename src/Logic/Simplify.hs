@@ -1,5 +1,5 @@
 {-# LANGUAGE GADTs #-}
-module Logic.Simplify where
+module Logic.Simplify (simplify, simplifyLocalVars, simplifyARead, simplifyAExpFO) where
 import AST
 import Control.Monad.Reader
 import Data.Set (Set)

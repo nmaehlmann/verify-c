@@ -1,11 +1,11 @@
-module IT.ReplaceStateSpec where
+module Replace.StateSpec where
 import Test.Hspec
 import AST
 import Replace.State
-import IT.FacFormula
+import Replace.FacFormula
 
 spec :: Spec
-spec = describe "ReplaceState.replaceState" $ do
+spec = describe "replaceState" $ do
     it "replaces c with c + 1 in an assertion of the fac program" $ do
         let facFormula = facFormulaForState sigma
     

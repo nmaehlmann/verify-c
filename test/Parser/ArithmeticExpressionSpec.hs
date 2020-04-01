@@ -1,14 +1,14 @@
-module IT.AExpSpec where
+module Parser.ArithmeticExpressionSpec where
 
 import Test.Hspec
 import Text.Parsec
 
 import AST
 import Parser.ArithmeticExpression
-import IT.Whitespaces
+import Parser.Whitespaces
 
 spec :: Spec
-spec = describe "Parser.ArithmeticExpression" $ do
+spec = describe "aExpFO" $ do
     let parseAExp t = parse aExpFO "" t
     let x = AIdt $ LIdt $ Idt "x"
     let y = AIdt $ LIdt $ Idt "y"

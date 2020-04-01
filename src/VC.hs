@@ -1,5 +1,5 @@
 {-# LANGUAGE GADTs #-}
-module VC where
+module VC (VC(..), VCInfo(..), verifyProgram, unliftMemory) where
 import AST
 import Data.Map (Map)
 import qualified Data.Map as Map
@@ -8,7 +8,7 @@ import Logic.Simplify
 import qualified Data.Set as Set
 import Logic.Lift
 import Memory.Lift
-import Memory.Unlift
+import qualified Memory.Unlift
 import Replace.State
 import Replace.AExp
 import Logic.FO
@@ -27,14 +27,11 @@ type VerifyC = Reader Ctx
 
 data Ctx = Ctx { functionMap :: Map Idt FunctionDefinition }
 
-mapVC :: (BExp FO a -> BExp FO b) -> VC a -> VC b
-mapVC f (VC info vc) = VC info $ f vc
-
 vcSimplify :: VC Refs -> VC Refs
 vcSimplify (VC info vc) = VC info $ simplify vc
 
-vcUnliftMemory :: VC Refs -> Maybe (VC Plain)
-vcUnliftMemory (VC info vc) = VC info <$> unliftMemory vc
+unliftMemory :: VC Refs -> Maybe (VC Plain)
+unliftMemory (VC info vc) = VC info <$> Memory.Unlift.unliftMemory vc
 
 verifyFunction :: FunctionDefinition -> VerifyC [VC Refs]
 verifyFunction f = do

@@ -121,7 +121,7 @@ verifyVCs :: String -> VerificationResult -> [(String, VC Refs)] -> App Verifica
 verifyVCs _ s [] = return s
 verifyVCs env VError ((description, _) : vcs) = printVCResult description Skipped >> verifyVCs env VError vcs
 verifyVCs env VOk ((description, vc@(VC _ refsFO)) : vcs) = clearTempPaths >> lift (hFlush stdout) >> do
-    case vcUnliftMemory vc of
+    case unliftMemory vc of
 
         Just (VC _ plainFO) -> do
             lift $ writeFile vcPath $ show plainFO

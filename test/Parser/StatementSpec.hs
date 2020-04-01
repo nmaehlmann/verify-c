@@ -1,4 +1,4 @@
-module IT.StatementSpec where
+module Parser.StatementSpec where
 
 import Test.Hspec
 import Text.Parsec
@@ -7,10 +7,10 @@ import Data.Either
 import AST
 import Parser.Statement
 
-import IT.Whitespaces
+import Parser.Whitespaces
 
 spec :: Spec
-spec = describe "Parser.Statement" $ do
+spec = describe "statement" $ do
     let isValid = isRight
     let parseStmt t = parse statement "" t
     let mkIdt = AIdt
