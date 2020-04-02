@@ -1,4 +1,4 @@
-void setATo5(){
+void unrelated_assignments(){
     precondition("true");
     postcondition("a == 5");
     a = 5;

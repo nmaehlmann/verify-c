@@ -1,0 +1,9 @@
+// this should not verify since i1 and i2 may have the same value, which violates the postcondition.
+void arrays_undecidable(int[] arr, int i1, int i2){
+    precondition("true");
+    postcondition("arr[i1] == 1 && arr[i2] == 2");
+
+    arr[i1] = 1;
+    arr[i2] = 2;
+    return;
+}
