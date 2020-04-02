@@ -8,7 +8,7 @@ import Parser.Statement
 
 spec :: Spec
 spec = describe "Parser.Statement" $ do
-    facSrc <- runIO $ readFile "examples/fac.c0" 
+    facSrc <- runIO $ readFile "test/resources/fac_body.c0" 
     it "parses a faculty program" $ do
         (parse statement "" facSrc) `shouldBe` fac
 

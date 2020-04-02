@@ -8,7 +8,7 @@ import VC
 
 spec :: Spec
 spec = describe "VC" $ do
-    swapSrc <- runIO $ readFile "examples/swap.c0" 
+    swapSrc <- runIO $ readFile "examples/swap/swap.c0" 
     let (Right swapProgram) = parse program "" swapSrc
     let swapImplicationTxt = "*y == Y && *x == X"
     let (Right swapImplication) = parse bExpFO "" swapImplicationTxt

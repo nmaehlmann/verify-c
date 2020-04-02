@@ -8,7 +8,7 @@ import Parser.Statement
 
 spec :: Spec
 spec = describe "Parser.Statement" $ do
-    maxSrc <- runIO $ readFile "examples/max.c0" 
+    maxSrc <- runIO $ readFile "test/resources/max_body.c0" 
     it "parses a program that finds the maximal element of an array" $ do
         (parse statement "" maxSrc) `shouldBe` maxExp
 
