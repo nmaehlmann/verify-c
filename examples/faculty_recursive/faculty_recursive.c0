@@ -1,0 +1,10 @@
+int faculty(int n){
+    precondition("n > 0");
+    postcondition("\result == fac(n) && n > 0");
+
+    if (n == 1) {
+        return 1;
+    }
+    int prevFac = faculty(n - 1);
+    return n * prevFac;
+}
