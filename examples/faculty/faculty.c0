@@ -1,6 +1,6 @@
-void fac(){
+int faculty(int n){
     precondition("n >= 0");
-    postcondition(" p == fac(n) ");
+    postcondition("\result == fac(n)");
 
     p = 1;
     c = 1;
@@ -9,5 +9,5 @@ void fac(){
         p = p * c;
         c = c + 1;
     }
-    return;
+    return p;
 }
