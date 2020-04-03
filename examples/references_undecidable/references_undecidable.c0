@@ -1,0 +1,21 @@
+// this should not verify since x may point to r.
+int references_undecidable(){
+    precondition("true");
+    postcondition("\result == 5");
+
+    int r = 0;
+    set_to_5(&r);
+    
+    int x = 99;
+    *x = 111;
+    
+    return r;
+}
+
+void set_to_5(int* ref){
+    precondition("true");
+    postcondition("*ref == 5");
+
+    *ref = 5;
+    return;
+}

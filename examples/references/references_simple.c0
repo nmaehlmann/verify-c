@@ -1,7 +1,0 @@
-int create_reference(int r){
-    precondition("true");
-    postcondition("\result == &r");
-
-    int ptr = &r;
-    return ptr;
-}
