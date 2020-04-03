@@ -1,3 +1,4 @@
+{-# LANGUAGE GADTs #-}
 module Parser.InternalArithmeticExpression (aExpC0, aExpFO) where
 
 import Data.Functor.Identity
@@ -29,11 +30,19 @@ aTermFO lExpParser = parens (aExpFO lExpParser)
     <|> aLit 
     <|> aLExp lExpParser
 
-aOperatorTable :: OperatorTable String () Identity (AExp l m)
+aOperatorTable :: OperatorTable String () Identity (AExp l Plain)
 aOperatorTable =
-    [ [Infix opMul AssocLeft, Infix opDiv AssocLeft]
+    [ [Prefix opAddress]
+    , [Infix opMul AssocLeft, Infix opDiv AssocLeft]
     , [Infix opAdd AssocLeft, Infix opSub AssocLeft]
     ]
+
+opAddress ::  Parser (AExp l Plain -> AExp l Plain)
+opAddress = reservedOp "&" >> return opAddress'
+
+opAddress' :: AExp l Plain -> AExp l Plain
+opAddress' (AIdt lExp) = AAddress lExp
+opAddress' _ = error "cannot read address from non LExpression."
 
 opMul, opDiv, opAdd, opSub :: Parser (AExp l m -> AExp l m -> AExp l m)
 opMul = reservedOp "*" >> return (ABinExp Mul)

@@ -48,6 +48,8 @@ executables:
     - filepath
     - options
     - mtl
+    - transformers
+    - either
 
 tests:
   verify-c-test:

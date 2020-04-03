@@ -10,9 +10,9 @@ replaceState sOld sNew = mapAExps (aReplaceState sOld sNew)
 aReplaceState :: ReplaceState (AExp FO Refs)
 aReplaceState _ _ (ALit i) = ALit i
 aReplaceState _ _ (ALogVar v) = ALogVar v
-aReplaceState sOld sNew (ARead readLExp) = ARead $ rReplaceState sOld sNew readLExp
 aReplaceState sOld sNew (ABinExp op l r) = ABinExp op (aReplaceState sOld sNew l) (aReplaceState sOld sNew r)
 aReplaceState sOld sNew (AFunCall name args) = AFunCall name $ map (aReplaceState sOld sNew) args
+aReplaceState sOld sNew (AIdt l) = AIdt $ lReplaceState sOld sNew l
 
 rReplaceState :: ReplaceState (ReadLExp FO)
 rReplaceState sOld sNew (ReadLExp sNested lSExp) = ReadLExp (sReplaceState sOld sNew sNested) (lReplaceState sOld sNew lSExp)

@@ -5,25 +5,43 @@ import Data.List
 import Data.Set (Set)
 import qualified Data.Set as Set
 
-export :: String -> BExp FO Plain -> String
-export env b =
-    let decls = map mkDecl $ Set.toList $ bDecls b
-        assertion = bAssert b
-    in  unlines $ [arrayAccessDecl, derefDecl] ++ decls ++ [env, assertion, checkSat]
+data SMTDecl = SMTConst String | SMTUnary String deriving (Eq, Ord)
 
-bAssert :: BExp FO Plain -> String
-bAssert b = sExp ["assert", bToSMT (BNeg b)]
+export :: String -> BExp FO Plain -> Maybe String
+export env b = fmap export' $ bAssert b
+    where 
+        export' assertion = unlines $ [arrayAccessDecl, derefDecl] ++ decls ++ [env, assertion, checkSat]
+        decls = map mkDecl $ Set.toList $ bDecls b
 
-bToSMT :: BExp FO Plain -> String
-bToSMT BTrue = "true"
-bToSMT BFalse = "false"
+bAssert :: BExp FO Plain -> Maybe String
+bAssert b = do
+    smtB <- bToSMT (BNeg b)
+    return $ sExp ["assert", smtB]
+
+bToSMT :: BExp FO Plain -> Maybe String
+bToSMT BTrue = return "true"
+bToSMT BFalse = return "false"
 bToSMT (BComp NotEqual l r) = bToSMT $ BNeg $ BComp Equal l r
-bToSMT (BComp op l r) = sExp [show op, aToSMT l, aToSMT r]
-bToSMT (BNeg b) = sExp ["not", bToSMT b]
-bToSMT (BBinExp op l r) = sExp [binOpToSMT op, bToSMT l, bToSMT r]
-bToSMT (BForall i b) = sExp ["forall", "((" ++ show i ++ " Int" ++ "))", bToSMT b]
-bToSMT (BExists i b) = sExp ["exists", "((" ++ show i ++ " Int" ++ "))", bToSMT b]
-bToSMT (BPredicate (Idt name) args) = sExp $ name : map aToSMT args
+bToSMT (BComp op l r) = do
+    smtL <- aToSMT l
+    smtR <- aToSMT r
+    return $ sExp [show op, smtL, smtR]
+bToSMT (BNeg b) = do
+    smtB <- bToSMT b
+    return $ sExp ["not", smtB]
+bToSMT (BBinExp op l r) = do
+    smtL <- bToSMT l
+    smtR <- bToSMT r
+    return $ sExp [binOpToSMT op, smtL, smtR]
+bToSMT (BForall i b) = do
+    smtB <- bToSMT b
+    return $ sExp ["forall", "((" ++ show i ++ " Int" ++ "))", smtB]
+bToSMT (BExists i b) = do
+    smtB <- bToSMT b
+    return $ sExp ["exists", "((" ++ show i ++ " Int" ++ "))", smtB]
+bToSMT (BPredicate (Idt name) args) = do
+    smtArgs <- mapM aToSMT args
+    return $ sExp $ name : smtArgs
 
 binOpToSMT :: BBinOp -> String
 binOpToSMT And = "and"
@@ -31,23 +49,34 @@ binOpToSMT Or = "or"
 binOpToSMT Implies = "implies"
 binOpToSMT Iff = "="
 
-aToSMT :: AExp FO Plain -> String
-aToSMT (ALit i) = show i
+aToSMT :: AExp FO Plain -> Maybe String
+aToSMT (ALit i) = return $ show i
 aToSMT (AIdt l) = lToSMT l
-aToSMT (ABinExp op l r) = sExp [show op, aToSMT l, aToSMT r]
-aToSMT (ALogVar v) = show v
-aToSMT (AFunCall (Idt name) args) = sExp $ name : map aToSMT args
+aToSMT (ABinExp op l r) = do
+    smtL <- aToSMT l
+    smtR <- aToSMT r
+    return $ sExp [show op, smtL, smtR]
+aToSMT (ALogVar v) = return $ show v
+aToSMT (AFunCall (Idt name) args) = do
+    smtArgs <- mapM aToSMT args
+    return $ sExp $ name : smtArgs
+aToSMT (AAddress l) = Nothing
 
-lToSMT :: LExp FO Plain -> String
-lToSMT (LIdt i) = show i
-lToSMT (LArray lExp aExp) = sExp [readArray, lToSMT lExp, aToSMT aExp]
-lToSMT (LStructurePart lExp (Idt accessor)) = sExp [accessor, lToSMT lExp]
-lToSMT (LDeref i) = sExp [deref, lToSMT i]
+lToSMT :: LExp FO Plain -> Maybe String
+lToSMT (LIdt i) = return $ show i
+lToSMT (LArray lExp aExp) = do
+    smtLExp <- lToSMT lExp
+    smtAExp <- aToSMT aExp
+    return $ sExp [readArray, smtLExp, smtAExp]
+lToSMT (LStructurePart lExp (Idt accessor)) = do
+    smtLExp <- lToSMT lExp
+    return $ sExp [accessor, smtLExp]
+lToSMT (LDeref lExp) = do
+    smtLExp <- lToSMT lExp
+    return $ sExp [deref, smtLExp]
 
 sExp :: [String] -> String
 sExp s = "(" ++ concat (intersperse " " s) ++ ")"
-
-data SMTDecl = SMTConst String | SMTUnary String deriving (Eq, Ord)
 
 bDecls :: BExp FO Plain -> Set SMTDecl
 bDecls BTrue = Set.empty
@@ -65,11 +94,12 @@ aDecls (AIdt l) = lDecls l
 aDecls (ABinExp _ l r) = Set.union (aDecls l) (aDecls r)
 aDecls (ALogVar (Idt v)) = Set.singleton $ SMTConst v
 aDecls (AFunCall _ args) = foldl Set.union Set.empty $ map aDecls args
+aDecls (AAddress l) = lDecls l
 
 lDecls :: LExp FO Plain -> Set SMTDecl
 lDecls (LIdt (Idt s)) = Set.singleton $ SMTConst s
 lDecls (LArray lExp aExp) = Set.union (lDecls lExp) (aDecls aExp)
-lDecls (LStructurePart lExp _) = (lDecls lExp) -- Set.insert (SMTUnary accessor) (lDecls lExp)
+lDecls (LStructurePart lExp _) = (lDecls lExp)
 lDecls (LDeref i) = lDecls i
 
 readArray :: String

@@ -29,7 +29,7 @@ data Stmt
     | Seq Stmt Stmt
     | Return (Maybe AExp'')
     | Assertion (BExp'  FO) LineNo
-    | Declaration LExp''
+    | Declaration Idt
     | FunCall (Maybe LExp'') Idt [AExp''] LineNo
     | Empty
     deriving (Eq, Show)
@@ -85,11 +85,11 @@ data LExp l m where
 
 data AExp l m where
     ALit        :: Integer -> AExp l m
-    AIdt        :: LExp l Plain -> AExp l Plain
-    ARead       :: ReadLExp FO -> AExp FO Refs
+    AIdt        :: LExp l m -> AExp l m
     ABinExp     :: ABinOp -> AExp l m -> AExp l m -> AExp l m
     AFunCall    :: Idt -> [AExp FO m] -> AExp FO m
     ALogVar     :: Idt -> AExp FO m
+    AAddress    :: LExp l Plain -> AExp l Plain
 
 data ReadLExp l = ReadLExp State (LExp l Refs)
 
@@ -114,8 +114,8 @@ mapAExps f (BPredicate name args) = BPredicate name $ fmap f args
 sigma :: State
 sigma = Atomic "s"
 
-resultLExp :: LExp FO Plain
-resultLExp = LIdt $ Idt "\\result"
+resultLExp :: LExp FO Refs
+resultLExp = LRead $ ReadLExp sigma $ LIdt $ Idt "\\result"
 
 -- Show instances
 
@@ -138,12 +138,12 @@ instance Show Idt where
 
 instance Show (AExp l m) where
     show (ALit i) = show i
-    show (ARead readLExp) = show readLExp
     show (ABinExp op l r) = showBinExp op l r
     show (AFunCall name args) = show name ++ "(" ++ argsList ++ ")"
         where argsList = concat $ intersperse "," $ map show args
     show (ALogVar i) = show i
     show (AIdt i) = show i
+    show (AAddress l) = "&" ++ show l
 
 instance Show ABinOp where
     show Add = "+"

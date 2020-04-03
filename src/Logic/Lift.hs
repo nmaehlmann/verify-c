@@ -9,6 +9,7 @@ aLiftLogic :: AExp C0 Plain -> AExp FO Plain
 aLiftLogic (ALit i) = ALit i
 aLiftLogic (AIdt l) = AIdt $ lLiftLogic l
 aLiftLogic (ABinExp op l r) = ABinExp op (aLiftLogic l) (aLiftLogic r)
+aLiftLogic (AAddress a) = AAddress $ lLiftLogic a
 
 lLiftLogic :: LExp C0 Plain -> LExp FO Plain
 lLiftLogic (LIdt i) = LIdt i

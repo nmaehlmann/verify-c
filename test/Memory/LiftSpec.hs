@@ -24,13 +24,13 @@ spec = do
         it "resolves regular variables" $ do
             -- x
             let justX = AIdt $ LIdt x
-            let readX = ARead $ ReadLExp sigma $ LIdt x
+            let readX = AIdt $ LRead $ ReadLExp sigma $ LIdt x
             hashmark justX `shouldBe` readX
 
         it "resolves references" $ do
             -- *x
             let derefX = AIdt $ LDeref $ LIdt x
-            let derefedX = ARead $ ReadLExp sigma $ LRead $ ReadLExp sigma $ LIdt x
+            let derefedX = AIdt $ LRead $ ReadLExp sigma $ LRead $ ReadLExp sigma $ LIdt x
             hashmark derefX `shouldBe` derefedX
 
         it "resolves arrays" $ do
@@ -38,14 +38,14 @@ spec = do
             let derefX = LDeref $ LIdt x
             let array = AIdt $ LArray derefX $ ALit 1
             let derefedX = LRead $ ReadLExp sigma $ LIdt x
-            let derefedArray = ARead $ ReadLExp sigma $ LArray derefedX $ ALit 1
+            let derefedArray = AIdt $ LRead $ ReadLExp sigma $ LArray derefedX $ ALit 1
             hashmark array `shouldBe` derefedArray
 
         it "resolves addition of two arrays" $ do
             let derefX = LDeref $ LIdt x
             let array = AIdt $ LArray derefX $ ALit 1
             let derefedX = LRead $ ReadLExp sigma $ LIdt x
-            let derefedArray = ARead $ ReadLExp sigma $ LArray derefedX $ ALit 1
+            let derefedArray = AIdt $ LRead $ ReadLExp sigma $ LArray derefedX $ ALit 1
             let addition = ABinExp Add array array
             let derefedAddition = ABinExp Add derefedArray derefedArray
             hashmark addition `shouldBe` derefedAddition

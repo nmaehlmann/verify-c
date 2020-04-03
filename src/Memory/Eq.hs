@@ -20,6 +20,8 @@ compareLExp a b = do
         else compareDifferentLExp a b
 
 compareDifferentLExp :: LExpFO -> LExpFO -> Simplified MemEq
+compareDifferentLExp (LRead (ReadLExp s1 l1)) (LRead (ReadLExp s2 l2)) = 
+    if s1 == s2 then compareLExp l1 l2 else return MemUndecidable
 compareDifferentLExp (LRead _) _ = return MemUndecidable
 compareDifferentLExp _ (LRead _) = return MemUndecidable
 compareDifferentLExp (LStructurePart struct1 idt1) (LStructurePart struct2 idt2) =
@@ -33,13 +35,11 @@ compareDifferentLExp _ _ = return MemNotEq
 compareAExp :: AExpFO -> AExpFO -> Simplified MemEq
 compareAExp a b | a == b = return MemEq
 compareAExp (ALit _) (ALit _) = return MemNotEq
-compareAExp (ARead (ReadLExp s1 l1)) (ARead (ReadLExp s2 l2)) | s1 == s2 = do
-    ineqs <- inequalities <$> ask
-    let predefindedNEq = Set.member (notEqual l1 l2) ineqs
-    sameLExp <- compareLExp l1 l2
-    return $ case sameLExp of
+compareAExp (AIdt l1) (AIdt l2) = do
+    comparison <- compareLExp l1 l2
+    return $ case comparison of
         MemEq -> MemEq
-        _ -> if predefindedNEq then MemNotEq else MemUndecidable
+        _ -> MemUndecidable
 compareAExp _ _ = return MemUndecidable
 
 memAnd :: MemEq -> MemEq -> MemEq

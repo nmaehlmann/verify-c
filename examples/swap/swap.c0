@@ -1,5 +1,5 @@
 void swap (int* x, int* y) {
-    precondition("y != *x && x != *y && x != *x && y != *y && *x != *y && *x == X && *y == Y");
+    precondition("*x != *y && *x == X && *y == Y");
     postcondition("*x == Y && *y == X");
 
     int tmp = *x;

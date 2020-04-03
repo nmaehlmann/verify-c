@@ -1,0 +1,16 @@
+int references(){
+    precondition("true");
+    postcondition("\result == 5");
+
+    int r = 0;
+    set_to_5(&r);
+    return r;
+}
+
+void set_to_5(int* ref){
+    precondition("true");
+    postcondition("*ref == 5");
+
+    *ref = 5;
+    return;
+}
