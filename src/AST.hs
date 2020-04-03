@@ -114,14 +114,8 @@ mapAExps f (BPredicate name args) = BPredicate name $ fmap f args
 sigma :: State
 sigma = Atomic "s"
 
-resultLExp :: LExp FO Plain
-resultLExp = LIdt $ Idt "\\result"
-
-resultLExp2 :: LExp FO Refs
-resultLExp2 = LIdt $ Idt "\\result"
-
-resultLExp3 :: LExp FO Refs
-resultLExp3 = LRead $ ReadLExp sigma $ LIdt $ Idt "\\result"
+resultLExp :: LExp FO Refs
+resultLExp = LRead $ ReadLExp sigma $ LIdt $ Idt "\\result"
 
 -- Show instances
 

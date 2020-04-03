@@ -12,7 +12,6 @@ import qualified Memory.Unlift
 import Replace.State
 import Replace.AExp
 import Logic.FO
-import Debug.Trace
 
 data VC a = VC VCInfo (BExp FO a) deriving Show
 
@@ -62,7 +61,7 @@ generateContext' (f:fs) =
     in  insert f prevCtx
 
 awp, awp' :: Stmt -> BExpFO -> BExpFO -> VerifyC BExpFO
-awp s q qr = traceShow q $ simplify <$> awp' s q qr
+awp s q qr = simplify <$> awp' s q qr
 awp' Empty q _ = return q
 awp' (Assertion q _) _ _ = return $ liftMemory q
 awp' (ITE condition sTrue sFalse) q qr = do
@@ -80,14 +79,14 @@ awp' (Assignment idt aExp) q _ =
     in  return $ replaceState oldState newState q
 awp' (Declaration idt) q _ = return $ simplifyLocalVars (Set.singleton (LIdt idt)) q
 awp' (Return Nothing) _ qr = return qr
-awp' (Return (Just e)) _ qr = return $ replaceAExp resultLExp3 (hashmark (aLiftLogic e)) qr
+awp' (Return (Just e)) _ qr = return $ replaceAExp resultLExp (hashmark (aLiftLogic e)) qr
 awp' (FunCall _ funName suppliedArgs _) _ _ = do
     calledFunction <- lookupFunction funName
     let funPrecond = liftMemory $ funDefPrecond calledFunction
     let readIdt i = LRead $ ReadLExp sigma $ LIdt i
     let funArgs = fmap readIdt $ fmap idtFromDecl $ funDefArgs calledFunction
     let suppliedArgsRefs = fmap (hashmark . aLiftLogic) suppliedArgs
-    let replacements = traceShow funPrecond $ traceShowId $ zip funArgs suppliedArgsRefs
+    let replacements = zip funArgs suppliedArgsRefs
     let replacedPrecondition = foldl replace funPrecond replacements
     return replacedPrecondition
 
@@ -131,7 +130,7 @@ wvc (FunCall maybeAssignment funName suppliedArgs line) q _ = do
     let suppliedArgsRefs = fmap (hashmark . aLiftLogic) suppliedArgs
     let resultReplace = case maybeAssignment of
             (Just assignTo) ->
-                let aResult = resultLExp3
+                let aResult = resultLExp
                     aTarget = hashmark $ aLiftLogic $ AIdt $ assignTo
                 in  [(aResult, aTarget)]
             Nothing -> []
@@ -140,8 +139,7 @@ wvc (FunCall maybeAssignment funName suppliedArgs line) q _ = do
     return $ return $ VC (CFunCall funName line) $ BBinExp Implies replacedPostcondition q
 
 replace :: BExp FO Refs -> (LExp FO Refs, AExp FO Refs) -> BExp FO Refs
-replace fo (toReplace, replaceWith) = trace ("Replace " ++ show toReplace ++ " with " ++ show replaceWith ++ " in " ++ show fo ++ " : " ++ show res) $ res
-    where res = replaceAExp toReplace replaceWith fo
+replace fo (toReplace, replaceWith) = replaceAExp toReplace replaceWith fo
 
 idtFromDecl :: Decl -> Idt
 idtFromDecl (Decl _ idt) = idt

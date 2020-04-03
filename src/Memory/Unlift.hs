@@ -31,4 +31,3 @@ unhashmark (AIdt l) = AIdt <$> undagger l
 unhashmark (ABinExp op l r) = ABinExp op <$> (unhashmark l) <*> (unhashmark r)
 unhashmark (AFunCall name args) = AFunCall name <$> mapM unhashmark args
 unhashmark (ALogVar v) = Just $ ALogVar v
--- unhashmark (AIdt l) = AIdt <$> undagger l

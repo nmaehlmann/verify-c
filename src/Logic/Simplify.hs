@@ -7,7 +7,6 @@ import qualified Data.Set as Set
 import Logic.Simplified
 import Logic.FO
 import Memory.Eq
-import Debug.Trace
 
 findInequalities :: BExpFO -> Set Inequality
 findInequalities (BComp NotEqual (AIdt (LRead (ReadLExp s1 l1))) (AIdt (LRead (ReadLExp s2 l2)))) = 
@@ -25,8 +24,8 @@ simplify = simplifyLocalVars Set.empty
 simplifyLocalVars :: Set LExpFO -> BExpFO -> BExpFO
 simplifyLocalVars locals a =
     let ctx = SimplificationCtx 
-            { inequalities = traceShowId $ findInequalities a
-            , localVars = traceShowId $ locals
+            { inequalities = findInequalities a
+            , localVars = locals
             }
     in  case runReaderT (simplifyBExpFO a) ctx of
             Updated updated -> simplifyLocalVars locals updated
