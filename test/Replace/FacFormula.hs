@@ -7,7 +7,7 @@ facFormulaForState state =
         p = LIdt $ Idt $ "p"
         c = LIdt $ Idt $ "c"
         n = LIdt $ Idt $ "n"
-        readFromS var = ARead $ ReadLExp state var
+        readFromS var = AIdt $ LRead $ ReadLExp state var
 
         -- read(s, p)
         readP = readFromS p

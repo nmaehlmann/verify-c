@@ -11,7 +11,7 @@ spec = describe "replaceState" $ do
     
         -- read(s, c) + 1
         let c = LIdt $ Idt $ "c"
-        let cPlus1 = ABinExp Add (ARead (ReadLExp sigma c)) $ ALit 1
+        let cPlus1 = ABinExp Add (AIdt $ LRead (ReadLExp sigma c)) $ ALit 1
 
         -- upd(s, c, read(c,s) + 1)
         let updatedState = Update sigma c cPlus1

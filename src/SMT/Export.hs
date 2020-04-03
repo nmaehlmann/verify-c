@@ -65,6 +65,7 @@ aDecls (AIdt l) = lDecls l
 aDecls (ABinExp _ l r) = Set.union (aDecls l) (aDecls r)
 aDecls (ALogVar (Idt v)) = Set.singleton $ SMTConst v
 aDecls (AFunCall _ args) = foldl Set.union Set.empty $ map aDecls args
+aDecls (AAddress l) = lDecls l
 
 lDecls :: LExp FO Plain -> Set SMTDecl
 lDecls (LIdt (Idt s)) = Set.singleton $ SMTConst s

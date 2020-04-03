@@ -20,12 +20,15 @@ undagger (LRead r) = unread r
 
 unread :: ReadLExp FO -> Maybe (LExp FO Plain)
 unread (ReadLExp s _) | s /= sigma = Nothing
+unread (ReadLExp _ (LIdt i)) = Just $ LIdt i
 unread (ReadLExp _ (LRead r)) = LDeref <$> unread r
 unread (ReadLExp _ l) = undagger l
 
 unhashmark :: AExp FO Refs -> Maybe (AExp FO Plain)
 unhashmark (ALit i) = Just $ ALit i
-unhashmark (ARead r) = AIdt <$> unread r
+unhashmark (AIdt (LIdt i)) = Just $ AAddress $ LIdt i
+unhashmark (AIdt l) = AIdt <$> undagger l
 unhashmark (ABinExp op l r) = ABinExp op <$> (unhashmark l) <*> (unhashmark r)
 unhashmark (AFunCall name args) = AFunCall name <$> mapM unhashmark args
 unhashmark (ALogVar v) = Just $ ALogVar v
+-- unhashmark (AIdt l) = AIdt <$> undagger l

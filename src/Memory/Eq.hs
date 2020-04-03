@@ -33,13 +33,7 @@ compareDifferentLExp _ _ = return MemNotEq
 compareAExp :: AExpFO -> AExpFO -> Simplified MemEq
 compareAExp a b | a == b = return MemEq
 compareAExp (ALit _) (ALit _) = return MemNotEq
-compareAExp (ARead (ReadLExp s1 l1)) (ARead (ReadLExp s2 l2)) | s1 == s2 = do
-    ineqs <- inequalities <$> ask
-    let predefindedNEq = Set.member (notEqual l1 l2) ineqs
-    sameLExp <- compareLExp l1 l2
-    return $ case sameLExp of
-        MemEq -> MemEq
-        _ -> if predefindedNEq then MemNotEq else MemUndecidable
+compareAExp (AIdt l1) (AIdt l2) = compareLExp l1 l2
 compareAExp _ _ = return MemUndecidable
 
 memAnd :: MemEq -> MemEq -> MemEq

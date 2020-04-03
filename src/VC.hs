@@ -12,6 +12,7 @@ import qualified Memory.Unlift
 import Replace.State
 import Replace.AExp
 import Logic.FO
+import Debug.Trace
 
 data VC a = VC VCInfo (BExp FO a) deriving Show
 
@@ -37,8 +38,9 @@ verifyFunction :: FunctionDefinition -> VerifyC [VC Refs]
 verifyFunction f = do
     let precondition = liftMemory $ funDefPrecond f
     let postcondition = liftMemory $ funDefPostcond f
-    let name  = funDefName f
-    awpBody <- awp (funDefBody f) postcondition postcondition
+    let name = funDefName f
+    let localArgs = Set.fromList $ fmap (LIdt . idtFromDecl) $ funDefArgs f
+    awpBody <- simplifyLocalVars localArgs <$> awp (funDefBody f) postcondition postcondition
     wvcs <- wvc (funDefBody f) BFalse postcondition
     let preconditionVC = VC (CPrecondition name) $ BBinExp Implies precondition awpBody
     return $ map vcSimplify $ preconditionVC : wvcs
@@ -47,9 +49,6 @@ verifyProgram :: Program -> [VC Refs]
 verifyProgram program@(Program functions) = 
     let ctx = generateContext program
     in  concat $ runReader (sequence (map verifyFunction functions)) ctx
-
-emptyCtx :: Ctx
-emptyCtx = Ctx { functionMap = Map.empty }
 
 generateContext :: Program -> Ctx
 generateContext (Program fs) = Ctx {functionMap = functionMap'}
@@ -63,7 +62,7 @@ generateContext' (f:fs) =
     in  insert f prevCtx
 
 awp, awp' :: Stmt -> BExpFO -> BExpFO -> VerifyC BExpFO
-awp s q qr = simplify <$> awp' s q qr
+awp s q qr = traceShow q $ simplify <$> awp' s q qr
 awp' Empty q _ = return q
 awp' (Assertion q _) _ _ = return $ liftMemory q
 awp' (ITE condition sTrue sFalse) q qr = do
@@ -79,15 +78,16 @@ awp' (Assignment idt aExp) q _ =
     let newState = Update sigma (dagger (lLiftLogic idt)) (hashmark (aLiftLogic aExp))
         oldState = sigma
     in  return $ replaceState oldState newState q
-awp' (Declaration idt) q _ = return $ simplifyLocalVars (Set.singleton (dagger (lLiftLogic idt))) q
+awp' (Declaration idt) q _ = return $ simplifyLocalVars (Set.singleton (LIdt idt)) q
 awp' (Return Nothing) _ qr = return qr
-awp' (Return (Just e)) _ qr = return $ replaceAExp (hashmark (AIdt resultLExp)) (hashmark (aLiftLogic e)) qr
+awp' (Return (Just e)) _ qr = return $ replaceAExp resultLExp3 (hashmark (aLiftLogic e)) qr
 awp' (FunCall _ funName suppliedArgs _) _ _ = do
     calledFunction <- lookupFunction funName
     let funPrecond = liftMemory $ funDefPrecond calledFunction
-    let funArgs = fmap (hashmark . AIdt . LIdt . idtFromDecl) $ funDefArgs calledFunction
+    let readIdt i = LRead $ ReadLExp sigma $ LIdt i
+    let funArgs = fmap readIdt $ fmap idtFromDecl $ funDefArgs calledFunction
     let suppliedArgsRefs = fmap (hashmark . aLiftLogic) suppliedArgs
-    let replacements = zip funArgs suppliedArgsRefs
+    let replacements = traceShow funPrecond $ traceShowId $ zip funArgs suppliedArgsRefs
     let replacedPrecondition = foldl replace funPrecond replacements
     return replacedPrecondition
 
@@ -126,11 +126,12 @@ wvc (Return _) _ _ = return []
 wvc (FunCall maybeAssignment funName suppliedArgs line) q _ = do
     calledFunction <- lookupFunction funName
     let funPostcond = liftMemory $ funDefPostcond calledFunction
-    let funArgs = fmap (hashmark . AIdt . LIdt . idtFromDecl) $ funDefArgs calledFunction
+    let readIdt i = LRead $ ReadLExp sigma $ LIdt i
+    let funArgs = fmap readIdt $ fmap idtFromDecl $ funDefArgs calledFunction
     let suppliedArgsRefs = fmap (hashmark . aLiftLogic) suppliedArgs
     let resultReplace = case maybeAssignment of
             (Just assignTo) ->
-                let aResult = hashmark $ AIdt resultLExp
+                let aResult = resultLExp3
                     aTarget = hashmark $ aLiftLogic $ AIdt $ assignTo
                 in  [(aResult, aTarget)]
             Nothing -> []
@@ -138,8 +139,9 @@ wvc (FunCall maybeAssignment funName suppliedArgs line) q _ = do
     let replacedPostcondition = foldl replace funPostcond (resultReplace ++ replacements)
     return $ return $ VC (CFunCall funName line) $ BBinExp Implies replacedPostcondition q
 
-replace :: BExp FO Refs -> (AExp FO Refs, AExp FO Refs) -> BExp FO Refs
-replace fo (toReplace, replaceWith) = replaceAExp toReplace replaceWith fo
+replace :: BExp FO Refs -> (LExp FO Refs, AExp FO Refs) -> BExp FO Refs
+replace fo (toReplace, replaceWith) = trace ("Replace " ++ show toReplace ++ " with " ++ show replaceWith ++ " in " ++ show fo ++ " : " ++ show res) $ res
+    where res = replaceAExp toReplace replaceWith fo
 
 idtFromDecl :: Decl -> Idt
 idtFromDecl (Decl _ idt) = idt

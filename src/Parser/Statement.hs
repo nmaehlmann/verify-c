@@ -43,13 +43,13 @@ voidFunCall = try $ do
 declAssignFunCall :: Parser Stmt
 declAssignFunCall = try $ do
     typeName
-    idt <- lExpC0
+    idt <- identifier
     reservedOp "="
     funName <- identifier
     funArgs <- parens $ commaSep aExpC0
     semi
     line <- lineNo
-    return $  Seq (Declaration idt) (FunCall (Just idt) funName funArgs line)
+    return $  Seq (Declaration idt) (FunCall (Just (LIdt idt)) funName funArgs line)
 
 assignFunCall :: Parser Stmt
 assignFunCall = try $ do
@@ -64,14 +64,14 @@ assignFunCall = try $ do
 decl :: Parser Stmt
 decl = do
     typeName
-    idt <- lExpC0
+    idt <- identifier
     semi
     return $ Declaration idt
 
 declAssignement :: Parser Stmt
 declAssignement = try $ do
     typeName
-    a@(Assignment idt _) <- assignment
+    a@(Assignment (LIdt idt) _) <- assignment
     return $ Seq (Declaration idt) a
 
 assignment :: Parser Stmt
