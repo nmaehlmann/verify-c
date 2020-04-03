@@ -18,8 +18,10 @@ import qualified Options as Options
 import qualified VerificationOptions as VerificationOptions
 import Control.Monad.Reader
 import System.IO
+import Control.Monad.Trans.Except
+import Data.Either.Combinators
 
-type App = ReaderT Settings IO
+type App = ExceptT VerificationStatus (ReaderT Settings IO)
 
 data Settings = VerifyCSettings { smtEnvironment :: String, hasColor :: Bool, smtTimeout :: Int}
 
@@ -34,9 +36,15 @@ z3OutputPath = "z3.log"
 
 clearTempPaths :: App ()
 clearTempPaths = do
-    lift $ removeIfExists vcPath
-    lift $ removeIfExists z3InputPath
-    lift $ removeIfExists z3OutputPath
+    runIO $ removeIfExists vcPath
+    runIO $ removeIfExists z3InputPath
+    runIO $ removeIfExists z3OutputPath
+
+runApp :: Settings -> App a -> IO ()
+runApp settings app = void $ runReaderT (runExceptT app) settings
+
+exceptMaybe :: VerificationStatus -> Maybe a -> App a
+exceptMaybe s m = except $ maybeToRight s m
 
 main :: IO ()
 main = Options.runCommand $ \opts args -> do
@@ -60,7 +68,7 @@ main = Options.runCommand $ \opts args -> do
 
             let ast = parse program "" src
             case ast of
-                (Right prog) -> flip runReaderT settings $ do
+                (Right prog) -> runApp settings $ do
                     let vcs = verifyProgram prog
                     let vcInfos = map printVC vcs
                     let maxLen = maximum $ map length vcInfos
@@ -68,12 +76,12 @@ main = Options.runCommand $ \opts args -> do
                     let maxRank = length vcs
                     let rankedVCInfos = zipWith (\r s -> printRank r maxRank ++ s) [1..] paddedVCInfos
                     
-                    lift $ putStrLn $ "Generated " ++ show (length vcs) ++ " verification condition(s). Starting proof:"
+                    runIO $ putStrLn $ "Generated " ++ show (length vcs) ++ " verification condition(s). Starting proof:"
                     
-                    result <- verifyVCs env VOk $ zip rankedVCInfos vcs
+                    result <- verifyVCs $ zip rankedVCInfos vcs
 
                     -- print result
-                    lift $ putStrLn ""
+                    runIO $ putStrLn ""
                     case result of
                         VOk -> printVerificationOK
                         VError -> printVerificationFailed
@@ -85,12 +93,12 @@ main = Options.runCommand $ \opts args -> do
 printVerificationOK :: App ()
 printVerificationOK = do
     inColor <- hasColor <$> ask
-    lift $ putStrLn $ "Summary: " ++ withColor Green "VERIFICATION OK" inColor
+    runIO $ putStrLn $ "Summary: " ++ withColor Green "VERIFICATION OK" inColor
 
 printVerificationFailed :: App ()
 printVerificationFailed = do
     inColor <- hasColor <$> ask
-    lift $ putStrLn $ "Summary: " ++ withColor Red "VERIFICATION FAILED" inColor
+    runIO $ putStrLn $ "Summary: " ++ withColor Red "VERIFICATION FAILED" inColor
 
         
 printVC :: VC a -> String
@@ -113,53 +121,95 @@ printRank pcurrent pmax = "[" ++ spadded ++ "/" ++ smax ++ "] "
         scurrent = show pcurrent
         spadded = padL '0' (length smax) scurrent
 
-data VerificationStatus = Verified | Violated | SimplifyFailed | Timeout | SMTError | Skipped
+data VerificationStatus = Verified | Violated | SimplifyFailed | Timeout | SMTError String String | Skipped
 
 data VerificationResult = VError | VOk
 
-verifyVCs :: String -> VerificationResult -> [(String, VC Refs)] -> App VerificationResult
-verifyVCs _ s [] = return s
-verifyVCs env VError ((description, _) : vcs) = printVCResult description Skipped >> verifyVCs env VError vcs
-verifyVCs env VOk ((description, vc@(VC _ refsFO)) : vcs) = clearTempPaths >> lift (hFlush stdout) >> do
-    case unliftMemory vc of
+type Environment = String
 
-        Just (VC _ plainFO) -> do
-            lift $ writeFile vcPath $ show plainFO
-            let smt = SMT.export env plainFO
-            lift $ writeFile z3InputPath smt
-            timeout <- smtTimeout <$> ask
-            (_, z3Result, z3Err) <- lift $ readProcessWithExitCode "z3" [z3InputPath, "-T:" ++ show timeout] ""
-            lift $ writeFile z3OutputPath z3Result
+-- verifyVCs :: Environment -> VerificationResult -> [(String, VC Refs)] -> App VerificationResult
+-- verifyVCs _ s [] = return s
+-- verifyVCs env VError ((description, _) : vcs) = printVCResult description Skipped >> verifyVCs env VError vcs
+-- verifyVCs env VOk ((description, vc@(VC _ refsFO)) : vcs) = clearTempPaths >> lift (hFlush stdout) >> do
+--     case unliftMemory vc of
 
-            let trimmedZ3Result = trim z3Result
-            case trimmedZ3Result of
-                "unsat" -> printVCResult description Verified >> verifyVCs env VOk vcs
-                "sat" -> printVCResult description Violated >> verifyVCs env VError vcs
-                "timeout" -> printVCResult description Timeout >> verifyVCs env VError vcs
-                _ -> do 
-                    printVCResult description SMTError
-                    _ <- verifyVCs env VError vcs
-                    when (not (null z3Result)) $ lift $ putStrLn z3Result
-                    when (not (null z3Err)) $ lift $ putStrLn z3Result
-                    return VError
+--         Just (VC _ plainFO) -> do
+--             lift $ writeFile vcPath $ show plainFO
+--             let smt = SMT.export env plainFO
+--             lift $ writeFile z3InputPath smt
+--             timeout <- smtTimeout <$> ask
+--             (_, z3Result, z3Err) <- lift $ readProcessWithExitCode "z3" [z3InputPath, "-T:" ++ show timeout] ""
+--             lift $ writeFile z3OutputPath z3Result
 
-        Nothing -> do
-            lift $ writeFile vcPath $ show refsFO
-            printVCResult description SimplifyFailed
-            verifyVCs env VError vcs
+--             let trimmedZ3Result = trim z3Result
+--             case trimmedZ3Result of
+--                 "unsat" -> printVCResult description Verified >> verifyVCs env VOk vcs
+--                 "sat" -> printVCResult description Violated >> verifyVCs env VError vcs
+--                 "timeout" -> printVCResult description Timeout >> verifyVCs env VError vcs
+--                 _ -> do 
+--                     printVCResult description SMTError
+--                     _ <- verifyVCs env VError vcs
+--                     when (not (null z3Result)) $ lift $ putStrLn z3Result
+--                     when (not (null z3Err)) $ lift $ putStrLn z3Result
+--                     return VError
+
+--         Nothing -> do
+--             lift $ writeFile vcPath $ show refsFO
+--             printVCResult description SimplifyFailed
+--             verifyVCs env VError vcs
+
+verifyVCs :: [(String, VC Refs)] -> App VerificationResult
+verifyVCs [] = return VOk
+verifyVCs (vc@(description, _) : vcs) = do
+    nextFun <- catchE
+        (verifyVC vc >> printVCResult description Verified >> return verifyVCs)
+        (\errorStatus -> (printVCResult description errorStatus)  >> return skipVCs)
+    nextFun vcs
+
+skipVCs :: [(String, VC Refs)] -> App VerificationResult
+skipVCs [] = return VError
+skipVCs ((description, _) : vcs) = printVCResult description Skipped >> skipVCs vcs
+
+verifyVC :: (String, VC Refs) -> App ()
+verifyVC (description, vc@(VC _ refsFO)) = clearTempPaths >> runIO (hFlush stdout) >> do
+
+    runIO $ writeFile vcPath $ show refsFO
+
+    (VC _ plainFO) <- exceptMaybe SimplifyFailed $ unliftMemory vc
+    runIO $ writeFile vcPath $ show plainFO
+
+    env <- smtEnvironment <$> ask
+    smt <- exceptMaybe SimplifyFailed $ SMT.export env plainFO
+    runIO $ writeFile z3InputPath smt
+
+    timeout <- smtTimeout <$> ask
+    (_, z3Result, z3Err) <- runIO $ readProcessWithExitCode "z3" [z3InputPath, "-T:" ++ show timeout] ""
+    runIO $ writeFile z3OutputPath z3Result
+
+    let trimmedZ3Result = trim z3Result
+    case trimmedZ3Result of
+        "unsat"     -> return ()
+        "sat"       -> throwE Violated
+        "timeout"   -> throwE Timeout
+        _           -> throwE $ SMTError z3Result z3Err 
 
 printVCResult :: String -> VerificationStatus -> App ()
 printVCResult description status = do
     inColor <- hasColor <$> ask
-    lift $ putStrLn $ description ++ printStatus status inColor
+    runIO $ putStrLn $ description ++ printStatus status inColor
+    case status of
+        (SMTError z3Result z3Err) -> do
+            when (not (null z3Result))  $ runIO $ putStrLn z3Result
+            when (not (null z3Err))     $ runIO $ putStrLn z3Result
+        _ -> return ()
 
 printStatus :: VerificationStatus -> Bool -> String
-printStatus Verified        = withColor Green   "OK"
-printStatus Violated        = withColor Red     "VIOLATED"
-printStatus SimplifyFailed  = withColor Red     "SIMPLIFY FAILED"
-printStatus Timeout         = withColor Red     "TIMEOUT"
-printStatus SMTError        = withColor Red     "SMT ERROR"
-printStatus Skipped         = withColor Default "SKIPPED"
+printStatus Verified         = withColor Green   "OK"
+printStatus Violated         = withColor Red     "VIOLATED"
+printStatus SimplifyFailed   = withColor Red     "SIMPLIFY FAILED"
+printStatus Timeout          = withColor Red     "TIMEOUT"
+printStatus (SMTError s1 s2) = withColor Red     "SMT ERROR"
+printStatus Skipped          = withColor Default "SKIPPED"
 
 withColor :: Color -> String -> Bool -> String
 withColor c s True = color c $ s
@@ -181,3 +231,6 @@ padL p s l
 
 padR :: a -> Int -> [a] -> [a]
 padR p s l = take s $ l ++ repeat p
+
+runIO :: IO a -> App a
+runIO = lift . lift

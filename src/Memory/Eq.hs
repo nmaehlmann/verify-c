@@ -35,7 +35,11 @@ compareDifferentLExp _ _ = return MemNotEq
 compareAExp :: AExpFO -> AExpFO -> Simplified MemEq
 compareAExp a b | a == b = return MemEq
 compareAExp (ALit _) (ALit _) = return MemNotEq
-compareAExp (AIdt l1) (AIdt l2) = compareLExp l1 l2
+compareAExp (AIdt l1) (AIdt l2) = do
+    comparison <- compareLExp l1 l2
+    return $ case comparison of
+        MemEq -> MemEq
+        _ -> MemUndecidable
 compareAExp _ _ = return MemUndecidable
 
 memAnd :: MemEq -> MemEq -> MemEq
