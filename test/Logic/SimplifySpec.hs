@@ -35,18 +35,6 @@ spec = do
             let foSimplified = BComp Equal (ALit 6) (ALit 0)
             simplify fo `shouldBe` foSimplified
 
-        -- (true -> (read(s, read(upd(s, b, read(s, a)), b)) = read(s, a)))
-        -- it "simplifies a comparison of two reads" $ do
-        --     let b = LIdt "b"
-        --     let lReadA = LRead sigma (LIdt (Idt "a"))
-        --     let aReadA = AIdt lReadA
-        --     let updateBWithReadA = Update sigma b aReadA
-        --     let read
-
-        --     let fo = BComp Equal 
-        --     let foSimplified = BComp Equal (ALit 6) (ALit 0)
-        --     simplify fo `shouldBe` foSimplified
-
     describe "simplifyAExpFO" $ do
         let x = LIdt $ Idt "x"
         let y = LIdt $ Idt "y"
