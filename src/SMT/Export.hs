@@ -60,7 +60,7 @@ aToSMT (ALogVar v) = return $ show v
 aToSMT (AFunCall (Idt name) args) = do
     smtArgs <- mapM aToSMT args
     return $ sExp $ name : smtArgs
-aToSMT (AAddress l) = Nothing
+aToSMT (AAddress _) = Nothing
 
 lToSMT :: LExp FO Plain -> Maybe String
 lToSMT (LIdt i) = return $ show i

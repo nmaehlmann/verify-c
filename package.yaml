@@ -50,6 +50,7 @@ executables:
     - mtl
     - transformers
     - either
+    - MissingH
 
 tests:
   verify-c-test:

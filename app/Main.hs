@@ -20,6 +20,7 @@ import Control.Monad.Reader
 import System.IO
 import Control.Monad.Trans.Except
 import Data.Either.Combinators
+import Data.List.Utils (replace)
 
 type App = ExceptT VerificationStatus (ReaderT Settings IO)
 
@@ -30,20 +31,23 @@ data Settings = VerifyCSettings
     , noSkip :: Bool
     }
 
-vcPath :: FilePath
-vcPath = "vcs.txt"
+data VerificationStatus = Verified | Violated | SimplifyFailed | SMTExportFailed | Timeout | SMTError String String | Skipped
 
-z3InputPath :: FilePath
-z3InputPath = "vcs.z3"
+data VerificationResult = VError | VOk
 
-z3OutputPath :: FilePath
-z3OutputPath = "z3.log"
+type Environment = String
 
-clearTempPaths :: App ()
+data Rank = Rank Int Int
+data Description = Description Rank String
+
+targetPath :: FilePath
+targetPath = "target"
+
+clearTempPaths :: IO ()
 clearTempPaths = do
-    runIO $ removeIfExists vcPath
-    runIO $ removeIfExists z3InputPath
-    runIO $ removeIfExists z3OutputPath
+    dirExists <- doesDirectoryExist targetPath
+    when dirExists $ removeDirectoryRecursive targetPath
+    createDirectory targetPath
 
 runApp :: Settings -> App a -> IO ()
 runApp settings app = void $ runReaderT (runExceptT app) settings
@@ -53,6 +57,7 @@ exceptMaybe s m = except $ maybeToRight s m
 
 main :: IO ()
 main = Options.runCommand $ \opts args -> do
+    clearTempPaths
     let textToParse = listToMaybe args
     case textToParse of 
         Nothing -> putStrLn "error: input file was not specified."
@@ -80,7 +85,7 @@ main = Options.runCommand $ \opts args -> do
                     let maxLen = maximum $ map length vcInfos
                     let paddedVCInfos = map (\s -> s ++ ": ") $ map (padR ' ' maxLen) vcInfos
                     let maxRank = length vcs
-                    let rankedVCInfos = zipWith (\r s -> printRank r maxRank ++ s) [1..] paddedVCInfos
+                    let rankedVCInfos = zipWith (\r s -> Description (Rank r maxRank) s) [1..] paddedVCInfos
                     
                     runIO $ putStrLn $ "Generated " ++ show (length vcs) ++ " verification condition(s). Starting proof:"
                     
@@ -120,20 +125,38 @@ printVCInfo (CPrecondition (Idt name)) = "Precondition " ++ name
 showLine :: LineNo -> String
 showLine (LineNo l) = " (l:" ++ show l ++ ") "
 
-printRank :: Int -> Int -> String
-printRank pcurrent pmax = "[" ++ spadded ++ "/" ++ smax ++ "] "
+printDescription :: Description -> String
+printDescription (Description rank s) = printRank rank ++ ": " ++ s
+
+descriptionToFile :: Description -> String -> FilePath
+descriptionToFile description extension = targetPath ++ "/" ++ (descriptionToFilename description) ++ "." ++ extension
+
+descriptionToFilename :: Description -> String
+descriptionToFilename (Description rank s) = rankToFilePath rank ++ "_" ++ identifier
+    where identifier = 
+            replace " " "_" $
+            trim $
+            replace "(" "" $
+            replace ")" "" $
+            replace ":" ""  $
+            s
+
+printRank :: Rank -> String
+printRank (Rank pCurrent pMax) = "[" ++ sPadded ++ "/" ++ sMax ++ "] "
     where 
-        smax = show pmax
-        scurrent = show pcurrent
-        spadded = padL '0' (length smax) scurrent
+        sMax = show pMax
+        sCurrent = show pCurrent
+        sPadded = padL '0' (length sMax) sCurrent
 
-data VerificationStatus = Verified | Violated | SimplifyFailed | Timeout | SMTError String String | Skipped
+rankToFilePath :: Rank -> String
+rankToFilePath (Rank pCurrent pMax) = sPadded ++ "_of_" ++ sMax
+    where 
+        sMax = show pMax
+        sCurrent = show pCurrent
+        sPadded = padL '0' (length sMax) sCurrent
 
-data VerificationResult = VError | VOk
 
-type Environment = String
-
-verifyVCs :: [(String, VC Refs)] -> App VerificationResult
+verifyVCs :: [(Description, VC Refs)] -> App VerificationResult
 verifyVCs [] = return VOk
 verifyVCs (vc@(description, _) : vcs) = do
     nextFun <- catchE
@@ -141,7 +164,7 @@ verifyVCs (vc@(description, _) : vcs) = do
         (\errorStatus -> (printVCResult description errorStatus) >> return skipVCs)
     nextFun vcs
 
-skipVCs :: [(String, VC Refs)] -> App VerificationResult
+skipVCs :: [(Description, VC Refs)] -> App VerificationResult
 skipVCs [] = return VError
 skipVCs allVCs@((description, _) : vcs) = do
     skip <- not <$> noSkip <$> ask
@@ -150,21 +173,25 @@ skipVCs allVCs@((description, _) : vcs) = do
         else verifyVCs allVCs
     return VError
 
-verifyVC :: (String, VC Refs) -> App ()
-verifyVC (description, vc@(VC _ refsFO)) = clearTempPaths >> runIO (hFlush stdout) >> do
+verifyVC :: (Description, VC Refs) -> App ()
+verifyVC (description, vc@(VC _ refsFO)) =  do
 
-    runIO $ writeFile vcPath $ show refsFO
+    let writeWithExtension ext str = runIO (writeFile (descriptionToFile description ext) str)
+
+    runIO (hFlush stdout)
+    writeWithExtension "refs" $ show refsFO
 
     (VC _ plainFO) <- exceptMaybe SimplifyFailed $ unliftMemory vc
-    runIO $ writeFile vcPath $ show plainFO
+    writeWithExtension "plain" $ show plainFO
 
     env <- smtEnvironment <$> ask
-    smt <- exceptMaybe SimplifyFailed $ SMT.export env plainFO
+    smt <- exceptMaybe SMTExportFailed $ SMT.export env plainFO
+    let z3InputPath = descriptionToFile description "z3"
     runIO $ writeFile z3InputPath smt
 
     timeout <- smtTimeout <$> ask
     (_, z3Result, z3Err) <- runIO $ readProcessWithExitCode "z3" [z3InputPath, "-T:" ++ show timeout] ""
-    runIO $ writeFile z3OutputPath z3Result
+    writeWithExtension "z3_log" z3Result
 
     let trimmedZ3Result = trim z3Result
     case trimmedZ3Result of
@@ -173,10 +200,10 @@ verifyVC (description, vc@(VC _ refsFO)) = clearTempPaths >> runIO (hFlush stdou
         "timeout"   -> throwE Timeout
         _           -> throwE $ SMTError z3Result z3Err 
 
-printVCResult :: String -> VerificationStatus -> App ()
+printVCResult :: Description -> VerificationStatus -> App ()
 printVCResult description status = do
     inColor <- hasColor <$> ask
-    runIO $ putStrLn $ description ++ printStatus status inColor
+    runIO $ putStrLn $ printDescription description ++ printStatus status inColor
     case status of
         (SMTError z3Result z3Err) -> do
             when (not (null z3Result))  $ runIO $ putStrLn z3Result
@@ -187,9 +214,11 @@ printStatus :: VerificationStatus -> Bool -> String
 printStatus Verified         = withColor Green   "OK"
 printStatus Violated         = withColor Red     "VIOLATED"
 printStatus SimplifyFailed   = withColor Red     "SIMPLIFY FAILED"
+printStatus SMTExportFailed  = withColor Red     "SMT_EXPORT FAILED"
 printStatus Timeout          = withColor Red     "TIMEOUT"
-printStatus (SMTError s1 s2) = withColor Red     "SMT ERROR"
+printStatus (SMTError _ _)   = withColor Red     "SMT ERROR"
 printStatus Skipped          = withColor Default "SKIPPED"
+
 
 withColor :: Color -> String -> Bool -> String
 withColor c s True = color c $ s
