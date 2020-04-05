@@ -10,16 +10,16 @@ If all verification conditions are proven successfully, the implemented function
 
 ## Installation
 
-`verify-c` can be built from source using the Haskell build tool `stack` by calling:
+A windows binary can be downloaded from the release section of this repository: https://github.com/nmaehlmann/verify-c/releases/latest .
 
+Additionally `verify-c` relies on the `Z3` theorem prover which has to be installed and added to the `PATH` variable.
+It can be downloaded at https://github.com/Z3Prover/z3 .
+
+To run `verify-c` on other operating systems it can be built from source using the Haskell build tool `stack` by calling:
 ```
 stack install
 ```
-
 in the root directory.
-Additionally `verify-c` relies on the `Z3` theorem prover which has to be installed and added to the `PATH` variable.
-It can be downloaded at https://github.com/Z3Prover/z3 .
-  
 
 ## Usage
 
