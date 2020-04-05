@@ -16,13 +16,10 @@ undagger :: LExp FO Refs -> Maybe (LExp FO Plain)
 undagger (LIdt idt) = Just $ LIdt idt
 undagger (LArray idt idx) = LArray <$> (undagger idt) <*> (unhashmark idx)
 undagger (LStructurePart struct part) = LStructurePart <$> (undagger struct) <*> Just part
-undagger (LRead r) = unread r
-
-unread :: ReadLExp FO -> Maybe (LExp FO Plain)
-unread (ReadLExp s _) | s /= sigma = Nothing
-unread (ReadLExp _ (LIdt i)) = Just $ LIdt i
-unread (ReadLExp _ (LRead r)) = LDeref <$> unread r
-unread (ReadLExp _ l) = undagger l
+undagger (LRead s _) | s /= sigma = Nothing
+undagger (LRead _ (LIdt i)) = Just $ LIdt i
+undagger (LRead _ r@(LRead _ _)) = LDeref <$> undagger r
+undagger (LRead _ l) = undagger l
 
 unhashmark :: AExp FO Refs -> Maybe (AExp FO Plain)
 unhashmark (ALit i) = Just $ ALit i

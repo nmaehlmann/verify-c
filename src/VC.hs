@@ -83,7 +83,7 @@ awp' (Return (Just e)) _ qr = return $ replaceAExp resultLExp (hashmark (aLiftLo
 awp' (FunCall _ funName suppliedArgs _) _ _ = do
     calledFunction <- lookupFunction funName
     let funPrecond = liftMemory $ funDefPrecond calledFunction
-    let readIdt i = LRead $ ReadLExp sigma $ LIdt i
+    let readIdt i = LRead sigma $ LIdt i
     let funArgs = fmap readIdt $ fmap idtFromDecl $ funDefArgs calledFunction
     let suppliedArgsRefs = fmap (hashmark . aLiftLogic) suppliedArgs
     let replacements = zip funArgs suppliedArgsRefs
@@ -125,7 +125,7 @@ wvc (Return _) _ _ = return []
 wvc (FunCall maybeAssignment funName suppliedArgs line) q _ = do
     calledFunction <- lookupFunction funName
     let funPostcond = liftMemory $ funDefPostcond calledFunction
-    let readIdt i = LRead $ ReadLExp sigma $ LIdt i
+    let readIdt i = LRead sigma $ LIdt i
     let funArgs = fmap readIdt $ fmap idtFromDecl $ funDefArgs calledFunction
     let suppliedArgsRefs = fmap (hashmark . aLiftLogic) suppliedArgs
     let resultReplace = case maybeAssignment of

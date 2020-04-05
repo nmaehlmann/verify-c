@@ -15,9 +15,6 @@ aReplaceAExp aOld aNew (ABinExp op l r) = ABinExp op (aReplaceAExp aOld aNew l) 
 aReplaceAExp aOld aNew (AFunCall name args) = AFunCall name $ map (aReplaceAExp aOld aNew) args
 aReplaceAExp aOld aNew (AIdt l) = AIdt $ lReplaceAExp aOld aNew l
 
-rReplaceAExp :: ReplaceAExp (ReadLExp FO)
-rReplaceAExp aOld aNew (ReadLExp lNested lSExp) = ReadLExp (sReplaceAExp aOld aNew lNested) (lReplaceAExp aOld aNew lSExp)
-
 sReplaceAExp :: ReplaceAExp State
 sReplaceAExp aOld aNew (Update state lExp aExp) = Update
     (sReplaceAExp aOld aNew state) 
@@ -27,7 +24,7 @@ sReplaceAExp _ _ s = s
 
 lReplaceAExp :: ReplaceAExp (LExp FO Refs)
 lReplaceAExp lOld (AIdt lNew) lCurrent | lOld == lCurrent = lNew
-lReplaceAExp aOld aNew (LArray lExp aSExp) = LArray (lReplaceAExp aOld aNew lExp) (aReplaceAExp aOld aNew aSExp)
+lReplaceAExp aOld aNew (LArray lExp aExp) = LArray (lReplaceAExp aOld aNew lExp) (aReplaceAExp aOld aNew aExp)
 lReplaceAExp aOld aNew (LStructurePart lExp idt) = LStructurePart (lReplaceAExp aOld aNew lExp) idt
-lReplaceAExp aOld aNew (LRead readLExp) = LRead $ rReplaceAExp aOld aNew readLExp
+lReplaceAExp aOld aNew (LRead state lExp) = LRead (sReplaceAExp aOld aNew state) (lReplaceAExp aOld aNew lExp)
 lReplaceAExp _ _ (LIdt idt) = LIdt idt

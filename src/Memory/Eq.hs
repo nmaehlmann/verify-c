@@ -20,10 +20,10 @@ compareLExp a b = do
         else compareDifferentLExp a b
 
 compareDifferentLExp :: LExpFO -> LExpFO -> Simplified MemEq
-compareDifferentLExp (LRead (ReadLExp s1 l1)) (LRead (ReadLExp s2 l2)) = 
+compareDifferentLExp (LRead s1 l1) (LRead s2 l2) = 
     if s1 == s2 then compareLExp l1 l2 else return MemUndecidable
-compareDifferentLExp (LRead _) _ = return MemUndecidable
-compareDifferentLExp _ (LRead _) = return MemUndecidable
+compareDifferentLExp (LRead _ _) _ = return MemUndecidable
+compareDifferentLExp _ (LRead _ _) = return MemUndecidable
 compareDifferentLExp (LStructurePart struct1 idt1) (LStructurePart struct2 idt2) =
     if idt1 == idt2 then compareLExp struct1 struct2 else return MemNotEq
 compareDifferentLExp (LArray arr1 idx1) (LArray arr2 idx2) = do

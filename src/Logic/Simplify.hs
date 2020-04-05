@@ -58,11 +58,11 @@ simplifyAExpFO (AFunCall funName funArgs) = AFunCall funName <$> mapM simplifyAE
 simplifyAExpFO (AIdt l) = do
     simplifiedLExp <- simplifyLExp l
     case simplifiedLExp of 
-        LRead (ReadLExp (Update state lExp aExp) toRead) -> do
+        LRead (Update state lExp aExp) toRead -> do
             memComparison <- compareLExp toRead lExp
             case memComparison of
                 MemEq -> update aExp
-                MemNotEq -> update $ AIdt $ LRead $ ReadLExp state toRead 
+                MemNotEq -> update $ AIdt $ LRead state toRead 
                 MemUndecidable -> return $ AIdt simplifiedLExp
         _ -> return $ AIdt simplifiedLExp
 
@@ -75,24 +75,16 @@ simplifyLExp (LArray name idx) = do
 simplifyLExp (LStructurePart struct part) = do
     newStruct <- simplifyLExp struct
     return $ LStructurePart newStruct part
-simplifyLExp (LRead r) = simplifyLRead r
-
-simplifyReadLExp :: ReadLExpFO -> Simplified ReadLExpFO
-simplifyReadLExp (ReadLExp state loc) = do
-    simplifiedState <- simplifyState state
-    simplifiedLoc <- simplifyLExp loc
-    return $ ReadLExp simplifiedState simplifiedLoc
-
-simplifyLRead :: ReadLExpFO -> Simplified LExpFO
-simplifyLRead l = simplifyReadLExp l >>= simplifyLRead'
-simplifyLRead' :: ReadLExpFO -> Simplified LExpFO
-simplifyLRead' original@(ReadLExp (Update state lExp _) toRead) = do
-    memComparison <- compareLExp toRead lExp
-    case memComparison of
-        MemEq ->  return $ LRead original
-        MemNotEq -> update $ LRead $ ReadLExp state toRead 
-        MemUndecidable -> return $ LRead original
-simplifyLRead' original = return $ LRead original
+simplifyLExp (LRead state' toRead') = do
+    state <- simplifyState state'
+    toRead <- simplifyLExp toRead'
+    case state of 
+        (Update nestedState toUpdate _) -> do
+            memComparison <- compareLExp toRead toUpdate
+            case memComparison of
+                MemNotEq -> update $ LRead nestedState toRead 
+                _ -> return $ LRead state toRead
+        _ -> return $ LRead state toRead
 
 simplifyState :: State -> Simplified State
 simplifyState (Update state lExp aExp) = do

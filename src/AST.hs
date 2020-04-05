@@ -80,7 +80,7 @@ data LExp l m where
     LIdt            :: Idt -> LExp l m
     LArray          :: LExp l m -> AExp l m -> LExp l m
     LStructurePart  :: LExp l m -> Idt -> LExp l m
-    LRead           :: ReadLExp l -> LExp l Refs
+    LRead           :: State -> LExp l Refs -> LExp l Refs
     LDeref          :: LExp l Plain -> LExp l Plain
 
 data AExp l m where
@@ -90,8 +90,6 @@ data AExp l m where
     AFunCall    :: Idt -> [AExp FO m] -> AExp FO m
     ALogVar     :: Idt -> AExp FO m
     AAddress    :: LExp l Plain -> AExp l Plain
-
-data ReadLExp l = ReadLExp State (LExp l Refs)
 
 type BExp' l = BExp l Plain
 type AExp' l = AExp l Plain
@@ -115,7 +113,7 @@ sigma :: State
 sigma = Atomic "s"
 
 resultLExp :: LExp FO Refs
-resultLExp = LRead $ ReadLExp sigma $ LIdt $ Idt "\\result"
+resultLExp = LRead sigma $ LIdt $ Idt "\\result"
 
 -- Show instances
 
@@ -151,15 +149,11 @@ instance Show ABinOp where
     show Mul = "*"
     show Div = "/"
 
-instance Show (ReadLExp l) where
-    -- show (ReadLExp (Atomic _) (LIdt i)) = show i
-    show (ReadLExp state lExp) = "read(" ++ show state ++ ", " ++ show lExp ++ ")"
-
 instance Show (LExp l m) where
     show (LIdt i) = show i
     show (LArray lExp aExp) = show lExp ++ "[" ++ show aExp ++ "]"
     show (LStructurePart lExp idt) = show lExp ++ "." ++ show idt
-    show (LRead r) = show r
+    show (LRead state lExp) = "read(" ++ show state ++ ", " ++ show lExp ++ ")"
     show (LDeref i) = '*' : show i
 
 instance Show State where
@@ -205,8 +199,3 @@ deriving instance Eq (AExp FO Refs)
 
 deriving instance Ord (AExp FO Refs)
 deriving instance Ord (AExp FO Plain)
-
-deriving instance Eq (ReadLExp FO)
-deriving instance Eq (ReadLExp C0)
-
-deriving instance Ord (ReadLExp FO)
