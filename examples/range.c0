@@ -1,9 +1,0 @@
-int contains(Range r, int i){
-    precondition("true");
-    postcondition("((r.lb <= i && r.ub >= i) <-> \result == 1)");
-    
-    if(r.lb <= i && i <= r.ub){
-        return 1;
-    }
-    return 0;
-}
