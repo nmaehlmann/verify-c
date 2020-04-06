@@ -22,15 +22,19 @@ data BBinOp = And | Or | Implies | Iff
 
 newtype LineNo = LineNo Int deriving (Eq, Show)
 
+type BExp' l = BExp l Plain
+type AExp' l = AExp l Plain
+type LExp' l = LExp l Plain
+
 data Stmt 
-    = Assignment LExp'' AExp''
+    = Assignment (LExp' C0) (AExp' C0)
     | ITE (BExp' C0) Stmt Stmt
     | While (BExp' C0) (BExp' FO) Stmt LineNo
     | Seq Stmt Stmt
-    | Return (Maybe AExp'')
+    | Return (Maybe (AExp' C0))
     | Assertion (BExp'  FO) LineNo
     | Declaration Idt
-    | FunCall (Maybe LExp'') Idt [AExp''] LineNo
+    | FunCall (Maybe (LExp' C0)) Idt [AExp' C0] LineNo
     | Empty
     deriving (Eq, Show)
 
@@ -90,12 +94,6 @@ data AExp l m where
     AFunCall    :: Idt -> [AExp FO m] -> AExp FO m
     ALogVar     :: Idt -> AExp FO m
     AAddress    :: LExp l Plain -> AExp l Plain
-
-type BExp' l = BExp l Plain
-type AExp' l = AExp l Plain
-type LExp' l = LExp l Plain
-type AExp'' = AExp' C0
-type LExp'' = LExp' C0
 
 mapAExps :: (AExp l m1 -> AExp FO m2) -> (BExp l m1) -> (BExp FO m2)
 mapAExps _ BTrue = BTrue

@@ -2,6 +2,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage{hyperref}
 \usepackage{xspace}
+\usepackage{float}
 \usepackage{listings}
 \lstset{
     basicstyle=\ttfamily
@@ -36,7 +37,7 @@
 \section{Introduction}
 This document explains the usage and inner workings of \verifyc. 
 \verifyc is a command line tool which verifies programs written in a subset of C. 
-The tool is based on Floyd-Hoare logic, which was intensivley discussed in the course \emph{Korrekte Software: Grundlagen und Methoden} at the University of Bremen held by Serge Autexier and Christoph Lüth in the summer semester 2019. \verifyc is an educational implementation of the discussed techinques aimed to deepen their understanding and explore which challenges arise when trying to formally verify software. 
+The tool is based on Floyd-Hoare logic, which was intensivley discussed in the course \emph{Korrekte Software: Grundlagen und Methoden} at the University of Bremen held by Serge Autexier and Christoph Lüth in the summer semester 2019. \verifyc is an educational implementation of the discussed techinques aimed to deepen their understanding and explore which challenges arise when formally verifying software. 
 \verifyc is written in Haskell and the source code is available online at \url{https://github.com/nmaehlmann/verify-c}.
 
 \section{Installation}
@@ -150,6 +151,142 @@ which outputs:
 \end{lstlisting}
 \end{minipage}
 
-\section{}
+
+\section{Implementation}
+
+\verifyc is written in Haskell and the source code is available online at \url{https://github.com/nmaehlmann/verify-c}.
+
+\subsection{Parsing}
+
+Parsing of the source code is done using the parser combinators library \texttt{parsec}.
+This is a standard procedure so I will not go into further details about parsing.
+The result of the parsing process is an Abstract Syntax Tree (AST) which is annotated with first order logic formulas. 
+
+\subsection{Logical Formulas}
+
+Logical formulas are the core data structure on which most of the verification logic operates.
+They are implemented by the GADT \texttt{BExp} shown in Listing \ref{lst:bexp}.
+
+\begin{lstlisting}[style=c0, caption=BExp, label=lst:bexp]
+data BExp l m where
+    BTrue       :: BExp l m
+    BFalse      :: BExp l m
+    BNeg        :: BExp l m -> BExp l m
+    BBinExp     :: BBinOp -> BExp l m -> BExp l m -> BExp l m
+    BComp       :: CompOp -> AExp l m -> AExp l m -> BExp l m
+    BForall     :: Idt -> BExp FO m -> BExp FO m
+    BExists     :: Idt -> BExp FO m -> BExp FO m
+    BPredicate  :: Idt -> [AExp FO m] -> BExp FO m
+\end{lstlisting}
+
+The \texttt{BExp} type is parameterized by two arguments \texttt{l} and \texttt{m}.
+
+The first argument \texttt{l} characterizes the type of logic that is used.
+It can take two values:
+\begin{enumerate}
+    \item \texttt{C0}: The logical operations that can be used as a part of the C programming language for example to formulate the condition of a while loop.
+    \item \texttt{FO}: First order logic which is used to specify preconditions, postconditions and invariants.
+\end{enumerate}
+ 
+While the \texttt{true} and \texttt{false} constants, negations, boolean operators, and comparisons are available in every logic, quantifiers and predicates are only available in first order logic.
+This is guaranteed by the type system through the usage of GADTs.
+Since \texttt{BExp C0 m} is a subset of \texttt{BExp FO m}, the first is converted to the latter during the actual generation of verification conditions.
+
+The second argument of \texttt{BExp} is \texttt{m} which characterizes the memory model that is used.
+It can also take two values:
+\begin{enumerate}
+    \item \texttt{Plain}: A user facing symbolic memory model that is used during the development of the program and the specification.
+    \item \texttt{Refs}: An axiomatic memory model which is used internally during verification condition generation in order to support references.
+\end{enumerate}
+
+\subsection{Arithmetic Expressions}
+
+Arithmetic expressions are expressions which evaluate to an integer.
+They are used on the right hand side of assignments, as array indices or as a part of a comparison operation in a logical formula.
+Arithmetic expressions are modelled by the \texttt{AExp} GADT which is shown in Listing \ref{lst:aexp}.
+
+\begin{lstlisting}[style=c0, caption=AExp, label=lst:aexp]
+data AExp l m where
+    ALit        :: Integer -> AExp l m
+    AIdt        :: LExp l m -> AExp l m
+    ABinExp     :: ABinOp -> AExp l m -> AExp l m -> AExp l m
+    AFunCall    :: Idt -> [AExp FO m] -> AExp FO m
+    ALogVar     :: Idt -> AExp FO m
+    AAddress    :: LExp l Plain -> AExp l Plain
+\end{lstlisting}
+
+As parts of \texttt{BExp}s they are also parameterized with the type of logic and memory model.
+Integer literals, variable names and binary calculations are supported for every combination of parameters.
+Lovgical variables and function calls as parts of an \texttt{AExp} require first order expressions, so they can only be used in for specification purposes. 
+As part of the C program code function calls do not form an \texttt{AExp} but are treated as a separate statement.
+This limitation is further explained in section \ref{funcalls}.
+The address operator (\texttt{\&}) is transformed into an LExpression in the \texttt{Refs} memory model so it is only available in the \texttt{Plain} memory model.
+
+\subsection{LExpressions}
+LExpressions are expressions which can be used on the left hand side of assignments or as variable identifiers as parts of arithmetic expressions. LExpressions are modelled by the \texttt{LExp} GADT which is shown in Listing \ref{lst:lexp}.
+
+\begin{lstlisting}[style=c0, caption=LExp, label=lst:lexp]
+data LExp l m where
+    LIdt            :: Idt -> LExp l m
+    LArray          :: LExp l m -> AExp l m -> LExp l m
+    LStructurePart  :: LExp l m -> Idt -> LExp l m
+    LRead           :: State -> LExp l Refs -> LExp l Refs
+    LDeref          :: LExp l Plain -> LExp l Plain
+\end{lstlisting}
+
+As parts of \texttt{AExp}s they are also parameterized with the type of logic and memory model.
+Identifiers and array and struct accessors are available for every combination of parameters.
+Similar to the address operator, the dereferencing operator (\texttt{*}) is only available in the \texttt{Plain} memory model.
+The \texttt{LRead} \texttt{LExp} is the core of the \texttt{Refs} memory model on which we will go into more detail in the next section.
+
+
+\subsubsection{Memory Models}
+In the symbolic memory model \texttt{C0} each LExpression is assigned a value.
+To verify a program using references however, it is necessary to transform the symbolic model into an axiomatic one.
+In the axiomatic model, each LExpression (except \texttt{LRead}) is assigned a memory address.
+The actual value is obtained by looking up the memory address in a program state:
+\[ read(\sigma, l) \]
+Reads are modelled by the \texttt{LRead} LExpression.
+Assigning a value to an address is creates an updated a state:
+\[ \sigma_2 = update(\sigma_1, l, v) \]
+
+This is modelled by the \texttt{State} type shown in Listing \ref{lst:state}.
+
+\begin{lstlisting}[style=c0, caption=State, label=lst:state]
+data State
+    = Atomic String
+    | Update State (LExp FO Refs) (AExp FO Refs)
+\end{lstlisting}
+
+Using this axiomatic model, LExpressions, Referencing and Dererferncing can be treated uniformly:
+
+\begin{center}
+    \begin{table}[H]
+        \centering
+        \begin{tabular}{|l|l|}
+            \hline
+            \textbf{\texttt{Plain}}  & \textbf{\texttt{Refs}} \\ \hline
+            \texttt{a}               & $read(\sigma, a)$                                        \\ \hline
+            \texttt{\&a}             & $a$                                        \\ \hline
+            \texttt{*a}              & $read(\sigma, read(\sigma, a))$                                        \\ \hline
+        \end{tabular}
+    \end{table}    
+\end{center}
+
+Often programs assign a lot of values which leads to deeply nested states, for example:
+\[ update(update(update(\sigma, l_1, v_1), l_2, v_2), l_3, v_3) \]
+The situation gets worse, when references are involved because dereferencing an LExpression doubles the amount of states. To keep state predicates small the following simplification rules are introduced:
+
+
+
+
+\section{Limitations}
+
+\subsection{Primitives}
+\label{primitives}
+
+\subsection{Function Calls}
+\label{funcalls}
+
 
 \end{document}
