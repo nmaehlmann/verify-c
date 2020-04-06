@@ -214,7 +214,7 @@ printStatus :: VerificationStatus -> Bool -> String
 printStatus Verified         = withColor Green   "OK"
 printStatus Violated         = withColor Red     "VIOLATED"
 printStatus SimplifyFailed   = withColor Red     "SIMPLIFY FAILED"
-printStatus SMTExportFailed  = withColor Red     "SMT_EXPORT FAILED"
+printStatus SMTExportFailed  = withColor Red     "SMT EXPORT FAILED"
 printStatus Timeout          = withColor Red     "TIMEOUT"
 printStatus (SMTError _ _)   = withColor Red     "SMT ERROR"
 printStatus Skipped          = withColor Default "SKIPPED"
