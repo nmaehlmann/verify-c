@@ -3,6 +3,7 @@
 \usepackage{hyperref}
 \usepackage{xspace}
 \usepackage{float}
+\usepackage{amsmath}
 \usepackage{listings}
 \lstset{
     basicstyle=\ttfamily
@@ -278,7 +279,35 @@ Two references might point to the same address, or two array indices might have 
 \[ \texttt{*a} \stackrel{?}{=} \texttt{*b} \]
 \[ \texttt{a[i]} \stackrel{?}{=} \texttt{a[j]} \]
 
+The following heurisitc comparison algorithm was implemented in the module \texttt{Memory.Eq}:
 
+\begin{align*}
+    cmp(a,a)= & Eq\\
+    cmp(a,b)= & NotEq &  & \text{if }a\neq b\text{ is predefined}\\
+    cmp(a,b)= & NotEq &  & \text{if }a\text{ was just initialized}\\
+    cmp(a,b)= & NotEq &  & \text{if }b\text{ was just initialized}\\
+    cmp(read(\sigma,a),read(\sigma,a))= & cmp(a,b)\\
+    cmp(read(\sigma,a),b)= & Undecidable\\
+    cmp(a,read(\sigma,b))= & Undecidable\\
+    cmp(a.i,b.j)= & cmp(a,b) &  & \text{if }i=j\\
+    cmp(a.i,b.j)= & NotEq &   & \text{if }i\neq j\\
+    cmp(a[i],b[j])= & Eq &  & \text{if }cmp(a,b)=Eq\wedge cmpA(i,j)=Eq\\
+    cmp(a[i],b[j])= & NotEq &  & \text{if }cmp(a,b)=NotEq\vee cmpA(i,j)=NotEq\\
+    cmp(a[i],b[j])= & Undecidable &  & \text{otherwise}\\
+    cmp(a,b)= & NotEq &  & \text{otherwise}\\
+    \\
+    cmpA(a,a)= & Eq\\
+    cmpA(a,b)= & NotEq &  & \text{if }a,b\text{ are both literals}\\
+    cmpA(a,b)= & Eq &  & \text{if }a,b\text{ are both identifiers}\wedge cmp(a,b)=Eq\\
+    cmpA(a,b)= & Undecidable &  & \text{otherwise}
+\end{align*}
+
+$cmp$ compares two LExpressions and returns $Eq$ when two $LExpression$ evaluate to the same memory address.
+$cmpA$ is used to compare array indices and returns $Eq$ when two two arithmetic expressions evaluate to the same integer.
+$a \neq b$ is predefined if it appears in a precondition. 
+$a$ was just initialized if the previous statement is the declaration of $a$. 
+In this case it is assumed, that the operating system assigned a fresh memory address to $a$.
+Both, the predefined inequalities and the set of freshly initialized identifiers are passed to the function as a context.
 
 \section{Limitations}
 

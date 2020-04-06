@@ -26,10 +26,8 @@ compareDifferentLExp (LRead _ _) _ = return MemUndecidable
 compareDifferentLExp _ (LRead _ _) = return MemUndecidable
 compareDifferentLExp (LStructurePart struct1 idt1) (LStructurePart struct2 idt2) =
     if idt1 == idt2 then compareLExp struct1 struct2 else return MemNotEq
-compareDifferentLExp (LArray arr1 idx1) (LArray arr2 idx2) = do
-    eqArray <- compareLExp arr1 arr2
-    eqIdx <- compareAExp idx1 idx2
-    return $ eqArray `memAnd` eqIdx
+compareDifferentLExp (LArray arr1 idx1) (LArray arr2 idx2) =
+    memAnd <$> compareLExp arr1 arr2 <*> compareAExp idx1 idx2
 compareDifferentLExp _ _ = return MemNotEq
 
 compareAExp :: AExpFO -> AExpFO -> Simplified MemEq
@@ -43,7 +41,7 @@ compareAExp (AIdt l1) (AIdt l2) = do
 compareAExp _ _ = return MemUndecidable
 
 memAnd :: MemEq -> MemEq -> MemEq
-memAnd MemUndecidable _ = MemUndecidable
-memAnd _ MemUndecidable = MemUndecidable
 memAnd MemEq MemEq = MemEq
-memAnd _ _ = MemNotEq
+memAnd MemNotEq _ = MemNotEq
+memAnd _ MemNotEq = MemNotEq
+memAnd _ _ = MemUndecidable
