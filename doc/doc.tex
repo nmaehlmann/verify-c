@@ -240,7 +240,7 @@ Similar to the address operator, the dereferencing operator (\texttt{*}) is only
 The \texttt{LRead} \texttt{LExp} is the core of the \texttt{Refs} memory model on which we will go into more detail in the next section.
 
 
-\subsubsection{Memory Models}
+\subsection{Memory Models}
 In the symbolic memory model \texttt{C0} each LExpression is assigned a value.
 To verify a program using references however, it is necessary to transform the symbolic model into an axiomatic one.
 In the axiomatic model, each LExpression (except \texttt{LRead}) is assigned a memory address.
@@ -260,23 +260,23 @@ data State
 
 Using this axiomatic model, LExpressions, Referencing and Dererferncing can be treated uniformly:
 
-\begin{center}
-    \begin{table}[H]
-        \centering
-        \begin{tabular}{|l|l|}
-            \hline
-            \textbf{\texttt{Plain}}  & \textbf{\texttt{Refs}} \\ \hline
-            \texttt{a}               & $read(\sigma, a)$                                        \\ \hline
-            \texttt{\&a}             & $a$                                        \\ \hline
-            \texttt{*a}              & $read(\sigma, read(\sigma, a))$                                        \\ \hline
-        \end{tabular}
-    \end{table}    
-\end{center}
+\[ \texttt{a}\ \hat{=}\ read(\sigma, a) \]
+\[ \texttt{\&a}\ \hat{=}\ a \]
+\[ \texttt{*a}\ \hat{=}\ read(\sigma, read(\sigma, a))\]
 
 Often programs assign a lot of values which leads to deeply nested states, for example:
 \[ update(update(update(\sigma, l_1, v_1), l_2, v_2), l_3, v_3) \]
-The situation gets worse, when references are involved because dereferencing an LExpression doubles the amount of states. To keep state predicates small the following simplification rules are introduced:
+The situation gets worse, when references are involved because dereferencing an LExpression doubles the amount of states. 
+To keep state predicates small the following two simplification rules are introduced:
 
+\[ S1: l_1 = l_2 \Rightarrow read(update(\sigma, l_2 , v), l_1) = v \]
+\[ S2: l_1 \neq l_2 \Rightarrow read(update(\sigma, l_2 , v), l_1) = read(\sigma, l_1 , v) \]
+
+To apply these simplifications it is crucial to decide whether or not two LExpressions are equal.
+This however is not always possible.
+Two references might point to the same address, or two array indices might have the same value:
+\[ \texttt{*a} \stackrel{?}{=} \texttt{*b} \]
+\[ \texttt{a[i]} \stackrel{?}{=} \texttt{a[j]} \]
 
 
 

@@ -9,10 +9,6 @@ import Logic.FO
 import Memory.Eq
 
 findInequalities :: BExpFO -> Set Inequality
--- findInequalities (BComp NotEqual (AIdt l1) (AIdt l2)) = 
---     if s1 == s2 
---         then Set.singleton $ notEqual l1 l2
---         else Set.empty
 findInequalities (BComp NotEqual (AIdt l1) (AIdt l2)) = Set.singleton $ notEqual l1 l2
 findInequalities (BBinExp And fo1 fo2) = Set.union (findInequalities fo1) (findInequalities fo2)
 findInequalities (BBinExp Implies fo _) = findInequalities fo
