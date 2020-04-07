@@ -242,6 +242,7 @@ The \texttt{LRead} \texttt{LExp} is the core of the \texttt{Refs} memory model o
 
 
 \subsection{Memory Models}
+\label{memory_models}
 In the symbolic memory model \texttt{C0} each LExpression is assigned a value.
 To verify a program using references however, it is necessary to transform the symbolic model into an axiomatic one.
 In the axiomatic model, each LExpression (except \texttt{LRead}) is assigned a memory address.
@@ -343,50 +344,66 @@ data SimplificationCtx = SimplificationCtx
     }
     
 type Inequality = Set (LExp FO Refs)
+
+update :: a -> Simplified a
+update a = lift $ Updated a
 \end{lstlisting}
 
 The simplification algorithm can now be implemented as a set of functions which recursively traverse and simplify a \texttt{BExp}.
+It is located in the \texttt{Logic.Simplification} module.
 The implementation of each of the three simplification rules is shown in Listing \ref{lst:simplification}
 
 \begin{lstlisting}[style=c0, caption=implementation of the simplification rules, label=lst:simplification]
-simplifyAExp :: AExpFO -> Simplified AExpFO
-... recursively simplify other cases of AExp ...
-simplifyAExp (AIdt l) = do
-    simplifiedLExp <- simplifyLExp l
-    case simplifiedLExp of 
-        LRead (Update state lExp aExp) toRead -> do
-            memComparison <- compareLExp toRead lExp
-            case memComparison of
-                MemEq -> update aExp
-                _ -> return $ AIdt simplifiedLExp
-        _ -> return $ AIdt simplifiedLExp
-
-simplifyLExp :: LExpFO -> Simplified LExpFO
-... recursively simplify other cases of LExp ...
-simplifyLExp (LRead state' toRead') = do
-    state <- simplifyState state'
-    toRead <- simplifyLExp toRead'
-    case state of 
-        (Update nestedState toUpdate _) -> do
-            memComparison <- compareLExp toRead toUpdate
-            case memComparison of
-                MemNotEq -> update $ LRead nestedState toRead 
-                _ -> return $ LRead state toRead
-        _ -> return $ LRead state toRead
-
 simplifyState :: State -> Simplified State
-simplifyState (Update state lExp aExp) = do
-    simplifiedState <- Update <$> simplifyState state <*> simplifyLExp lExp <*> simplifyAExp aExp
-    simplifyState' simplifiedState 
-simplifyState atomic = return atomic    
-simplifyState' :: State -> Simplified State
-simplifyState'  original@(Update (Update s l1 _) l2 w) = do
+simplifyState original@(Update (Update s l1 _) l2 w) = do
     memComparison <- compareLExp l1 l2
     case memComparison of
         MemEq -> update $ Update s l2 w
-        _ -> return original
-simplifyState' original = return original
+        _ -> simplifyState' original
+simplifyState s = simplifyState' s
+
+simplifyAExp :: AExpFO -> Simplified AExpFO
+simplifyAExp original@(AIdt (LRead (Update state toUpdate aExp) toRead)) = do
+    memComparison <- compareLExp toRead toUpdate
+    case memComparison of
+        MemEq -> update aExp
+        _ -> simplifyAExp' original
+simplifyAExp a = simplifyAExp' a
+
+simplifyLExp :: LExpFO -> Simplified LExpFO
+simplifyLExp original@(LRead (Update state toUpdate _) toRead) = do
+    memComparison <- compareLExp toRead toUpdate
+    case memComparison of
+        MemNotEq -> update $ LRead state toRead 
+        _ -> simplifyLExp' original
+simplifyLExp l = simplifyLExp' l
 \end{lstlisting}
+
+\texttt{simplifyState'}, \texttt{simplifyAExp'}, and \texttt{simplifyLExp'} are not shown in the listing, as they just recursively descend the expression.
+The corresponding function to \texttt{simplifyBExp}, which starts simplification on the formula level has a special handling for implication. 
+Inequalities specified on the left hand side of an implication can be used to simplify the right hand side of the same implication as described in section \ref{memory_models}.
+For this purpose the context used to simplify the right hand side is enriched with the inequalities that were found in the left hand side, which is depicted in Listing \ref{lst:predefined}.
+
+\begin{lstlisting}[style=c0, caption=searching for predefined inequalities, label=lst:predefined]
+simplifyBExp :: BExpFO -> Simplified BExpFO
+simplifyBExp (BBinExp op l r) = do
+    updatedL <- simplifyBExp l
+    let lhsInequalities = if op == Implies 
+            then findInequalities updatedL 
+            else Set.empty
+    updatedR <- local (addInequalities lhsInequalities) $ simplifyBExp r
+    return $ BBinExp op updatedL updatedR
+... other cases of simplifyBExp: recursively simplify BExp ...
+
+findInequalities :: BExpFO -> Set Inequality
+findInequalities (BComp NotEqual (AIdt l1) (AIdt l2)) = 
+    Set.singleton $ notEqual l1 l2
+findInequalities (BBinExp And fo1 fo2) = Set.union (findInequalities fo1) (findInequalities fo2)
+findInequalities _ = Set.empty
+\end{lstlisting}
+
+The search for inequalities is again implemented as a simple heurisitc only.
+Inequalities are found if they are either specified on the top level of the formula, or are part of a (possibly nested) conjunction.
 
 \section{Limitations}
 
