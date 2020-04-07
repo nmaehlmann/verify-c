@@ -238,7 +238,7 @@ data LExp l m where
 As parts of \texttt{AExp}s they are also parameterized with the type of logic and memory model.
 Identifiers and array and struct accessors are available for every combination of parameters.
 Similar to the address operator, the dereferencing operator (\texttt{*}) is only available in the \texttt{Plain} memory model.
-The \texttt{LRead} \texttt{LExp} is the core of the \texttt{Refs} memory model on which we will go into more detail in the next section.
+The \texttt{LRead} \texttt{LExp} is the core of the \texttt{Refs} memory model on which will be explained in more detail in the next section.
 
 
 \subsection{Memory Models}
@@ -248,7 +248,7 @@ In the axiomatic model, each LExpression (except \texttt{LRead}) is assigned a m
 The actual value is obtained by looking up the memory address in a program state:
 \[ read(\sigma, l) \]
 Reads are modelled by the \texttt{LRead} LExpression.
-Assigning a value to an address is creates an updated a state:
+Assigning a value to an address is creates an updated state:
 \[ \sigma_2 = update(\sigma_1, l, v) \]
 
 This is modelled by the \texttt{State} type shown in Listing \ref{lst:state}.
@@ -259,7 +259,7 @@ data State
     | Update State (LExp FO Refs) (AExp FO Refs)
 \end{lstlisting}
 
-Using this axiomatic model, LExpressions, Referencing and Dererferncing can be treated uniformly:
+Using this axiomatic model, LExpressions, Referencing and Dereferncing can be treated uniformly:
 
 \[ \texttt{a}\ \hat{=}\ read(\sigma, a) \]
 \[ \texttt{\&a}\ \hat{=}\ a \]
@@ -268,10 +268,11 @@ Using this axiomatic model, LExpressions, Referencing and Dererferncing can be t
 Often programs assign a lot of values which leads to deeply nested states, for example:
 \[ update(update(update(\sigma, l_1, v_1), l_2, v_2), l_3, v_3) \]
 The situation gets worse, when references are involved because dereferencing an LExpression doubles the amount of states. 
-To keep state predicates small the following two simplification rules are introduced:
+To keep the states small the following simplification rules are introduced:
 
-\[ S1: l_1 = l_2 \Rightarrow read(update(\sigma, l_2 , v), l_1) = v \]
-\[ S2: l_1 \neq l_2 \Rightarrow read(update(\sigma, l_2 , v), l_1) = read(\sigma, l_1 , v) \]
+\[ l_1 = l_2 \Rightarrow update(update(\sigma, l_2 , v_2), l_1, v_1) = update(\sigma, l_1 , v_1)\]
+\[ l_1 = l_2 \Rightarrow read(update(\sigma, l_2 , v), l_1) = v \]
+\[ l_1 \neq l_2 \Rightarrow read(update(\sigma, l_2 , v), l_1) = read(\sigma, l_1 , v) \]
 
 To apply these simplifications it is crucial to decide whether or not two LExpressions are equal.
 This however is not always possible.
@@ -302,12 +303,90 @@ The following heurisitc comparison algorithm was implemented in the module \text
     cmpA(a,b)= & Undecidable &  & \text{otherwise}
 \end{align*}
 
-$cmp$ compares two LExpressions and returns $Eq$ when two $LExpression$ evaluate to the same memory address.
-$cmpA$ is used to compare array indices and returns $Eq$ when two two arithmetic expressions evaluate to the same integer.
-$a \neq b$ is predefined if it appears in a precondition. 
+$cmp$ compares two LExpressions and should return $Eq$ if two $LExpression$ evaluate to the same memory address.
+$cmpA$ is used to compare array indices and should return $Eq$ if two arithmetic expressions evaluate to the same integer.
+$a \neq b$ is a predefined inequality in the right hand side of an implicication if $a \neq b$ is true in the left hand side of that implication. 
 $a$ was just initialized if the previous statement is the declaration of $a$. 
 In this case it is assumed, that the operating system assigned a fresh memory address to $a$.
-Both, the predefined inequalities and the set of freshly initialized identifiers are passed to the function as a context.
+Both, the predefined inequalities and the set of just initialized identifiers have to be passed to the functions as a context.
+
+\subsection{Simplification}
+With the simplification rules and comparison function in place the simplification algorithm can be implemented.
+Applying one simplification rule to a logical formula can lead to the opportunity to apply another one, leading to an expression collapsing step by step.
+Therefore the simplificiation algorithm has to run repeatedly until no further simplifications are possible.
+To conveniently keep track whether a simplification has happend, or the result remained unchanged a custom \texttt{Updated} monad shown in \ref{lst:updated} is introduced:
+
+\begin{lstlisting}[style=c0, caption=the Updated monad, label=lst:updated]
+data Updated a = Updated a | Unchanged a
+
+instance Monad Updated where
+    return a = Unchanged a
+    (Updated a) >>= f = Updated $ unwrap $ f a
+    (Unchanged a) >>= f = f a
+
+unwrap :: Updated a -> a
+unwrap (Updated a) = a
+unwrap (Unchanged a) = a
+\end{lstlisting}
+
+If an \texttt{Updated} value is composed, the result is also \texttt{Updated}.
+As previously presented, the comparison algorithm for LExpressions requires a context in which predefined inequalities and local variables can be looked up.
+This context is made accessible by wrapping the \texttt{Updated} monad into a Reader monad, which carries the required information.
+The obtained nested monad is aliased as \texttt{Simplified} and presented in Listing \ref{lst:simplified}.
+
+\begin{lstlisting}[style=c0, caption=the Simplified monad, label=lst:simplified]
+type Simplified = ReaderT SimplificationCtx Updated
+
+data SimplificationCtx = SimplificationCtx 
+    { inequalities :: Set Inequality
+    , localVars :: Set (LExp FO Refs)
+    }
+    
+type Inequality = Set (LExp FO Refs)
+\end{lstlisting}
+
+The simplification algorithm can now be implemented as a set of functions which recursively traverse and simplify a \texttt{BExp}.
+The implementation of each of the three simplification rules is shown in Listing \ref{lst:simplification}
+
+\begin{lstlisting}[style=c0, caption=implementation of the simplification rules, label=lst:simplification]
+simplifyAExpFO :: AExpFO -> Simplified AExpFO
+... recursively simplify other cases of AExp ...
+simplifyAExpFO (AIdt l) = do
+    simplifiedLExp <- simplifyLExp l
+    case simplifiedLExp of 
+        LRead (Update state lExp aExp) toRead -> do
+            memComparison <- compareLExp toRead lExp
+            case memComparison of
+                MemEq -> update aExp
+                _ -> return $ AIdt simplifiedLExp
+        _ -> return $ AIdt simplifiedLExp
+
+simplifyLExp :: LExpFO -> Simplified LExpFO
+... recursively simplify other cases of LExp ...
+simplifyLExp (LRead state' toRead') = do
+    state <- simplifyState state'
+    toRead <- simplifyLExp toRead'
+    case state of 
+        (Update nestedState toUpdate _) -> do
+            memComparison <- compareLExp toRead toUpdate
+            case memComparison of
+                MemNotEq -> update $ LRead nestedState toRead 
+                _ -> return $ LRead state toRead
+        _ -> return $ LRead state toRead
+
+simplifyState :: State -> Simplified State
+simplifyState (Update state lExp aExp) = do
+    simplifiedState <- Update <$> simplifyState state <*> simplifyLExp lExp <*> simplifyAExpFO aExp
+    simplifyState' simplifiedState 
+simplifyState atomic = return atomic    
+simplifyState' :: State -> Simplified State
+simplifyState'  original@(Update (Update s l1 _) l2 w) = do
+    memComparison <- compareLExp l1 l2
+    case memComparison of
+        MemEq -> update $ Update s l2 w
+        _ -> return original
+simplifyState' original = return original
+\end{lstlisting}
 
 \section{Limitations}
 

@@ -11,7 +11,6 @@ import Memory.Eq
 findInequalities :: BExpFO -> Set Inequality
 findInequalities (BComp NotEqual (AIdt l1) (AIdt l2)) = Set.singleton $ notEqual l1 l2
 findInequalities (BBinExp And fo1 fo2) = Set.union (findInequalities fo1) (findInequalities fo2)
-findInequalities (BBinExp Implies fo _) = findInequalities fo
 findInequalities _ = Set.empty
 
 simplify :: BExpFO -> BExpFO
@@ -20,12 +19,15 @@ simplify = simplifyLocalVars Set.empty
 simplifyLocalVars :: Set LExpFO -> BExpFO -> BExpFO
 simplifyLocalVars locals a =
     let ctx = SimplificationCtx 
-            { inequalities = findInequalities a
+            { inequalities = Set.empty
             , localVars = locals
             }
     in  case runReaderT (simplifyBExpFO a) ctx of
             Updated updated -> simplifyLocalVars locals updated
             Unchanged unchanged -> unchanged
+
+addInequalities :: Set Inequality -> SimplificationCtx -> SimplificationCtx
+addInequalities ineqs ctx = ctx {inequalities = Set.union ineqs $ inequalities ctx}
 
 simplifyBExpFO :: BExpFO -> Simplified BExpFO
 simplifyBExpFO BTrue = return BTrue
@@ -37,7 +39,10 @@ simplifyBExpFO (BComp op l r) = do
 simplifyBExpFO (BNeg fo) = BNeg <$> simplifyBExpFO fo
 simplifyBExpFO (BBinExp op l r) = do
     updatedL <- simplifyBExpFO l
-    updatedR <- simplifyBExpFO r
+    let lhsInequalities = if op == Implies 
+            then findInequalities updatedL 
+            else Set.empty
+    updatedR <- local (addInequalities lhsInequalities) $ simplifyBExpFO r
     return $ BBinExp op updatedL updatedR
 simplifyBExpFO (BForall i fo) = BForall i <$> simplifyBExpFO fo
 simplifyBExpFO (BExists i fo) = BExists i <$> simplifyBExpFO fo
@@ -51,16 +56,15 @@ simplifyAExpFO (ABinExp op l r) = do
     updatedR <- simplifyAExpFO r
     return $ ABinExp op updatedL updatedR
 simplifyAExpFO (AFunCall funName funArgs) = AFunCall funName <$> mapM simplifyAExpFO funArgs
-simplifyAExpFO (AIdt l) = do
-    simplifiedLExp <- simplifyLExp l
-    case simplifiedLExp of 
-        LRead (Update state lExp aExp) toRead -> do
-            memComparison <- compareLExp toRead lExp
+simplifyAExpFO (AIdt lExp') = do
+    lExp <- simplifyLExp lExp'
+    case lExp of 
+        LRead (Update state toUpdate aExp) toRead -> do
+            memComparison <- compareLExp toRead toUpdate
             case memComparison of
                 MemEq -> update aExp
-                MemNotEq -> update $ AIdt $ LRead state toRead 
-                MemUndecidable -> return $ AIdt simplifiedLExp
-        _ -> return $ AIdt simplifiedLExp
+                _ -> return $ AIdt lExp
+        _ -> return $ AIdt lExp
 
 simplifyLExp :: LExpFO -> Simplified LExpFO
 simplifyLExp (LIdt i) = return $ LIdt i
@@ -84,10 +88,8 @@ simplifyLExp (LRead state' toRead') = do
 
 simplifyState :: State -> Simplified State
 simplifyState (Update state lExp aExp) = do
-    simplifiedState <- simplifyState state
-    simplifiedLExp <- simplifyLExp lExp
-    simplifiedAExp <- simplifyAExpFO aExp
-    simplifyState' (Update simplifiedState simplifiedLExp simplifiedAExp)
+    simplifiedState <- Update <$> simplifyState state <*> simplifyLExp lExp <*> simplifyAExpFO aExp
+    simplifyState' simplifiedState 
 simplifyState atomic = return atomic    
 simplifyState' :: State -> Simplified State
 simplifyState'  original@(Update (Update s l1 _) l2 w) = do

@@ -4,14 +4,14 @@ import Data.Set (Set)
 import qualified Data.Set as Set
 import Logic.FO
 
-type Inequality = Set LExpFO
-
 type Simplified = ReaderT SimplificationCtx Updated
 
 data SimplificationCtx = SimplificationCtx 
     { inequalities :: Set Inequality
     , localVars :: Set LExpFO
     }
+
+type Inequality = Set LExpFO
 
 data Updated a = Updated a | Unchanged a deriving (Eq, Show)
 
