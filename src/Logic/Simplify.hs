@@ -49,52 +49,52 @@ simplifyBExpFO (BExists i fo) = BExists i <$> simplifyBExpFO fo
 simplifyBExpFO (BPredicate i fos) = BPredicate i <$> mapM simplifyAExpFO fos 
 
 simplifyAExpFO :: AExpFO -> Simplified AExpFO
-simplifyAExpFO (ALit a) = return $ ALit a
-simplifyAExpFO (ALogVar v) = return $ ALogVar v
-simplifyAExpFO (ABinExp op l r) = do
+simplifyAExpFO original@(AIdt (LRead (Update state toUpdate aExp) toRead)) = do
+    memComparison <- compareLExp toRead toUpdate
+    case memComparison of
+        MemEq -> update aExp
+        _ -> simplifyAExpFO' original
+simplifyAExpFO a = simplifyAExpFO' a
+        
+simplifyAExpFO' :: AExpFO -> Simplified AExpFO
+simplifyAExpFO' (ALit a) = return $ ALit a
+simplifyAExpFO' (ALogVar v) = return $ ALogVar v
+simplifyAExpFO' (ABinExp op l r) = do
     updatedL <- simplifyAExpFO l
     updatedR <- simplifyAExpFO r
     return $ ABinExp op updatedL updatedR
-simplifyAExpFO (AFunCall funName funArgs) = AFunCall funName <$> mapM simplifyAExpFO funArgs
-simplifyAExpFO (AIdt lExp') = do
-    lExp <- simplifyLExp lExp'
-    case lExp of 
-        LRead (Update state toUpdate aExp) toRead -> do
-            memComparison <- compareLExp toRead toUpdate
-            case memComparison of
-                MemEq -> update aExp
-                _ -> return $ AIdt lExp
-        _ -> return $ AIdt lExp
+simplifyAExpFO' (AFunCall funName funArgs) = AFunCall funName <$> mapM simplifyAExpFO funArgs
+simplifyAExpFO' (AIdt lExp) = AIdt <$> simplifyLExp lExp
 
 simplifyLExp :: LExpFO -> Simplified LExpFO
-simplifyLExp (LIdt i) = return $ LIdt i
-simplifyLExp (LArray name idx) = do
+simplifyLExp original@(LRead (Update state toUpdate _) toRead) = do
+    memComparison <- compareLExp toRead toUpdate
+    case memComparison of
+        MemNotEq -> update $ LRead state toRead 
+        _ -> simplifyLExp' original
+simplifyLExp l = simplifyLExp' l
+
+simplifyLExp' :: LExpFO -> Simplified LExpFO
+simplifyLExp' (LIdt i) = return $ LIdt i
+simplifyLExp' (LArray name idx) = do
     newName <- simplifyLExp name
     newIdx <- simplifyAExpFO idx
     return $ LArray newName newIdx
-simplifyLExp (LStructurePart struct part) = do
+simplifyLExp' (LStructurePart struct part) = do
     newStruct <- simplifyLExp struct
     return $ LStructurePart newStruct part
-simplifyLExp (LRead state' toRead') = do
-    state <- simplifyState state'
-    toRead <- simplifyLExp toRead'
-    case state of 
-        (Update nestedState toUpdate _) -> do
-            memComparison <- compareLExp toRead toUpdate
-            case memComparison of
-                MemNotEq -> update $ LRead nestedState toRead 
-                _ -> return $ LRead state toRead
-        _ -> return $ LRead state toRead
+simplifyLExp' (LRead state toRead) = 
+    LRead <$> simplifyState state <*> simplifyLExp toRead
 
 simplifyState :: State -> Simplified State
-simplifyState (Update state lExp aExp) = do
-    simplifiedState <- Update <$> simplifyState state <*> simplifyLExp lExp <*> simplifyAExpFO aExp
-    simplifyState' simplifiedState 
-simplifyState atomic = return atomic    
-simplifyState' :: State -> Simplified State
-simplifyState'  original@(Update (Update s l1 _) l2 w) = do
+simplifyState original@(Update (Update s l1 _) l2 w) = do
     memComparison <- compareLExp l1 l2
     case memComparison of
         MemEq -> update $ Update s l2 w
-        _ -> return original
-simplifyState' original = return original
+        _ -> simplifyState' original
+simplifyState s = simplifyState' s
+
+simplifyState' :: State -> Simplified State
+simplifyState' (Atomic name) = return $ Atomic name
+simplifyState' (Update state lExp aExp) =
+    Update <$> simplifyState state <*> simplifyLExp lExp <*> simplifyAExpFO aExp
