@@ -35,13 +35,13 @@ spec = do
             let foSimplified = BComp Equal (ALit 6) (ALit 0)
             simplify fo `shouldBe` foSimplified
 
-    describe "simplifyAExpFO" $ do
+    describe "simplifyAExp" $ do
         let x = LIdt $ Idt "x"
         let y = LIdt $ Idt "y"
 
         it "simplifies unneccessary updates" $ do
             let aExp = AIdt (LRead (Update sigma y (ALit 6)) x)
             let aExpSimplified = AIdt (LRead sigma x)
-            runReaderT (simplifyAExpFO aExp) emptySimplificationCtx `shouldBe` (Updated aExpSimplified)
+            runReaderT (simplifyAExp aExp) emptySimplificationCtx `shouldBe` (Updated aExpSimplified)
 
 emptySimplificationCtx = SimplificationCtx { inequalities = Set.empty, localVars = Set.empty}

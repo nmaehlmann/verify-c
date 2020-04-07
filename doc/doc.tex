@@ -349,9 +349,9 @@ The simplification algorithm can now be implemented as a set of functions which 
 The implementation of each of the three simplification rules is shown in Listing \ref{lst:simplification}
 
 \begin{lstlisting}[style=c0, caption=implementation of the simplification rules, label=lst:simplification]
-simplifyAExpFO :: AExpFO -> Simplified AExpFO
+simplifyAExp :: AExpFO -> Simplified AExpFO
 ... recursively simplify other cases of AExp ...
-simplifyAExpFO (AIdt l) = do
+simplifyAExp (AIdt l) = do
     simplifiedLExp <- simplifyLExp l
     case simplifiedLExp of 
         LRead (Update state lExp aExp) toRead -> do
@@ -376,7 +376,7 @@ simplifyLExp (LRead state' toRead') = do
 
 simplifyState :: State -> Simplified State
 simplifyState (Update state lExp aExp) = do
-    simplifiedState <- Update <$> simplifyState state <*> simplifyLExp lExp <*> simplifyAExpFO aExp
+    simplifiedState <- Update <$> simplifyState state <*> simplifyLExp lExp <*> simplifyAExp aExp
     simplifyState' simplifiedState 
 simplifyState atomic = return atomic    
 simplifyState' :: State -> Simplified State
