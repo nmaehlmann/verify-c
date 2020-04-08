@@ -266,7 +266,7 @@ Using this axiomatic model, LExpressions, Referencing and Dereferncing can be tr
 \[ \texttt{\&a}\ \hat{=}\ a \]
 \[ \texttt{*a}\ \hat{=}\ read(\sigma, read(\sigma, a))\]
 
-Often programs assign a lot of values which leads to deeply nested states, for example:
+Often programs contain multiple assignments which leads to deeply nested states, for example:
 \[ update(update(update(\sigma, l_1, v_1), l_2, v_2), l_3, v_3) \]
 The situation gets worse, when references are involved because dereferencing an LExpression doubles the amount of states. 
 To keep the states small the following simplification rules are introduced:
@@ -404,6 +404,70 @@ findInequalities _ = Set.empty
 
 The search for inequalities is again implemented as a simple heurisitc only.
 Inequalities are found if they are either specified on the top level of the formula, or are part of a (possibly nested) conjunction.
+
+\subsection{Statements}
+
+The program that should be verified into a sequence of statements.
+The type \texttt{Stmt} which models a statment in \verifyc is depicted in Listing \ref{lst:stmt}.
+
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[style=c0, caption=Stmt, label=lst:stmt]
+type BExp' l = BExp l Plain
+type AExp' l = AExp l Plain
+type LExp' l = LExp l Plain
+    
+data Stmt 
+|   = Empty
+    | Declaration Idt
+    | Assignment (LExp' C0) (AExp' C0)
+    | While (BExp' C0) (BExp' FO) Stmt LineNo
+    | ITE (BExp' C0) Stmt Stmt
+    | FunCall (Maybe (LExp' C0)) Idt [AExp' C0] LineNo
+    | Assertion (BExp'  FO) LineNo
+    | Return (Maybe (AExp' C0))
+    | Seq Stmt Stmt
+\end{lstlisting}
+\end{minipage}
+
+Since the statements are obtained directly from the parser, all statement use the \texttt{Plain} memory model. 
+\verifyc supports the following statements:
+
+\subsubsection*{Empty}
+Empty statements have no effect.
+
+\subsubsection*{Declarations}
+Declarations declare the memory address of an identifiers as fresh.
+
+\subsubsection*{Assignments}
+Assignments which also act as declarations like \texttt{int i = 0;} are split into a declaration and an assignment by the parser.
+
+\subsubsection*{While Loops}
+While loops consist of a \texttt{C0} logic condition, an \texttt{FO} logic invariant and a body.
+The current line number is included for logging purposes.
+
+\subsubsection*{If-Then-Else Branches}
+If-Then-Else branches consist of a \texttt{C0} logic condition, a true branch, and a false branch.
+If conditions without an else branch are parsed as If-Then-Else branches with an empty false branch.
+
+\subsubsection*{Function Calls}
+Function Calls consisting of the variable the result of the function is assigned to, the function name, and a list of function arguments. The current line number is included for logging purposes. Since some functions do not return a result, the assigned variable is optional.
+Function calls are modelled as separate statements instead of an arithmetic expressions in order to avoid dealing with ambiguous orders of side effects in expressions like \texttt{n = inc(\&n) + inc(\&n);}.
+Function calls which also act as declarations are split into a declaration and a function call by the parser.
+
+\subsubsection*{Assertions}
+Assertions modify the current precondition.
+
+\subsubsection*{Return Statements}
+Return statements which may or may not return a value.
+
+\subsubsection*{Sequences}
+Statments can be combined into sequences.
+
+\subsection{Applying the Floyd-Hoare Logic}
+
+The Floyd-Hoare logic was intensively discussed in the \emph{Korrekte Software: Grundlagen und Methoden} course. 
+Given a postcondition for every statement an approximated weakest precondition is calculated.
+Starting at the last statement, the precondition of the first statement 
 
 \section{Limitations}
 
