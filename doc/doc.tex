@@ -417,7 +417,7 @@ type AExp' l = AExp l Plain
 type LExp' l = LExp l Plain
     
 data Stmt 
-|   = Empty
+    = Empty
     | Declaration Idt
     | Assignment (LExp' C0) (AExp' C0)
     | While (BExp' C0) (BExp' FO) Stmt LineNo
@@ -466,12 +466,12 @@ Statments can be combined into sequences.
 \subsection{Applying the Floyd-Hoare Logic}
 
 The Floyd-Hoare logic was intensively discussed in the \emph{Korrekte Software: Grundlagen und Methoden} course. 
-Given a postcondition, for every statement an approximated weakest precondition is calculated.
+Given a postcondition, for every statement an approximate weakest precondition ($awp$) is calculated.
 Traversing the statements in reverse order starting with the programs last statement, the precondition of a statement is the postcondition of the next statement.
 Some statements like the while loop have a predetermined postcondition.
 In this case a verification condition is generated which states that the predetermined postcondition implies the precondition of the following statement.
 To prove the correctness of a program every generated verification condition has to be proven.
-The following functions are used to calculate the verification conditions:
+The following functions are used to calculate the verification conditions of statements:
 
 \begin{align*}
     awp(\texttt{Empty},Q,Q_{R})= & Q\\
@@ -494,6 +494,34 @@ The following functions are used to calculate the verification conditions:
     wvc(\texttt{FunCall r fun args},Q,Q_{R})= & post(\texttt{fun})[\texttt{args}/params(\texttt{fun})][\texttt{r}/\texttt{\textbackslash result}]\Rightarrow Q\\
     wvc(\texttt{Return r},Q,Q_{R})= & \emptyset
 \end{align*}
+
+$Q[a/b]$ is the formula $Q$ in which every occurence of $b$ has been replaced by $a$.
+If $a$ and $b$ are lists, a replacement is made for each element.
+$pre(f)$, $post(f)$, and $params(f)$ are the precondition, postcondition, and parameter list of the function $f$.
+The implementation of $awp$ and $wvc$ can be found in the module \texttt{VC} with some additions.
+
+\begin{itemize}
+    \item The generated result of each $awp$ call is simplified.
+    \item Every time a formula, arithemtic expression, or LExpression is used to calculate the $awp$ or $wvc$ of a statement, its logic type is converted to \texttt{FO} and its memory model is converted to \texttt{Refs}.
+    The GADTs that are used to model the different types of expressions ensure at compile time that the correct format is used.
+    \item The generated verification are enriched with debug informations like line numbers.
+\end{itemize}
+
+These details are omitted in the definitions above to keep them small, as well as the line number which are part of some statements.
+
+Based on the $wvc$ and $awp$ functions, verification conditions can be calculated separatly for each function of the program as follows:
+
+\[wvcF(f) = \{pre(f)\Rightarrow awp(body(f), false, post(f))\} \]
+\[\cup\ wvc(body(f), false, post(f))\]
+
+The Floyd-Hoare logic rules implemented in \verifyc follow the rules presented in 
+\emph{Korrekte Software: Grundlagen und Methoden} course closely but the following changes were made:
+
+\begin{itemize}
+    \item Declarations were added as separate statements to enable better simplifcation.
+    \item Function calls produce a verification condition.
+    \item The \texttt{\textbackslash old(x)} syntax was dropped. Users are expected to bind variables to logical variables in the precondition instead.
+\end{itemize}
 
 
 \section{Limitations}

@@ -39,7 +39,7 @@ verifyFunction f = do
     let postcondition = liftMemory $ funDefPostcond f
     let name = funDefName f
     let localArgs = Set.fromList $ fmap (LIdt . idtFromDecl) $ funDefArgs f
-    awpBody <- simplifyLocalVars localArgs <$> awp (funDefBody f) postcondition postcondition
+    awpBody <- simplifyLocalVars localArgs <$> awp (funDefBody f) BFalse postcondition
     wvcs <- wvc (funDefBody f) BFalse postcondition
     let preconditionVC = VC (CPrecondition name) $ BBinExp Implies precondition awpBody
     return $ map vcSimplify $ preconditionVC : wvcs
