@@ -466,8 +466,35 @@ Statments can be combined into sequences.
 \subsection{Applying the Floyd-Hoare Logic}
 
 The Floyd-Hoare logic was intensively discussed in the \emph{Korrekte Software: Grundlagen und Methoden} course. 
-Given a postcondition for every statement an approximated weakest precondition is calculated.
-Starting at the last statement, the precondition of the first statement 
+Given a postcondition, for every statement an approximated weakest precondition is calculated.
+Traversing the statements in reverse order starting with the programs last statement, the precondition of a statement is the postcondition of the next statement.
+Some statements like the while loop have a predetermined postcondition.
+In this case a verification condition is generated which states that the predetermined postcondition implies the precondition of the following statement.
+To prove the correctness of a program every generated verification condition has to be proven.
+The following functions are used to calculate the verification conditions:
+
+\begin{align*}
+    awp(\texttt{Empty},Q,Q_{R})= & Q\\
+    awp(\texttt{Assertion a},Q,Q_{R})= & \texttt{a}\\
+    awp(\texttt{ITE c t f},Q,Q_{R})= & (awp(\texttt{t},Q,Q_{R})\wedge\texttt{c})\vee(awp(\texttt{f},Q,Q_{R})\wedge\lnot\texttt{c})\\
+    awp(\texttt{While c i b},Q,Q_{R})= & \texttt{i}\\
+    awp(\texttt{Seq s1 s2},Q,Q_{R})= & awp(\texttt{s1},awp(\texttt{s2},Q,Q_{R}),Q_{R})\\
+    awp(\texttt{Assignment l e},Q,Q_{R})= & Q[update(\sigma,l,e)/\sigma]\\
+    awp(\texttt{Declaration i},Q,Q_{R})= & \text{simplify }Q\text{ with }\texttt{i}\neq\text{any other memory address}\\
+    awp(\texttt{FunCall r fun args},Q,Q_{R})= & pre(\texttt{fun})[\texttt{args}/params(\texttt{fun})]\\
+    awp(\texttt{Return r},Q,Q_{R})= & Q_{R}[\texttt{r}/\texttt{\textbackslash result}]\\
+    \\
+    wvc(\texttt{Empty},Q,Q_{R})= & \emptyset\\
+    wvc(\texttt{Assertion a},Q,Q_{R})= & \{\texttt{a}\Rightarrow Q\}\\
+    wvc(\texttt{ITE c t f},Q,Q_{R})= & wvc(\texttt{t},Q,Q_{R})\cup wvc(\texttt{f},Q,Q_{R})\\
+    wvc(\texttt{While c i b},Q,Q_{R})= & \{\texttt{i}\wedge\texttt{b}\Rightarrow awp(\texttt{b},\texttt{i},Q_{R}),\texttt{i}\wedge\lnot\texttt{b}\Rightarrow Q\}\cup wvc(\texttt{b},\texttt{i},Q_{R})\\
+    wvc(\texttt{Seq s1 s2},Q,Q_{R})= & wvc(\texttt{s1},awp(\texttt{s2},Q,Q_{R}),Q_{R})\cup wvc(\texttt{s2},Q,Q_{R})\\
+    wvc(\texttt{Assignment l e},Q,Q_{R})= & \emptyset\\
+    wvc(\texttt{Declaration i},Q,Q_{R})= & \emptyset\\
+    wvc(\texttt{FunCall r fun args},Q,Q_{R})= & post(\texttt{fun})[\texttt{args}/params(\texttt{fun})][\texttt{r}/\texttt{\textbackslash result}]\Rightarrow Q\\
+    wvc(\texttt{Return r},Q,Q_{R})= & \emptyset
+\end{align*}
+
 
 \section{Limitations}
 
