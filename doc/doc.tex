@@ -54,6 +54,7 @@ It can be downloaded at \url{https://github.com/Z3Prover/z3}.
   
 
 \section{Usage}
+\label{usage}
 \verifyc parses program code written in a subset of C.
 Each function is annotated with logical pre- and postconditions, which specify the contract of the function.
 Based on the parsed program it generates a set of verification conditions.
@@ -514,15 +515,57 @@ Based on the $wvc$ and $awp$ functions, verification conditions can be calculate
 \[wvcF(f) = \{pre(f)\Rightarrow awp(body(f), false, post(f))\} \]
 \[\cup\ wvc(body(f), false, post(f))\]
 
-The Floyd-Hoare logic rules implemented in \verifyc follow the rules presented in 
+The Floyd-Hoare logic rules implemented in \verifyc follow the rules presented in the 
 \emph{Korrekte Software: Grundlagen und Methoden} course closely but the following changes were made:
 
 \begin{itemize}
-    \item Declarations were added as separate statements to enable better simplifcation.
+    \item Declarations were added as separate statements to enable better simplification.
     \item Function calls produce a verification condition.
-    \item The \texttt{\textbackslash old(x)} syntax was dropped. Users are expected to bind variables to logical variables in the precondition instead.
+    \item The \texttt{\textbackslash old(x)} syntax was dropped. Users are expected to bind values to logical variables in the precondition instead.
 \end{itemize}
 
+\subsection{SMT Export}
+The generated verification conditions have to be proven in order to show the correctness of a program.
+This task is tedious.
+While the satisfiability of first order logic is not decideable in general, often formulas can be proven by a theorem prover.
+The \verifyc exports the generated verfication conditions into the SMT-LIB standard and runs the \zthree solver in order to automate the profs.
+While this feature is only rudimentarily implemented it already usable.
+In order to show how the export works Listing \ref{lst:wvcfac} shows one of the verification condition of the faculty program which was shown in section \ref{usage} in Listing \ref{lst:faculty}.
+Exports of all verification conditions are located in the \texttt{.\textbackslash target} folder created by \verifyc.
+
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[style=c0, caption=an exported verification condition, label=lst:wvcfac]
+(declare-fun read_array (Int Int) Int)
+(declare-fun deref (Int) Int)
+(declare-fun c () Int)
+(declare-fun n () Int)
+(declare-fun p () Int)
+(declare-fun fac (Int) Int)
+(assert (= (fac 0) 1))
+(assert (forall ((nn Int)) (implies (< 0 nn) (= (fac nn) (* nn (fac (- nn 1)))))))
+(assert (not (implies (and (and (and (= p (fac (- c 1))) (<= c (+ n 1))) (> c 0)) (<= c n)) (and (and (= (* p c) (fac (- (+ c 1) 1))) (<= (+ c 1) (+ n 1))) (> (+ c 1) 0)))))
+(check-sat)
+\end{lstlisting}
+\end{minipage}
+
+l.1 and l.2 of listing \ref{lst:wvcfac} are predefined functions which are contained in every export.
+\texttt{read\_array} is a function which simulates array access. It takes two integer arguments.
+The first is interpreted as the memory address of an array, the second is an index.
+The return value is interpreted of the value of specified array at the specified index.
+\texttt{deref} is a function which simulates dereferencing.
+It takes one integer argument, which is interpreted as a memory address.
+The return value is interpreted as the value which is obtained by reading the memory at that address.
+
+l.3 - l.5 are the unbound local variables which appear in the verification condition that should be exported.
+The are modelled as constant functions which do not take any input and return the value of that variable.
+
+l.7 - l.8 contains the environment which is read from the optional \texttt{.env} accompanying the program which should be proven.
+The environment should contain custom functions and predicates as well as structure accessors.
+
+l.9 contains the negated exported verification condition.
+
+l.10 tells the smt solver to start the prof. 
+If the solver can prove that there is no model for the negated verification condition (\texttt{unsat}), then the verification condition is valid and proven.
 
 \section{Limitations}
 
