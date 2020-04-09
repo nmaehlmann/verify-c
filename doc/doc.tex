@@ -38,7 +38,7 @@
 \section{Introduction}
 This document explains the usage and inner workings of \verifyc. 
 \verifyc is a command line tool which verifies programs written in a subset of C. 
-The tool is based on Floyd-Hoare logic, which was intensivley discussed in the course \emph{Korrekte Software: Grundlagen und Methoden} at the University of Bremen held by Serge Autexier and Christoph Lüth in the summer semester 2019. \verifyc is an educational implementation of the discussed techinques aimed to deepen their understanding and explore which challenges arise when formally verifying software. 
+The tool is based on Floyd-Hoare logic, which was intensively discussed in the course \emph{Korrekte Software: Grundlagen und Methoden} at the University of Bremen held by Serge Autexier and Christoph Lüth in the summer semester 2019. \verifyc is an educational implementation of the discussed techniques aimed to deepen their understanding and explore which challenges arise when formally verifying software. 
 \verifyc is written in Haskell and the source code is available online at \url{https://github.com/nmaehlmann/verify-c}.
 
 \section{Installation}
@@ -76,7 +76,7 @@ Furthermore the while loop is annotated with an invariant (l.8).
 The invariant has to be satisfied before the while loop is entered as well as after each loop is completed.
 The specification of preconditions, postconditions and invariants is mandatory and missing specifications will result in a parser error.
 
-Additionally to the C source code \verifyc requires an envrionment file if custom functions or predicates are used in specifications. 
+Additionally to the C source code \verifyc requires an environment file if custom functions or predicates are used in specifications. 
 The function \texttt{fac} used in the precondition and in the invariant is such a custom function.
 It is specified in Listing \ref{lst:faculty_env}.
 
@@ -84,7 +84,7 @@ It is specified in Listing \ref{lst:faculty_env}.
 \lstinputlisting[style = c0, caption=faculty.env, label=lst:faculty_env]{../examples/faculty/faculty.env}
 \end{minipage}
 
-The specification of the envrionment is written in the SMT-LIB format and verbatim fed into the \zthree prover.
+The specification of the environment is written in the SMT-LIB format and verbatim fed into the \zthree prover.
 More information regarding the SMT-LIB language can be found online at \url{http://smtlib.cs.uiowa.edu/language.shtml}. In order to be found by \verifyc the environment has to have the same name as the source file but with an \texttt{.env} extension.
 With the environment in place the source code of the faculty function can now be verified by calling:
 
@@ -219,7 +219,7 @@ data AExp l m where
 
 As parts of \texttt{BExp}s they are also parameterized with the type of logic and memory model.
 Integer literals, variable names and binary calculations are supported for every combination of parameters.
-Lovgical variables and function calls as parts of an \texttt{AExp} require first order expressions, so they can only be used in for specification purposes. 
+Logical variables and function calls as parts of an \texttt{AExp} require first order expressions, so they can only be used in for specification purposes. 
 As part of the C program code function calls do not form an \texttt{AExp} but are treated as a separate statement.
 This limitation is further explained in section \ref{funcalls}.
 The address operator (\texttt{\&}) is transformed into an LExpression in the \texttt{Refs} memory model so it is only available in the \texttt{Plain} memory model.
@@ -261,7 +261,7 @@ data State
     | Update State (LExp FO Refs) (AExp FO Refs)
 \end{lstlisting}
 
-Using this axiomatic model, LExpressions, Referencing and Dereferncing can be treated uniformly:
+Using this axiomatic model, LExpressions, Referencing and Dereferencing can be treated uniformly:
 
 \[ \texttt{a}\ \hat{=}\ read(\sigma, a) \]
 \[ \texttt{\&a}\ \hat{=}\ a \]
@@ -282,7 +282,7 @@ Two references might point to the same address, or two array indices might have 
 \[ \texttt{*a} \stackrel{?}{=} \texttt{*b} \]
 \[ \texttt{a[i]} \stackrel{?}{=} \texttt{a[j]} \]
 
-The following heurisitc comparison algorithm was implemented in the module \texttt{Memory.Eq}:
+The following heuristic comparison algorithm was implemented in the module \texttt{Memory.Eq}:
 
 \begin{align*}
     cmp(a,a)= & Eq\\
@@ -307,7 +307,7 @@ The following heurisitc comparison algorithm was implemented in the module \text
 
 $cmp$ compares two LExpressions and should return $Eq$ if two $LExpression$ evaluate to the same memory address.
 $cmpA$ is used to compare array indices and should return $Eq$ if two arithmetic expressions evaluate to the same integer.
-$a \neq b$ is a predefined inequality in the right hand side of an implicication if $a \neq b$ is true in the left hand side of that implication. 
+$a \neq b$ is a predefined inequality in the right hand side of an implication if $a \neq b$ is true in the left hand side of that implication. 
 $a$ was just initialized if the previous statement is the declaration of $a$. 
 In this case it is assumed, that the operating system assigned a fresh memory address to $a$.
 Both, the predefined inequalities and the set of just initialized identifiers have to be passed to the functions as a context.
@@ -315,8 +315,8 @@ Both, the predefined inequalities and the set of just initialized identifiers ha
 \subsection{Simplification}
 With the simplification rules and comparison function in place the simplification algorithm can be implemented.
 Applying one simplification rule to a logical formula can lead to the opportunity to apply another one, leading to an expression collapsing step by step.
-Therefore the simplificiation algorithm has to run repeatedly until no further simplifications are possible.
-To conveniently keep track whether a simplification has happend, or the result remained unchanged a custom \texttt{Updated} monad shown in \ref{lst:updated} is introduced:
+Therefore the simplification algorithm has to run repeatedly until no further simplifications are possible.
+To conveniently keep track whether a simplification has happened, or the result remained unchanged a custom \texttt{Updated} monad shown in \ref{lst:updated} is introduced:
 
 \begin{lstlisting}[style=c0, caption=the Updated monad, label=lst:updated]
 data Updated a = Updated a | Unchanged a
@@ -403,13 +403,13 @@ findInequalities (BBinExp And fo1 fo2) = Set.union (findInequalities fo1) (findI
 findInequalities _ = Set.empty
 \end{lstlisting}
 
-The search for inequalities is again implemented as a simple heurisitc only.
+The search for inequalities is again implemented as a simple heuristic only.
 Inequalities are found if they are either specified on the top level of the formula, or are part of a (possibly nested) conjunction.
 
 \subsection{Statements}
 
 The program that should be verified into a sequence of statements.
-The type \texttt{Stmt} which models a statment in \verifyc is depicted in Listing \ref{lst:stmt}.
+The type \texttt{Stmt} which models a statement in \verifyc is depicted in Listing \ref{lst:stmt}.
 
 \begin{minipage}{\linewidth}
 \begin{lstlisting}[style=c0, caption=Stmt, label=lst:stmt]
@@ -462,7 +462,7 @@ Assertions modify the current precondition.
 Return statements which may or may not return a value.
 
 \subsubsection*{Sequences}
-Statments can be combined into sequences.
+Statements can be combined into sequences.
 
 \subsection{Applying the Floyd-Hoare Logic}
 
@@ -496,21 +496,21 @@ The following functions are used to calculate the verification conditions of sta
     wvc(\texttt{Return r},Q,Q_{R})= & \emptyset
 \end{align*}
 
-$Q[a/b]$ is the formula $Q$ in which every occurence of $b$ has been replaced by $a$.
+$Q[a/b]$ is the formula $Q$ in which every occurrence of $b$ has been replaced by $a$.
 If $a$ and $b$ are lists, a replacement is made for each element.
 $pre(f)$, $post(f)$, and $params(f)$ are the precondition, postcondition, and parameter list of the function $f$.
 The implementation of $awp$ and $wvc$ can be found in the module \texttt{VC} with some additions.
 
 \begin{itemize}
     \item The generated result of each $awp$ call is simplified.
-    \item Every time a formula, arithemtic expression, or LExpression is used to calculate the $awp$ or $wvc$ of a statement, its logic type is converted to \texttt{FO} and its memory model is converted to \texttt{Refs}.
+    \item Every time a formula, arithmetic expression, or LExpression is used to calculate the $awp$ or $wvc$ of a statement, its logic type is converted to \texttt{FO} and its memory model is converted to \texttt{Refs}.
     The GADTs that are used to model the different types of expressions ensure at compile time that the correct format is used.
-    \item The generated verification are enriched with debug informations like line numbers.
+    \item The generated verification are enriched with debug information like line numbers.
 \end{itemize}
 
 These details are omitted in the definitions above to keep them small, as well as the line number which are part of some statements.
 
-Based on the $wvc$ and $awp$ functions, verification conditions can be calculated separatly for each function of the program as follows:
+Based on the $wvc$ and $awp$ functions, verification conditions can be calculated separately for each function of the program as follows:
 
 \[wvcF(f) = \{pre(f)\Rightarrow awp(body(f), false, post(f))\} \]
 \[\cup\ wvc(body(f), false, post(f))\]
@@ -527,8 +527,8 @@ The Floyd-Hoare logic rules implemented in \verifyc follow the rules presented i
 \subsection{SMT Export}
 The generated verification conditions have to be proven in order to show the correctness of a program.
 This task is tedious.
-While the satisfiability of first order logic is not decideable in general, often formulas can be proven by a theorem prover.
-The \verifyc exports the generated verfication conditions into the SMT-LIB standard and runs the \zthree solver in order to automate the profs.
+While the satisfiability of first order logic is not decidable in general, often formulas can be proven by a theorem prover.
+The \verifyc exports the generated verification conditions into the SMT-LIB standard and runs the \zthree solver in order to automate the profs.
 While this feature is only rudimentarily implemented it already usable.
 In order to show how the export works Listing \ref{lst:wvcfac} shows one of the verification condition of the faculty program which was shown in section \ref{usage} in Listing \ref{lst:faculty}.
 Exports of all verification conditions are located in the \texttt{.\textbackslash target} folder created by \verifyc.
@@ -588,7 +588,7 @@ This section should list known limitations without being exhaustive.
 While the purpose of the Floyd-Hoare logic is to prove correctness of programs,
 there are some classes errors which cannot be found by this implementation, including:
 \begin{itemize}
-    \item nonterminating loops
+    \item non-terminating loops
     \item array index out of bounds errors
     \item overflows
 \end{itemize}
