@@ -557,23 +557,77 @@ It takes one integer argument, which is interpreted as a memory address.
 The return value is interpreted as the value which is obtained by reading the memory at that address.
 
 l.3 - l.5 are the unbound local variables which appear in the verification condition that should be exported.
-The are modelled as constant functions which do not take any input and return the value of that variable.
+They are modelled as constant functions which do not take any input and return the value of that variable.
 
 l.7 - l.8 contains the environment which is read from the optional \texttt{.env} accompanying the program which should be proven.
 The environment should contain custom functions and predicates as well as structure accessors.
 
 l.9 contains the negated exported verification condition.
+In order to export the verification condition its memory model is converted back to \texttt{Plain}.
+For every boolean function which is supported by \verifyc an equivalent SMT-LIB function exists, so they can be translated directly.
+The same goes for arithmetic functions except for the address operator.
+Verification conditions containing the address operator cannot be exported.
+The most difficult part is exporting the LExpressions.
+Identifiers are exported to variable names.
+Array access and dereferencing is modelled by the predefined functions mentioned above.
+Structure parts accessors are expected to be modelled by the user as part of the environment,
+where the name of the accessor should match the name of an unary function.
 
 l.10 tells the smt solver to start the prof. 
 If the solver can prove that there is no model for the negated verification condition (\texttt{unsat}), then the verification condition is valid and proven.
 
 \section{Limitations}
 
-\subsection{Primitives}
-\label{primitives}
+\verifyc is an educational project and should not be used to verify any critical software.
+It is only tested on small example programs.
+No guarantees are made by the author.
+This section should list known limitations without being exhaustive.
 
-\subsection{Function Calls}
-\label{funcalls}
+\subsection{Correctness}
+\label{correctness}
+While the purpose of the Floyd-Hoare logic is to prove correctness of programs,
+there are some classes errors which cannot be found by this implementation, including:
+\begin{itemize}
+    \item nonterminating loops
+    \item array index out of bounds errors
+    \item overflows
+\end{itemize}
 
+\subsection{Scalability}
+\label{completeness}
+One important feature which is not implemented is the ability to specify which parts of the memory are
+changed by a function call.
+To remain sound without this specification only the postcondition of the called function can be assumed.
+This makes it hard (maybe even impossible) to prove programs like then recursive fibonacci program shown in listing \ref{lst:fib}.
+
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[style=c0, caption=a recursive fibonacci program, label=lst:fib]
+int fib(int n) {
+    precondition("n >= 0");
+    postcondition("\result == fibonacci(n)");
+
+    if(n == 0 || n == 1){
+        return 1;
+    } else {
+        int prev = fib(n - 1);
+        int prev2 = fib(n - 2);
+        return prev + prev2;
+    }
+}
+\end{lstlisting}
+\end{minipage}
+
+This severely limits the scale in which \verifyc can be applied.
+
+\subsection{Compatibility with C}
+\verifyc only supports a subset of the C programming language.
+Missing features include:
+
+\begin{itemize}
+    \item primitive types other than integers
+    \item includes
+    \item union types
+    \item syntactic sugar like for loops or increment operators (\texttt{i++;})
+\end{itemize}
 
 \end{document}
