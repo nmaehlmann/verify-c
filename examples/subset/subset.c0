@@ -1,0 +1,58 @@
+// Test wether or not a sorted set of ranges (drange) is completely included into another set of ranges.
+int subsetOf (Range[] v, int m, Range[] w, int n){
+    precondition("m > 0 && n > 0 && dRange(v) && dRange(w)");
+    postcondition("\result == 1 <-> forall(idxV, in(idxV, 0, m) -> exists(idxW, in(idxW, 0, n) && containedIn(v[idxV], w[idxW])))");
+
+    int j = 0;
+    int i = 0;
+    while(i < m){
+        invariant("
+            in(i, 0, m + 1) && in(j, 0, n) && dRange(v) && dRange(w) &&
+            forall(idxV, in(idxV, 0, i) -> exists(idxW, in(idxW, 0, n) && containedIn(v[idxV], w[idxW]))) &&
+            forall(idxW, in(idxW, 0, j) -> !containedIn(v[i], w[idxW]))
+        ");
+        
+        // Set j to the smallest idx j s.t. w[j].upperBound >= v[i].upperBound. 
+        while(j < n && w[j].ub < v[i].ub) {
+            invariant("
+                in(i, 0, m) && in(j, 0, n + 1) && dRange(v) && dRange(w) &&
+                forall(idxV, in(idxV, 0, i) -> exists(idxW, in(idxW, 0, n) && containedIn(v[idxV], w[idxW]))) &&
+                forall(idxW, in(idxW, 0, j) -> !containedIn(v[i], w[idxW]))
+            ");
+
+            j = j + 1;
+        }
+
+        if(j >= n) {
+            // There is no w[j] that contains v[i]. v cannot be a subset of w. Terminate.
+            return 0;
+        }
+
+        // Check whether v[i] is contained w[j].
+        if(w[j].lb <= v[i].lb) {
+
+            // v[i] is contained in w[j]. Continue with next value of v.
+            i = i + 1;
+
+
+            // Find smallest idx i s.t. v[i].upperbound > w[j].upperbound. In other words: find smallest v[i] which is not contained in w[j].
+            // If no j was found, then i >= m and the enclosing for loop will terminate. In this case all remaining v[i] were contained in w[j].
+            while(i < m && v[i].ub <= w[j].ub){
+                invariant("
+                    w[j].lb <= v[i].lb &&
+                    in(i, 0, m + 1) && in(j, 0, n) && dRange(v) && dRange(w) &&
+                    forall(idxV, in(idxV, 0, i) -> exists(idxW, in(idxW, 0, n) && containedIn(v[idxV], w[idxW]))) &&
+                    forall(idxW, in(idxW, 0, j) -> !containedIn(v[i], w[idxW]))
+                ");
+
+                i = i + 1;
+            }
+
+        } else {
+            // v[i] is not contained in w[j]. Following values of w cannot contain v[i] either. Terminate.
+            return 0;            
+        }
+    }
+    // If all v[i] were contained, v is a subset of w.
+    return 1;
+}
